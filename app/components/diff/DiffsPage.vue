@@ -16,6 +16,7 @@ const props = defineProps<{
   reviewed: Set<string>
   isLoading?: boolean
   error?: Error
+  isEmbedded?: boolean
   // Only meaningful once `diff`/`grouped` are loaded - a source with no live
   // origin (paste) just never sets this.
   isStale?: boolean
@@ -80,6 +81,7 @@ function toggleGroup(key: string) {
         :total-files="diff.files.length"
         :additions="totalAdditions"
         :deletions="totalDeletions"
+        :is-embedded="isEmbedded"
         :groups="resolvedGroups.map(group => ({ key: group.key, label: group.label }))"
         @update:layout="emit('update:layout', $event)"
         @refresh="emit('refresh')"

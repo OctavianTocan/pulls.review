@@ -66,7 +66,7 @@ function navigateToFile(sha: string) {
     <div class="p-3 flex flex-col gap-4 lg:grid lg:grid-cols-[1fr_4fr]">
       <!-- top-45 approximates the page's own sticky DiffsHeader height, so the aside
            sticks just below it rather than underneath it. -->
-      <aside class="flex flex-col gap-3 min-w-0 top-45 lg:self-start lg:sticky">
+      <aside class="flex shrink-0 flex-col gap-3 min-w-70 top-45 lg:self-start lg:sticky">
         <header class="bg-base flex w-full items-center">
           <button
             type="button"

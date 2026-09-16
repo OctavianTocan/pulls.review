@@ -17,6 +17,7 @@ const props = defineProps<{
   totalFiles: number
   additions: number
   deletions: number
+  isEmbedded?: boolean
   /** Top-level groups, for the quick-nav row - matches ids the page gives each group section. */
   groups: { key: string, label: string }[]
 }>()
@@ -75,7 +76,7 @@ const { y } = useWindowScroll()
           :options="layoutOptions"
           @update:model-value="emit('update:layout', $event as 'split' | 'unified')"
         />
-        <NavControls class="shrink-0" />
+        <NavControls v-if="!isEmbedded" class="shrink-0" />
       </div>
 
       <div class="text-sm op-fade flex flex-wrap gap-x-3 gap-y-1 items-center">

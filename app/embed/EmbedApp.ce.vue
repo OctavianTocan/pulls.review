@@ -87,11 +87,10 @@ onBeforeUnmount(() => {
 
 <template>
   <div ref="root">
-    <!-- TODO: have the diffs text rotate 90 degrees -->
     <button
       v-if="pr"
       type="button"
-      class="z-[2147483000] text-xs color-base font-semibold px-2.5 py-2 border border-base rounded-l-lg bg-base shadow-lg transition-[right] right-0 top-1/2 fixed -translate-y-1/2"
+      class="z-[2147483000] text-xs color-base font-semibold px-2 py-2.5 border border-base rounded-l-lg bg-base shadow-lg [writing-mode:vertical-rl] right-0 top-1/2 fixed -translate-y-1/2"
       :style="{ right: open ? `${width}px` : '0' }"
       @click="toggleOpen"
     >

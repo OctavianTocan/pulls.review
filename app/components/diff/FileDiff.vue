@@ -98,9 +98,8 @@ defineExpose({
 
 <template>
   <div :id="`file-${file.sha}`" class="border border-base rounded-lg overflow-hidden scroll-mt-45">
-    <!-- TODO: This header should also be sticky -->
     <header
-      class="px-2 py-1.5 bg-raised flex gap-2 items-center justify-between"
+      class="z-[20] px-2 py-1.5 bg-raised flex gap-2 items-center top-45 justify-between sticky"
       role="button"
       @click.self="collapsed = !collapsed"
     >
