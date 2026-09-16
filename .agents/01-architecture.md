@@ -130,12 +130,10 @@ land later without a rewrite:
 - `local` CLI provider.
 - Any landing/history dashboard (deep-links only: `/gh/owner/repo/number` and
   nothing else) or social/OG link previews (no backend to render them).
-- A userscript (Tampermonkey/Violentmonkey) that embeds this app as a
-  sidepanel inside GitHub's own PR page, next to the real comment thread
-  (pointing an iframe at the matching `/gh/owner/repo/number`). Not built
-  yet, but the app SHOULD NOT gain anything that forecloses it later — no
-  restrictive `X-Frame-Options`/`frame-ancestors`, and an eventual compact
-  "embed" layout mode is expected.
+- A compact "embed" layout mode (`?embed`), for the userscript below to
+  render sanely inside a narrow drawer instead of the full page chrome. Not
+  built yet - the app MUST NOT gain anything that forecloses it, no
+  restrictive `X-Frame-Options`/`frame-ancestors`.
 - A VS Code extension ("devframe", à la the official GitHub Pull Requests and
   Issues extension) surfacing Diffs inside the editor for the local
   working-tree diff or the PR matching the checked-out branch. Depends on
@@ -148,7 +146,11 @@ land later without a rewrite:
   pure `*Panel.vue` content), triggered from `AppHeader.vue` — never routed
   pages. `AppHeader` itself only renders on `pages/index.vue` (the `/gh/...`
   and `/upload` reading views stay header-free; their own sticky
-  `DiffGroupHeader`s are the only scroll nav there).
+  `DiffsHeader` is the only scroll nav there).
+- A userscript (`userscript/diffs-github.user.js`) embeds a Diffs drawer
+  directly into `github.com` pull request pages via an iframe pointing at
+  the matching `/gh/owner/repo/number?embed` - styled with inline styles
+  only, since it can't ship a stylesheet into someone else's page.
 - Diff layout (split/unified) is user-toggleable; both are supported by
   `@pierre/diffs`.
 - Large PRs are a first-class case, not an edge case: file lists and diff
