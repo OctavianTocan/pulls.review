@@ -40,4 +40,14 @@ describe('ruleBasedAdapter', () => {
   it('is always available and needs no network', () => {
     expect(ruleBasedAdapter.available).toBe(true)
   })
+
+  it('gives every group a human label and a basic summary, even without an LLM', async () => {
+    const diff: PullRequestDiff = {
+      meta: { provider: 'github', id: 'github:o/r#1', title: 't', description: '' },
+      files: [file('src/index.ts')],
+    }
+    const result = await ruleBasedAdapter.analyze(diff)
+    expect(result.groups[0]?.label).toBe('Code')
+    expect(result.groups[0]?.summary).toBeTruthy()
+  })
 })

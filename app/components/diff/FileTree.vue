@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import type { FileChange } from '../../types/diff'
 import DisplayBadge from '@antfu/design/components/Display/DisplayBadge.vue'
+import DisplayFileIcon from '@antfu/design/components/Display/DisplayFileIcon.vue'
+import DisplayFilePath from '@antfu/design/components/Display/DisplayFilePath.vue'
 import FormCheckbox from '@antfu/design/components/Form/FormCheckbox.vue'
 import { useVirtualizer } from '@tanstack/vue-virtual'
 import { computed, useTemplateRef } from 'vue'
@@ -93,7 +95,7 @@ const virtualizer = useVirtualizer(computed(() => ({
         }"
       >
         <template v-if="row.row.type === 'folder'">
-          <span class="i-ph:folder op-fade" aria-hidden="true" />
+          <DisplayFileIcon directory :path="row.row.name" class="op-fade" />
           <span class="op-fade truncate">{{ row.row.name }}</span>
         </template>
         <template v-else-if="row.row.file">
@@ -101,8 +103,7 @@ const virtualizer = useVirtualizer(computed(() => ({
             :model-value="reviewed.has(row.row.file.sha)"
             @update:model-value="emit('update:reviewed', row.row.file.sha, $event)"
           />
-          <span class="i-ph:file" aria-hidden="true" />
-          <span class="flex-1 min-w-0 truncate">{{ row.row.name }}</span>
+          <DisplayFilePath :path="row.row.name" :dim="false" class="flex-1 min-w-0" />
           <DisplayBadge :text="row.row.file.status" :color="STATUS_COLOR[row.row.file.status]" />
           <span class="text-xs mr-2 whitespace-nowrap">
             <span class="color-success-500">+{{ row.row.file.additions }}</span>

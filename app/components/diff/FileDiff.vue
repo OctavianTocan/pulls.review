@@ -2,6 +2,7 @@
 import type { FileChange } from '../../types/diff'
 import ActionIconButton from '@antfu/design/components/Action/ActionIconButton.vue'
 import DisplayBadge from '@antfu/design/components/Display/DisplayBadge.vue'
+import DisplayFilePath from '@antfu/design/components/Display/DisplayFilePath.vue'
 import FormCheckbox from '@antfu/design/components/Form/FormCheckbox.vue'
 import { FileDiff as PierreFileDiff, processFile } from '@pierre/diffs'
 import { computed, onBeforeUnmount, onMounted, ref, useTemplateRef, watch } from 'vue'
@@ -61,7 +62,9 @@ function render() {
   // (its default assumption is that it created the container itself) - the third
   // `isContainerManaged: true` constructor arg opts out of that.
   instance?.cleanUp()
-  instance = new PierreFileDiff({ diffStyle: props.layout, disableErrorHandling: false }, undefined, true)
+  // `disableFileHeader`: we render our own header (filename, status, +/-, reviewed
+  // checkbox) above the diff body, so pierre's own file-header row would be redundant.
+  instance = new PierreFileDiff({ diffStyle: props.layout, disableErrorHandling: false, disableFileHeader: true }, undefined, true)
   instance.render({ fileDiff, fileContainer: containerRef.value })
 }
 
@@ -87,7 +90,7 @@ const statusColor = computed(() => STATUS_COLOR[props.file.status])
           :label="collapsed ? 'Expand file' : 'Collapse file'"
           @click="collapsed = !collapsed"
         />
-        <span class="font-mono truncate">{{ file.path }}</span>
+        <DisplayFilePath :path="file.path" class="min-w-0" />
         <DisplayBadge :text="file.status" :color="statusColor" />
         <span v-if="!file.isBinary" class="text-xs whitespace-nowrap">
           <span class="color-success-500">+{{ file.additions }}</span>

@@ -1,17 +1,17 @@
 import type { Meta, StoryObj } from '@storybook/vue3-vite'
 import nestedGroups from '../../fixtures/synthetic/nested-groups.json'
 import partiallyReviewed from '../../fixtures/synthetic/partially-reviewed.json'
+import DiffGroup from './DiffGroup.vue'
 import { resolveGroups } from './group-utils'
-import GroupDiffPanel from './GroupDiffPanel.vue'
 
-const meta: Meta<typeof GroupDiffPanel> = {
-  title: 'Diff/GroupDiffPanel',
-  component: GroupDiffPanel,
+const meta: Meta<typeof DiffGroup> = {
+  title: 'Diff/DiffGroup',
+  component: DiffGroup,
   args: { layout: 'unified', collapsed: false },
 }
 export default meta
 
-type Story = StoryObj<typeof GroupDiffPanel>
+type Story = StoryObj<typeof DiffGroup>
 
 export const Default: Story = {
   args: {
