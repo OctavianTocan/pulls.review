@@ -97,9 +97,9 @@ defineExpose({
 </script>
 
 <template>
-  <div :id="`file-${file.sha}`" class="border border-base rounded-lg overflow-hidden scroll-mt-45">
+  <div :id="`file-${file.sha}`" class="border border-base rounded-lg overflow-hidden">
     <header
-      class="z-[20] px-2 py-1.5 bg-raised flex gap-2 items-center top-45 justify-between sticky"
+      class="z-[20] px-2 py-1.5 flex gap-2 items-center justify-between"
       role="button"
       @click.self="collapsed = !collapsed"
     >

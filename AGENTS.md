@@ -10,8 +10,8 @@ where the two disagree, the packages' `src/` and test suites win, and the docs g
 
 ## Find the contract
 
-| Task | Read |
-| --- | --- |
-| Understand what this project is, why it exists, and its longer-term direction | [00 Goal](./.agents/00-goal.md) |
+| Task                                                                                                                   | Read                                            |
+| ---------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------- |
+| Understand what this project is, why it exists, and its longer-term direction                                          | [00 Goal](./.agents/00-goal.md)                 |
 | Understand the overall design: provider/analyze-adapter boundaries, canonical data structures, caching, deferred scope | [01 Architecture](./.agents/01-architecture.md) |
-| Understand a specific implementation phase's task breakdown | [plans/](./plans/) |
+| Understand a specific implementation phase's task breakdown                                                            | [plans/](./plans/)                              |

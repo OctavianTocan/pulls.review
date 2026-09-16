@@ -75,6 +75,8 @@ function onResizeDown(event: PointerEvent) {
   handle.addEventListener('pointerup', onResizeUp)
 }
 
+const hostContainer = computed(() => rootRef.value?.ownerDocument ?? document)
+
 onMounted(() => {
   document.addEventListener('turbo:load', syncPr)
   window.addEventListener('popstate', syncPr)
@@ -112,7 +114,10 @@ onBeforeUnmount(() => {
           ✕
         </button>
       </header>
-      <EmbedPrView v-if="pr" :key="prKey" :owner="pr.owner" :repo="pr.repo" :number="pr.number" class="flex-1 min-h-0 overflow-auto" />
+      <EmbedPrView
+        v-if="pr"
+        :key="prKey" :owner="pr.owner" :repo="pr.repo" :number="pr.number" :host-container="hostContainer" class="flex-1 min-h-0 overflow-auto"
+      />
     </div>
   </div>
 </template>

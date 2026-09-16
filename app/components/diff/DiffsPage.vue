@@ -10,6 +10,7 @@ import DiffsHeader from './DiffsHeader.vue'
 import { resolveGroups } from './group-utils'
 
 const props = defineProps<{
+  hostContainer?: Document | ShadowRoot
   diff?: PullRequestDiff
   grouped?: GroupedResult
   layout: 'split' | 'unified'
@@ -75,8 +76,9 @@ function toggleGroup(key: string) {
     </template>
     <template v-else-if="diff && grouped">
       <DiffsHeader
+        :host-container
         :meta="diff.meta"
-        :layout="layout"
+        :layout
         :reviewed-count="reviewedCount"
         :total-files="diff.files.length"
         :additions="totalAdditions"

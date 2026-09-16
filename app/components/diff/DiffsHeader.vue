@@ -11,6 +11,7 @@ import DiffStats from './DiffStats.vue'
 import PrStatusIcon from './PrStatusIcon.vue'
 
 const props = defineProps<{
+  hostContainer?: Document | ShadowRoot
   meta: DiffsPayload
   layout: 'split' | 'unified'
   reviewedCount: number
@@ -47,7 +48,7 @@ const githubRef = computed(() => {
 })
 
 function scrollToGroup(key: string) {
-  document.getElementById(`group-${key}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  (props.hostContainer || document).getElementById(`group-${key}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
 }
 
 const { y } = useWindowScroll()
@@ -80,15 +81,14 @@ const { y } = useWindowScroll()
       </div>
 
       <div class="text-sm op-fade flex flex-wrap gap-x-3 gap-y-1 items-center">
-        <div v-if="githubRef" class="text-sm mb-1 op-fade flex gap-1.5 items-center">
-          <GithubAvatar :login="githubRef.owner" :size="16" />
+        <div v-if="githubRef && !isEmbedded" class="text-sm mb-1 op-fade flex gap-1.5 items-center">
           <span>{{ githubRef.owner }}/{{ githubRef.repo }}</span>
         </div>
         <span v-if="meta.pullRequest?.author" class="flex gap-1.5 items-center">
           <GithubAvatar :login="meta.pullRequest.author" :size="16" />
           by {{ meta.pullRequest.author }}
         </span>
-        <span v-if="meta.base && meta.head" class="font-mono flex gap-1 items-center">
+        <span v-if="meta.base && meta.head && !isEmbedded" class="font-mono flex gap-1 items-center">
           <span class="font-mono px-2 py-0.5 border border-base rounded bg-code">{{ meta.base.ref }}</span>
           ←
           <span class="font-mono px-2 py-0.5 border border-base rounded bg-code">{{ meta.head.ref }}</span>

@@ -13,6 +13,7 @@ import { useSettings } from '../composables/useSettings'
 // so a fresh instance (and fresh `usePullRequest` call) is created per navigation,
 // same as the routed page getting a fresh mount per route change.
 const props = defineProps<{
+  hostContainer?: Document | ShadowRoot
   owner: string
   repo: string
   number: string
@@ -47,6 +48,7 @@ watch(() => diff.value?.meta.id, (id, previousId) => {
 
 <template>
   <DiffsPage
+    :host-container
     :diff="diff"
     :grouped="grouped"
     :layout="layout"
