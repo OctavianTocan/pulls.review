@@ -24,7 +24,7 @@ const progress = computed(() => props.totalFiles === 0 ? 1 : props.reviewedCount
 </script>
 
 <template>
-  <header class="bg-base flex w-full items-center" :class="{ 'top-14 z-[20] sticky': sticky }">
+  <header class="bg-base flex w-full items-center" :class="{ 'top-0 z-[20] sticky': sticky }">
     <button
       type="button"
       class="text-sm px-2 py-1 flex flex-1 min-w-0 items-start"

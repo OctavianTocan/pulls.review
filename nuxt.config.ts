@@ -37,7 +37,7 @@ export default defineNuxtConfig({
     },
   },
 
-  css: ['@antfu/design/styles.css'],
+  css: ['@antfu/design/styles.css', '~/assets/css/main.css'],
 
   colorMode: {
     classSuffix: '',

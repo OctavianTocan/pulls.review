@@ -1,7 +1,9 @@
 <script setup lang="ts">
+import ActionButton from '@antfu/design/components/Action/ActionButton.vue'
 import FeedbackEmptyState from '@antfu/design/components/Feedback/FeedbackEmptyState.vue'
 import FeedbackLoading from '@antfu/design/components/Feedback/FeedbackLoading.vue'
 import { onMounted, ref } from 'vue'
+import { navigateTo } from '#imports'
 import DiffView from '../components/diff/DiffView.vue'
 import { UPLOAD_SESSION_STORAGE_KEY } from '../composables/uploadSession'
 import { usePullRequest } from '../composables/usePullRequest'
@@ -35,14 +37,19 @@ onMounted(async () => {
 </script>
 
 <template>
-  <div>
+  <main class="mx-auto px-4 py-6 w-full">
     <FeedbackEmptyState
       v-if="!hasPending"
       icon="i-ph:upload-simple"
       title="No diff loaded"
     >
       <template #hint>
-        Use the upload button in the header to paste or drop a diff.
+        Go to the home page and use the upload button to paste or drop a diff.
+      </template>
+      <template #actions>
+        <ActionButton variant="primary" @click="navigateTo('/')">
+          Go home
+        </ActionButton>
       </template>
     </FeedbackEmptyState>
     <FeedbackLoading v-else-if="isLoading && !diff" text="Parsing diff…" />
@@ -64,5 +71,5 @@ onMounted(async () => {
       @update:layout="layout = $event"
       @update:reviewed="(sha, isReviewed) => toggle(sha, isReviewed)"
     />
-  </div>
+  </main>
 </template>

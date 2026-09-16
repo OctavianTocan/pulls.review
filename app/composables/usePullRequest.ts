@@ -35,7 +35,7 @@ export function usePullRequest(params: FetchDiffParams, opts: { token?: string }
     await putEntry(storage, {
       key,
       diff: freshDiff,
-      headSha: freshDiff.meta.headSha ?? '',
+      headSha: freshDiff.meta.head?.sha ?? '',
       analyzedBy,
       lastViewedAt: Date.now(),
       sizeBytes: computeEntrySizeBytes(freshDiff, analyzedBy),

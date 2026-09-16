@@ -38,7 +38,7 @@ watch(() => diff.value?.meta.id, (id, previousId) => {
 </script>
 
 <template>
-  <div>
+  <main class="mx-auto px-4 py-6 w-full">
     <FeedbackLoading v-if="isLoading && !diff" text="Loading pull request…" />
     <FeedbackEmptyState
       v-else-if="error"
@@ -70,5 +70,5 @@ watch(() => diff.value?.meta.id, (id, previousId) => {
         @update:reviewed="(sha, isReviewed) => toggle(sha, isReviewed)"
       />
     </template>
-  </div>
+  </main>
 </template>

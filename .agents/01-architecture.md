@@ -145,8 +145,10 @@ land later without a rewrite:
 
 - Settings (GitHub PAT, later model keys) and loading a pasted/uploaded diff
   are both modals/panels (`SettingsModal.vue`/`LoadDiffModal.vue` wrapping
-  pure `*Panel.vue` content), triggered from `AppHeader.vue`, mounted once in
-  `layouts/default.vue` — never routed pages.
+  pure `*Panel.vue` content), triggered from `AppHeader.vue` — never routed
+  pages. `AppHeader` itself only renders on `pages/index.vue` (the `/gh/...`
+  and `/upload` reading views stay header-free; their own sticky
+  `DiffGroupHeader`s are the only scroll nav there).
 - Diff layout (split/unified) is user-toggleable; both are supported by
   `@pierre/diffs`.
 - Large PRs are a first-class case, not an edge case: file lists and diff

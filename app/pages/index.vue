@@ -3,6 +3,7 @@ import ActionButton from '@antfu/design/components/Action/ActionButton.vue'
 import FormTextInput from '@antfu/design/components/Form/FormTextInput.vue'
 import { computed, ref } from 'vue'
 import { navigateTo } from '#imports'
+import AppHeader from '../components/AppHeader.vue'
 
 const url = ref('')
 
@@ -22,21 +23,24 @@ function go() {
 </script>
 
 <template>
-  <div class="mx-auto py-12 text-center flex flex-col gap-4 max-w-lg items-center">
-    <h1 class="text-2xl font-semibold">
-      Diffs
-    </h1>
-    <p class="op-fade">
-      A better way to review a GitHub pull request's diff: grouped, summarized, and fast.
-    </p>
-    <div class="flex gap-2 w-full items-start">
-      <FormTextInput v-model="url" placeholder="https://github.com/owner/repo/pull/123" class="flex-1" @keyup.enter="go" />
-      <ActionButton variant="primary" :disabled="!parsed" @click="go">
-        Open
-      </ActionButton>
-    </div>
-    <p class="text-sm op-fade">
-      Or use the upload button in the header to review a pasted/uploaded diff.
-    </p>
+  <div class="flex flex-col min-h-screen">
+    <AppHeader />
+    <main class="mx-auto py-12 text-center flex flex-1 flex-col gap-4 max-w-lg w-full items-center">
+      <h1 class="text-2xl font-semibold">
+        Diffs
+      </h1>
+      <p class="op-fade">
+        A better way to review a GitHub pull request's diff: grouped, summarized, and fast.
+      </p>
+      <div class="flex gap-2 w-full items-start">
+        <FormTextInput v-model="url" placeholder="https://github.com/owner/repo/pull/123" class="flex-1" @keyup.enter="go" />
+        <ActionButton variant="primary" :disabled="!parsed" @click="go">
+          Open
+        </ActionButton>
+      </div>
+      <p class="text-sm op-fade">
+        Or use the upload button in the header to review a pasted/uploaded diff.
+      </p>
+    </main>
   </div>
 </template>

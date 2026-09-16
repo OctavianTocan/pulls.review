@@ -31,35 +31,45 @@ export type FileChange = v.InferOutput<typeof FileChangeSchema>
 export const PullRequestStateSchema = v.picklist(['open', 'closed', 'merged', 'draft'])
 export type PullRequestState = v.InferOutput<typeof PullRequestStateSchema>
 
+/**
+ * The genuinely PR-only extras - absent for paste/local, which have no review
+ * lifecycle of their own. Nested under `DiffsPayload.pullRequest` rather than
+ * flattened, so a payload with no `pullRequest` is unambiguously "not a PR".
+ */
 export const PullRequestMetaSchema = v.object({
-  provider: v.picklist(['github', 'local', 'paste']),
-  id: v.string(), // e.g. "github:owner/repo#123" or "paste:<contentHash>"
-  title: v.string(), // "Pasted diff" default for paste, no PR title available
-  description: v.string(), // raw markdown body; empty for paste
   author: v.optional(v.string()),
-  // Absent for paste/local, which have no lifecycle of their own.
   state: v.optional(PullRequestStateSchema),
-  // base/head refs+shas are only meaningful when the source actually has them
-  // (github always does; a bare pasted patch usually doesn't unless a git diff
-  // preamble is present, so these stay optional at the schema level).
-  baseRef: v.optional(v.string()),
-  headRef: v.optional(v.string()),
-  baseSha: v.optional(v.string()),
-  headSha: v.optional(v.string()),
-  createdAt: v.optional(v.string()),
-  updatedAt: v.optional(v.string()),
-  url: v.optional(v.string()), // permalink to source, absent for local/paste
 })
 export type PullRequestMeta = v.InferOutput<typeof PullRequestMetaSchema>
 
+const RefSchema = v.object({
+  sha: v.string(),
+  ref: v.string(),
+})
+
 /**
- * TODO: generate this, call it DiffsPayload, have top level id, title, provider, description?, url?, base?: { sha: string, ref: string }, head?: { sha: string, ref: string }, createdAt?, updatedAt?, and pullRequest?: PullRequestMeta
- * So the same payload can be used for different sources like GitHub, local diffs, or pasted diffs universally.
- *
- * We should have a component to consume this, and then we could have isomorphic handling for differnet routes.
+ * Universal across sources (github, local diffs, pasted diffs) so the same
+ * view components can render any of them without knowing which produced it.
  */
+export const DiffsPayloadSchema = v.object({
+  provider: v.picklist(['github', 'local', 'paste']),
+  id: v.string(), // e.g. "github:owner/repo#123" or "paste:<contentHash>"
+  title: v.string(), // "Pasted diff" default for paste, no PR title available
+  description: v.optional(v.string()), // raw markdown body; absent for paste
+  url: v.optional(v.string()), // permalink to source, absent for local/paste
+  // base/head are only meaningful when the source actually has them (github
+  // always does; a bare pasted patch usually doesn't unless a git diff
+  // preamble is present, so these stay optional at the schema level).
+  base: v.optional(RefSchema),
+  head: v.optional(RefSchema),
+  createdAt: v.optional(v.string()),
+  updatedAt: v.optional(v.string()),
+  pullRequest: v.optional(PullRequestMetaSchema),
+})
+export type DiffsPayload = v.InferOutput<typeof DiffsPayloadSchema>
+
 export const PullRequestDiffSchema = v.object({
-  meta: PullRequestMetaSchema,
+  meta: DiffsPayloadSchema,
   files: v.array(FileChangeSchema),
 })
 export type PullRequestDiff = v.InferOutput<typeof PullRequestDiffSchema>

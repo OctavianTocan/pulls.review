@@ -1,9 +1,9 @@
 <script setup lang="ts">
-import type { PullRequestMeta } from '../../types/diff'
+import type { DiffsPayload } from '../../types/diff'
 import { ref } from 'vue'
 
 defineProps<{
-  meta: PullRequestMeta
+  meta: DiffsPayload
 }>()
 
 // Default collapsed: the description is usually long prose and secondary to the
@@ -17,8 +17,8 @@ const descriptionOpen = ref(false)
       {{ meta.title }}
     </h1>
     <div class="text-sm op-fade flex flex-wrap gap-x-3 gap-y-1 items-center">
-      <span v-if="meta.author">by {{ meta.author }}</span>
-      <span v-if="meta.baseRef && meta.headRef" class="font-mono">{{ meta.baseRef }} ← {{ meta.headRef }}</span>
+      <span v-if="meta.pullRequest?.author">by {{ meta.pullRequest.author }}</span>
+      <span v-if="meta.base && meta.head" class="font-mono">{{ meta.base.ref }} ← {{ meta.head.ref }}</span>
       <a v-if="meta.url" :href="meta.url" target="_blank" rel="noopener" class="hover:underline">View on GitHub</a>
     </div>
     <template v-if="meta.description">
