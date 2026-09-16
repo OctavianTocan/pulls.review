@@ -4,7 +4,7 @@ import { useEmbedDark } from './dark'
 import EmbedPrView from './EmbedPrView.vue'
 
 const WIDTH_STORAGE_KEY = 'diffs-embed:drawer-width'
-const DEFAULT_WIDTH = 480
+const DEFAULT_WIDTH = 800
 const MIN_WIDTH = 320
 
 interface Pr {
@@ -87,6 +87,7 @@ onBeforeUnmount(() => {
 
 <template>
   <div ref="root">
+    <!-- TODO: have the diffs text rotate 90 degrees -->
     <button
       v-if="pr"
       type="button"
@@ -99,7 +100,7 @@ onBeforeUnmount(() => {
 
     <div
       v-if="pr"
-      class="z-[2147483001] color-base bg-base flex flex-col h-full shadow-2xl transition-transform right-0 top-0 fixed"
+      class="z-[2147483001] color-base border-l border-base bg-base flex flex-col h-full shadow-2xl transition-transform right-0 top-0 fixed"
       :style="{ width: `${width}px`, maxWidth: '92vw', transform: open ? 'translateX(0)' : 'translateX(100%)' }"
     >
       <div

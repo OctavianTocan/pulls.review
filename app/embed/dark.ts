@@ -1,4 +1,5 @@
 import type { Ref } from 'vue'
+import { usePreferredDark } from '@vueuse/core'
 import { provide, ref, watch } from 'vue'
 import { isDarkKey } from '../state/dark'
 
@@ -9,12 +10,22 @@ import { isDarkKey } from '../state/dark'
  * classes, since normal descendant combinators apply fine within a shadow tree.
  */
 export function useEmbedDark(rootRef: Ref<HTMLElement | null>): Ref<boolean> {
-  const isDark = ref(document.documentElement.dataset.colorMode === 'dark')
+  const colorMode = document.documentElement.dataset.colorMode
+  const isDark = colorMode === 'auto'
+    ? usePreferredDark()
+    : colorMode === 'dark'
+      ? ref(true)
+      : ref(false)
+
   provide(isDarkKey, isDark)
 
-  watch([rootRef, isDark], ([root, dark]) => {
-    root?.classList.toggle('dark', dark)
-  }, { immediate: true })
+  watch(
+    [rootRef, isDark],
+    ([root, dark]) => {
+      root?.classList.toggle('dark', dark)
+    },
+    { immediate: true },
+  )
 
   return isDark
 }
