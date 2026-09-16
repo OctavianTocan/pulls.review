@@ -2,6 +2,7 @@
 import type { ResolvedGroupWithChildren } from './group-utils'
 import ActionIconButton from '@antfu/design/components/Action/ActionIconButton.vue'
 import { computed } from 'vue'
+import DiffStats from './DiffStats.vue'
 import FileDiff from './FileDiff.vue'
 import FileTree from './FileTree.vue'
 
@@ -25,8 +26,6 @@ const totalDeleted = computed(() => props.group.deleted + props.group.children.r
 <template>
   <section class="border border-base rounded-lg overflow-hidden">
     <header class="flex w-full">
-      <!-- TODO: should have review checkbox | file title | added/deleted counts | collapse/expand button -->
-      <!-- TODO: auto close diff when review is clicked. And when the initial state of reviewed is true, the default state should be collapsed -->
       <button
         type="button"
         class="text-sm px-3 py-2 bg-raised flex flex-1 gap-2 items-center hover:bg-active"
@@ -41,14 +40,11 @@ const totalDeleted = computed(() => props.group.deleted + props.group.children.r
         />
         <span class="font-medium">{{ group.label }}</span>
         <span class="text-xs ml-auto op-fade">{{ totalFiles }} file{{ totalFiles === 1 ? '' : 's' }}</span>
-        <span class="text-xs whitespace-nowrap">
-          <span class="color-success-500">+{{ totalAdded }}</span>
-          <span class="color-error-500 ml-1">-{{ totalDeleted }}</span>
-        </span>
+        <DiffStats :additions="totalAdded" :deletions="totalDeleted" />
       </button>
     </header>
 
-    <div v-if="!collapsed" class="p-3 flex flex-col gap-4 md:grid md:grid-cols-[280px_1fr]">
+    <div v-if="!collapsed" class="p-3 flex flex-col gap-4 lg:grid lg:grid-cols-[1fr_4fr]">
       <aside class="flex flex-col gap-3 min-w-0">
         <p v-if="group.summary" class="text-sm op-fade">
           {{ group.summary }}

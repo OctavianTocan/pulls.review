@@ -1,11 +1,12 @@
 <script setup lang="ts">
 import type { FileChange } from '../../types/diff'
-import DisplayBadge from '@antfu/design/components/Display/DisplayBadge.vue'
 import DisplayFileIcon from '@antfu/design/components/Display/DisplayFileIcon.vue'
 import DisplayFilePath from '@antfu/design/components/Display/DisplayFilePath.vue'
 import FormCheckbox from '@antfu/design/components/Form/FormCheckbox.vue'
 import { useVirtualizer } from '@tanstack/vue-virtual'
 import { computed, useTemplateRef } from 'vue'
+import DiffStats from './DiffStats.vue'
+import FileStatus from './FileStatus.vue'
 
 const props = defineProps<{
   files: FileChange[]
@@ -22,14 +23,6 @@ interface TreeRow {
   type: 'folder' | 'file'
   name: string
   file?: FileChange
-}
-
-const STATUS_COLOR: Record<FileChange['status'], string> = {
-  added: 'green',
-  removed: 'red',
-  modified: 'yellow',
-  renamed: 'blue',
-  copied: 'blue',
 }
 
 const rows = computed<TreeRow[]>(() => {
@@ -103,12 +96,9 @@ const virtualizer = useVirtualizer(computed(() => ({
             :model-value="reviewed.has(row.row.file.sha)"
             @update:model-value="emit('update:reviewed', row.row.file.sha, $event)"
           />
+          <FileStatus :status="row.row.file.status" />
           <DisplayFilePath :path="row.row.name" :dim="false" class="flex-1 min-w-0" />
-          <DisplayBadge :text="row.row.file.status" :color="STATUS_COLOR[row.row.file.status]" />
-          <span class="text-xs mr-2 whitespace-nowrap">
-            <span class="color-success-500">+{{ row.row.file.additions }}</span>
-            <span class="color-error-500 ml-1">-{{ row.row.file.deletions }}</span>
-          </span>
+          <DiffStats :additions="row.row.file.additions" :deletions="row.row.file.deletions" class="mr-2" />
         </template>
       </div>
     </div>

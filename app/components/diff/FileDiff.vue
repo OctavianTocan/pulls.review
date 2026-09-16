@@ -1,11 +1,12 @@
 <script setup lang="ts">
 import type { FileChange } from '../../types/diff'
 import ActionIconButton from '@antfu/design/components/Action/ActionIconButton.vue'
-import DisplayBadge from '@antfu/design/components/Display/DisplayBadge.vue'
 import DisplayFilePath from '@antfu/design/components/Display/DisplayFilePath.vue'
 import FormCheckbox from '@antfu/design/components/Form/FormCheckbox.vue'
 import { FileDiff as PierreFileDiff, processFile } from '@pierre/diffs'
-import { computed, onBeforeUnmount, onMounted, ref, useTemplateRef, watch } from 'vue'
+import { onBeforeUnmount, onMounted, ref, useTemplateRef, watch } from 'vue'
+import DiffStats from './DiffStats.vue'
+import FileStatus from './FileStatus.vue'
 import { ensurePierreDiffsShadowRoot } from './pierre-diffs-shadow'
 
 const props = defineProps<{
@@ -17,14 +18,6 @@ const props = defineProps<{
 const emit = defineEmits<{
   'update:reviewed': [reviewed: boolean]
 }>()
-
-const STATUS_COLOR: Record<FileChange['status'], string> = {
-  added: 'green',
-  removed: 'red',
-  modified: 'yellow',
-  renamed: 'blue',
-  copied: 'blue',
-}
 
 const containerRef = useTemplateRef<HTMLDivElement>('container')
 const collapsed = ref(props.reviewed)
@@ -74,35 +67,35 @@ onBeforeUnmount(() => instance?.cleanUp())
 watch(() => [props.layout, collapsed.value, props.file], () => render(), { deep: false, flush: 'post' })
 
 watch(() => props.reviewed, (isReviewed) => {
+  // Auto-collapse a file once it's marked reviewed (and re-expand it if unmarked) - it's
+  // already handled, no need to keep it open. `collapsed`'s initial value above mirrors
+  // this for a file that's already reviewed on first render.
   collapsed.value = isReviewed
 })
-
-const statusColor = computed(() => STATUS_COLOR[props.file.status])
 </script>
 
 <template>
   <div class="border border-base rounded-lg overflow-hidden">
     <header class="px-2 py-1.5 bg-raised flex gap-2 items-center justify-between">
       <div class="text-sm flex gap-2 min-w-0 items-center">
+        <FormCheckbox
+          :model-value="reviewed"
+          aria-label="Mark as reviewed"
+          @update:model-value="emit('update:reviewed', $event)"
+        />
+        <FileStatus :status="file.status" />
+        <DisplayFilePath :path="file.path" class="min-w-0" />
+      </div>
+      <div class="flex shrink-0 gap-2 items-center">
+        <DiffStats v-if="!file.isBinary" :additions="file.additions" :deletions="file.deletions" />
+        <span v-else class="text-xs op-fade">Binary file</span>
         <ActionIconButton
           compact
           :icon="collapsed ? 'i-ph:caret-right' : 'i-ph:caret-down'"
           :label="collapsed ? 'Expand file' : 'Collapse file'"
           @click="collapsed = !collapsed"
         />
-        <DisplayFilePath :path="file.path" class="min-w-0" />
-        <DisplayBadge :text="file.status" :color="statusColor" />
-        <span v-if="!file.isBinary" class="text-xs whitespace-nowrap">
-          <span class="color-success-500">+{{ file.additions }}</span>
-          <span class="color-error-500 ml-1">-{{ file.deletions }}</span>
-        </span>
-        <span v-else class="text-xs op-fade">Binary file</span>
       </div>
-      <FormCheckbox
-        :model-value="reviewed"
-        label="Reviewed"
-        @update:model-value="emit('update:reviewed', $event)"
-      />
     </header>
     <div v-if="file.isBinary" class="text-sm p-4 op-fade">
       Binary file not shown.
