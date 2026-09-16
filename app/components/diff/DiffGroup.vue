@@ -25,6 +25,8 @@ const totalDeleted = computed(() => props.group.deleted + props.group.children.r
 <template>
   <section class="border border-base rounded-lg overflow-hidden">
     <header class="flex w-full">
+      <!-- TODO: should have review checkbox | file title | added/deleted counts | collapse/expand button -->
+      <!-- TODO: auto close diff when review is clicked. And when the initial state of reviewed is true, the default state should be collapsed -->
       <button
         type="button"
         class="text-sm px-3 py-2 bg-raised flex flex-1 gap-2 items-center hover:bg-active"

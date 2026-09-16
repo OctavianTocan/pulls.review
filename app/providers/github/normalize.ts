@@ -1,4 +1,4 @@
-import type { FileChange, FileChangeStatus, PullRequestDiff } from '../../types/diff'
+import type { FileChange, FileChangeStatus, PullRequestDiff, PullRequestState } from '../../types/diff'
 import type { GithubPullRequestFileJson, GithubPullRequestJson } from './api'
 import { parseHunks, parsePatch } from '../../patch-parser'
 
@@ -62,6 +62,16 @@ async function normalizeFile(file: GithubPullRequestFileJson, fallbackDiffText?:
   }
 }
 
+function resolveState(pr: GithubPullRequestJson): PullRequestState {
+  if (pr.merged)
+    return 'merged'
+  if (pr.state === 'closed')
+    return 'closed'
+  if (pr.draft)
+    return 'draft'
+  return 'open'
+}
+
 export async function normalizePullRequest(
   owner: string,
   repo: string,
@@ -84,6 +94,7 @@ export async function normalizePullRequest(
       title: pr.title,
       description: pr.body ?? '',
       author: pr.user?.login,
+      state: resolveState(pr),
       baseRef: pr.base.ref,
       headRef: pr.head.ref,
       baseSha: pr.base.sha,

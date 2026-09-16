@@ -5,6 +5,7 @@ import FeedbackLoading from '@antfu/design/components/Feedback/FeedbackLoading.v
 import { computed, onMounted, ref, watch } from 'vue'
 import { useRoute } from '#imports'
 import DiffView from '../../../../components/diff/DiffView.vue'
+import { useSyncPrNavContext } from '../../../../composables/usePrNavContext'
 import { usePullRequest } from '../../../../composables/usePullRequest'
 import { useReviewedFiles } from '../../../../composables/useReviewedFiles'
 import { useSettings } from '../../../../composables/useSettings'
@@ -23,6 +24,8 @@ const params = computed(() => ({
 
 const { diff, grouped, isLoading, error, isStale, load, refresh } = usePullRequest(params.value, { token: githubToken.value })
 const { reviewed, load: loadReviewed, toggle } = useReviewedFiles()
+
+useSyncPrNavContext(diff, reviewed)
 
 async function loadAll() {
   await load()

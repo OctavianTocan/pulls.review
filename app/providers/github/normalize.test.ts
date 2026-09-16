@@ -11,6 +11,9 @@ const PR_JSON: GithubPullRequestJson = {
   created_at: '2026-01-01T00:00:00Z',
   updated_at: '2026-01-02T00:00:00Z',
   html_url: 'https://github.com/owner/repo/pull/1',
+  state: 'open',
+  draft: false,
+  merged: false,
 }
 
 describe('normalizePullRequest', () => {
@@ -97,6 +100,16 @@ describe('normalizePullRequest', () => {
     const diff = await normalizePullRequest('owner', 'repo', '1', PR_JSON, files, async () => fallbackText)
 
     expect(diff.files[0]).toMatchObject({ path: 'assets/logo.png', isBinary: true })
+  })
+
+  it.each([
+    [{ state: 'open' as const, draft: false, merged: false }, 'open'],
+    [{ state: 'open' as const, draft: true, merged: false }, 'draft'],
+    [{ state: 'closed' as const, draft: false, merged: false }, 'closed'],
+    [{ state: 'closed' as const, draft: false, merged: true }, 'merged'],
+  ])('resolves meta.state from %o to %s', async (overrides, expected) => {
+    const diff = await normalizePullRequest('owner', 'repo', '1', { ...PR_JSON, ...overrides }, [], async () => '')
+    expect(diff.meta.state).toBe(expected)
   })
 
   it('only fetches the fallback diff text once even with multiple omitted-patch files', async () => {

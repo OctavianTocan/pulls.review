@@ -18,6 +18,7 @@
   },
   "dependencies": {
     "@antfu/design": "catalog:",
+    "@antfu/utils": "catalog:",
     "@pierre/diffs": "catalog:",
     "@tanstack/vue-virtual": "catalog:",
     "@vueuse/core": "catalog:frontend",

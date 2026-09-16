@@ -4,6 +4,7 @@ import FeedbackLoading from '@antfu/design/components/Feedback/FeedbackLoading.v
 import { onMounted, ref } from 'vue'
 import DiffView from '../components/diff/DiffView.vue'
 import { UPLOAD_SESSION_STORAGE_KEY } from '../composables/uploadSession'
+import { useSyncPrNavContext } from '../composables/usePrNavContext'
 import { usePullRequest } from '../composables/usePullRequest'
 import { useReviewedFiles } from '../composables/useReviewedFiles'
 
@@ -21,6 +22,8 @@ const { diff, grouped, isLoading, error, load } = usePullRequest(
   pending ? { kind: 'patch-text', text: pending.text, title: pending.title } : { kind: 'patch-text', text: '' },
 )
 const { reviewed, load: loadReviewed, toggle } = useReviewedFiles()
+
+useSyncPrNavContext(diff, reviewed)
 
 onMounted(async () => {
   if (!pending) {

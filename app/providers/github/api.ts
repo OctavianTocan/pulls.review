@@ -9,6 +9,9 @@ export interface GithubPullRequestJson {
   created_at: string
   updated_at: string
   html_url: string
+  state: 'open' | 'closed'
+  draft: boolean
+  merged: boolean
 }
 
 export interface GithubPullRequestFileJson {

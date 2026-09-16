@@ -28,12 +28,17 @@ export const FileChangeSchema = v.object({
 })
 export type FileChange = v.InferOutput<typeof FileChangeSchema>
 
+export const PullRequestStateSchema = v.picklist(['open', 'closed', 'merged', 'draft'])
+export type PullRequestState = v.InferOutput<typeof PullRequestStateSchema>
+
 export const PullRequestMetaSchema = v.object({
   provider: v.picklist(['github', 'local', 'paste']),
   id: v.string(), // e.g. "github:owner/repo#123" or "paste:<contentHash>"
   title: v.string(), // "Pasted diff" default for paste, no PR title available
   description: v.string(), // raw markdown body; empty for paste
   author: v.optional(v.string()),
+  // Absent for paste/local, which have no lifecycle of their own.
+  state: v.optional(PullRequestStateSchema),
   // base/head refs+shas are only meaningful when the source actually has them
   // (github always does; a bare pasted patch usually doesn't unless a git diff
   // preamble is present, so these stay optional at the schema level).

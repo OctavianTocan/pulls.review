@@ -33,6 +33,7 @@ allowBuilds:
 
 catalog:
   '@antfu/design': ^0.5.0
+  '@antfu/utils': ^9.3.0
   '@iconify-json/catppuccin': ^1.2.17
   '@iconify-json/ph': ^1.2.2
   '@pierre/diffs': ^1.4.2
