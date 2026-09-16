@@ -68,7 +68,7 @@ const { y } = useWindowScroll()
           :options="layoutOptions"
           @update:model-value="emit('update:layout', $event as 'split' | 'unified')"
         />
-        <NavControls v-if="!isEmbedded" class="shrink-0" />
+        <NavControls v-if="!isEmbedded" class="shrink-0" :host-container="hostContainer" />
       </div>
 
       <div class="text-sm op-fade flex flex-wrap gap-x-3 gap-y-1 items-center">

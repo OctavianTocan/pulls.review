@@ -1,11 +1,12 @@
 <script setup lang="ts">
-import OverlayModal from '@antfu/design/components/Overlay/OverlayModal.vue'
 import { useRouter } from 'vue-router'
 import { UPLOAD_SESSION_STORAGE_KEY } from '../../composables/uploadSession'
+import AppModal from '../AppModal.vue'
 import LoadDiffPanel from './LoadDiffPanel.vue'
 
 defineProps<{
   open: boolean
+  hostContainer?: Document | ShadowRoot
 }>()
 
 const emit = defineEmits<{
@@ -22,12 +23,13 @@ function handleSubmit(text: string, title?: string) {
 </script>
 
 <template>
-  <OverlayModal
+  <AppModal
     title="Load a diff"
     description="Paste or drop a unified diff / .patch file to review it."
     :open="open"
+    :host-container="hostContainer"
     @update:open="emit('update:open', $event ?? false)"
   >
     <LoadDiffPanel @submit="handleSubmit" />
-  </OverlayModal>
+  </AppModal>
 </template>

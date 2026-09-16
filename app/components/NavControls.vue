@@ -8,6 +8,7 @@ import SettingsModal from './settings/SettingsModal.vue'
 defineProps<{
   /** "Load a diff" only makes sense from the home page - PR/upload reading views don't get it. */
   loadDiff?: boolean
+  hostContainer?: Document | ShadowRoot
 }>()
 
 const settingsOpen = ref(false)
@@ -20,6 +21,6 @@ const loadDiffOpen = ref(false)
     <ActionIconButton icon="i-ph:gear" label="Settings" tooltip="Settings" @click="settingsOpen = true" />
     <DarkToggle />
   </div>
-  <SettingsModal v-model:open="settingsOpen" />
-  <LoadDiffModal v-if="loadDiff" v-model:open="loadDiffOpen" />
+  <SettingsModal v-model:open="settingsOpen" :host-container="hostContainer" />
+  <LoadDiffModal v-if="loadDiff" v-model:open="loadDiffOpen" :host-container="hostContainer" />
 </template>

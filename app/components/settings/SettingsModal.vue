@@ -1,10 +1,11 @@
 <script setup lang="ts">
-import OverlayModal from '@antfu/design/components/Overlay/OverlayModal.vue'
 import { useSettings } from '../../composables/useSettings'
+import AppModal from '../AppModal.vue'
 import SettingsPanel from './SettingsPanel.vue'
 
 defineProps<{
   open: boolean
+  hostContainer?: Document | ShadowRoot
 }>()
 
 const emit = defineEmits<{
@@ -15,11 +16,12 @@ const { githubToken } = useSettings()
 </script>
 
 <template>
-  <OverlayModal
+  <AppModal
     title="Settings"
     :open="open"
+    :host-container="hostContainer"
     @update:open="emit('update:open', $event ?? false)"
   >
     <SettingsPanel v-model="githubToken" />
-  </OverlayModal>
+  </AppModal>
 </template>

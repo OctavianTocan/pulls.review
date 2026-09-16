@@ -75,7 +75,11 @@ function onResizeDown(event: PointerEvent) {
   handle.addEventListener('pointerup', onResizeUp)
 }
 
-const hostContainer = computed(() => rootRef.value?.ownerDocument ?? document)
+// `ownerDocument` is always the top-level `Document`, even for a node inside a shadow
+// tree - `getRootNode()` is the one that actually returns the ShadowRoot, which is
+// what anything mounting/querying "within this component" (the quick-nav scroll
+// target, AppModal's Teleport target) needs to stay inside the shadow boundary.
+const hostContainer = computed(() => (rootRef.value?.getRootNode() ?? document) as Document | ShadowRoot)
 
 onMounted(() => {
   document.addEventListener('turbo:load', syncPr)
