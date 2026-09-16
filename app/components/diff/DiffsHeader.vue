@@ -5,6 +5,7 @@ import ActionToggleGroup from '@antfu/design/components/Action/ActionToggleGroup
 import DisplayDonut from '@antfu/design/components/Display/DisplayDonut.vue'
 import { useWindowScroll } from '@vueuse/core'
 import { computed } from 'vue'
+import { parseGithubDiffId } from '../../types/diff'
 import GithubAvatar from '../GithubAvatar.vue'
 import NavControls from '../NavControls.vue'
 import DiffStats from './DiffStats.vue'
@@ -35,17 +36,7 @@ const layoutOptions = [
   { value: 'split', label: 'Split', icon: 'i-ph:columns' },
 ]
 
-// `meta.id` is `github:{owner}/{repo}#{number}` for the github provider (see
-// `normalizePullRequest`) - the only source that has an owner/repo/number to show.
-const githubRef = computed(() => {
-  if (props.meta.provider !== 'github')
-    return undefined
-  const match = props.meta.id.match(/^github:([^/]+)\/([^#]+)#(\d+)$/)
-  if (!match)
-    return undefined
-  const [, owner, repo, number] = match
-  return { owner: owner!, repo: repo!, number: number! }
-})
+const githubRef = computed(() => props.meta.provider === 'github' ? parseGithubDiffId(props.meta.id) : undefined)
 
 function scrollToGroup(key: string) {
   (props.hostContainer || document).getElementById(`group-${key}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' })

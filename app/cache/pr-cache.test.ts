@@ -1,7 +1,7 @@
 import type { PrCacheEntry } from '../types/cache'
 import memoryDriver from 'unstorage/drivers/memory'
 import { beforeEach, describe, expect, it } from 'vitest'
-import { computeEntrySizeBytes, enforceBudget, getEntry, putEntry, touchEntry } from './pr-cache'
+import { computeEntrySizeBytes, enforceBudget, getEntry, listRecentEntries, putEntry, touchEntry } from './pr-cache'
 import { getReviewed, setReviewed } from './review-cache'
 import { createCacheStorage } from './storage'
 
@@ -76,6 +76,15 @@ describe('pr-cache', () => {
 
     const reviewed = await getReviewed(storage, ['sha-old', 'sha-new'])
     expect(reviewed).toEqual(new Set(['sha-new']))
+  })
+
+  it('listRecentEntries returns entries most-recently-viewed first, capped at the limit', async () => {
+    await putEntry(storage, makeEntry('old', 'sha-old', 1000))
+    await putEntry(storage, makeEntry('mid', 'sha-mid', 2000))
+    await putEntry(storage, makeEntry('new', 'sha-new', 3000))
+
+    expect((await listRecentEntries(storage, 10)).map(entry => entry.key)).toEqual(['new', 'mid', 'old'])
+    expect((await listRecentEntries(storage, 2)).map(entry => entry.key)).toEqual(['new', 'mid'])
   })
 
   it('enforceBudget is a no-op when nothing exceeds the budget', async () => {

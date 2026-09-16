@@ -64,6 +64,12 @@ async function getAllEntries(storage: CacheStorage): Promise<PrCacheEntry[]> {
   return entries
 }
 
+/** Most-recently-viewed entries first, for the home page's "recent" list. */
+export async function listRecentEntries(storage: CacheStorage, limit: number): Promise<PrCacheEntry[]> {
+  const entries = await getAllEntries(storage)
+  return entries.sort((a, b) => b.lastViewedAt - a.lastViewedAt).slice(0, limit)
+}
+
 export async function enforceBudget(storage: CacheStorage, budget?: CacheBudget): Promise<void> {
   const maxBytes = budget?.maxBytes ?? DEFAULT_MAX_BUDGET_BYTES
   const maxEntries = budget?.maxEntries ?? DEFAULT_MAX_ENTRY_COUNT
