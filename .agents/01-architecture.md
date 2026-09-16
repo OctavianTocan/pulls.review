@@ -2,7 +2,7 @@
 
 Diffs is a SPA (deployed at diffs.antfu.dev) that renders a GitHub PR's diff at
 `/gh/{owner}/{repo}/{number}` — or an arbitrary pasted/uploaded unified diff at
-`/paste/{hash}` — grouped and summarized for easier review, with a rule-based
+`/upload` — grouped and summarized for easier review, with a rule-based
 fallback grouping when no LLM is configured. See `plans/` for the
 phase-by-phase implementation plans; this doc is the standing contract those
 plans (and any future work) MUST follow.
@@ -15,9 +15,9 @@ plans (and any future work) MUST follow.
   gateway token. This rules out anything that needs a server to keep a secret.
 - The app MUST build as a static SPA (`ssr: false`, `nuxt generate`) and
   deploy as static files, on Vercel. `vercel.json` carries a catch-all
-  rewrite to Nuxt's `/200.html` fallback so the dynamic routes
-  (`/gh/[owner]/[repo]/[number]`, `/paste/[hash]`) work on direct
-  navigation/refresh, not just client-side routing after landing on `/`.
+  rewrite to Nuxt's `/200.html` fallback so the dynamic route
+  `/gh/[owner]/[repo]/[number]` works on direct navigation/refresh, not just
+  client-side routing after landing on `/`.
 - Nuxt auto-imports MUST stay disabled (`imports: { autoImport: false }`,
   `components: false`). Every composable, component, and Nuxt utility
   (`useRoute`, `#imports`, etc.) is imported explicitly.
@@ -42,9 +42,10 @@ analysis strategy later never touches the view layer:
   - `github` — GitHub REST API (PR metadata + paginated file list/patches).
   - `paste` — accepts raw unified-diff/patch text (pasted, or an uploaded
     `.diff`/`.patch` file, e.g. GitHub's `.diff` endpoint or `git diff >
-    diff.patch` output) via the shared `app/patch-parser/`. Has no live
-    source: if its cache entry is evicted, its URL cannot be recovered — an
-    accepted limitation, not a bug.
+    diff.patch` output) via the shared `app/patch-parser/`. Fed to the
+    `/upload` route (no param) via a fixed `sessionStorage` key, not a URL —
+    deliberately not shareable as a link, since it has no live source to
+    refetch even if it were content-hash-addressed.
   - `local` (CLI-driven, diffing a working tree/commit range) is planned but
     deferred — it will reuse the same `patch-parser` `paste` already uses.
 - **`app/patch-parser/`** parses unified-diff / git-extended-diff text (the
@@ -104,12 +105,14 @@ is flat key-value, so there's no native "object store" split):
 
 - `pr:*` — raw diff + per-adapter `GroupedResult`s, keyed by
   `pr:{provider}:{owner}/{repo}#{number}` for github or `pr:paste:{contentHash}`
-  for paste. App-managed LRU eviction (size/count budget), not left to browser
-  eviction heuristics. For `github`, staleness is detected by comparing
-  cached vs. live `headSha` and surfaced as a non-intrusive refresh banner —
-  the app MUST NOT silently auto-refetch (that could re-trigger a paid LLM
-  analysis) or silently go stale. `paste` entries have no live source, so no
-  staleness check applies; if evicted, the URL simply has nothing to show.
+  for paste (content hash is an internal cache key only, never exposed in a
+  URL — see the `paste` provider note above). App-managed LRU eviction
+  (size/count budget), not left to browser eviction heuristics. For `github`,
+  staleness is detected by comparing cached vs. live `headSha` and surfaced
+  as a non-intrusive refresh banner — the app MUST NOT silently auto-refetch
+  (that could re-trigger a paid LLM analysis) or silently go stale. `paste`
+  entries have no live source, so no staleness check applies; if evicted,
+  `/upload` simply has nothing to show until the user pastes again.
 - `review:*` — per-file "reviewed" marks, keyed by `review:{FileChange.sha}`,
   not by path or PR. This is deliberate: if a PR gets new commits and a
   file's `sha` is unchanged, its reviewed mark MUST survive; only files whose
@@ -133,6 +136,10 @@ land later without a rewrite:
   yet, but the app SHOULD NOT gain anything that forecloses it later — no
   restrictive `X-Frame-Options`/`frame-ancestors`, and an eventual compact
   "embed" layout mode is expected.
+- A VS Code extension ("devframe", à la the official GitHub Pull Requests and
+  Issues extension) surfacing Diffs inside the editor for the local
+  working-tree diff or the PR matching the checked-out branch. Depends on
+  the `local` provider; not built yet.
 
 ## UI conventions
 

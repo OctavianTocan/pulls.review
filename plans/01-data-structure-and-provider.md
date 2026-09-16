@@ -2,7 +2,7 @@
 
 ## Scope recap
 
-**In scope this phase:** canonical data types, `Provider` abstraction + `github` implementation (diff/metadata only), a shared unified-diff/patch text parser, a `paste` provider built on that parser (paste/upload an arbitrary `.diff`/`.patch` file), `AnalyzeAdapter` abstraction with the `rule-based` adapter implemented, IndexedDB caching w/ LRU, minimal Settings (GitHub PAT only), pure data-driven Vue components, Storybook for every component, the `/gh/owner/repo/number` and `/paste/[hash]` pages wiring it together.
+**In scope this phase:** canonical data types, `Provider` abstraction + `github` implementation (diff/metadata only), a shared unified-diff/patch text parser, a `paste` provider built on that parser (paste/upload an arbitrary `.diff`/`.patch` file), `AnalyzeAdapter` abstraction with the `rule-based` adapter implemented, IndexedDB caching w/ LRU, minimal Settings (GitHub PAT only), pure data-driven Vue components, Storybook for every component, the `/gh/owner/repo/number` and `/upload` pages wiring it together.
 
 **Explicitly deferred:** `llm` and `web-llm` analyze adapters (stubbed as TODO, not implemented), comment read/write, review actions, `local` CLI provider (interface must accommodate it, not build it).
 
@@ -17,7 +17,7 @@
   - Nuxt-specific utilities (`useRoute`, `useState`, `definePageMeta`, etc.) are imported explicitly from the `#imports` virtual module instead of relying on global auto-import.
   - All components imported explicitly with `<script setup>` `import` statements — no more auto-registration by filename.
 - Delete `Dockerfile` (no server to run) and `netlify.toml` (target is Vercel, not Netlify).
-- Add `vercel.json` with a catch-all rewrite to Nuxt's static-hosting fallback file (`/(.*)` → `/200.html`) — needed because `/gh/[owner]/[repo]/[number]` and `/paste/[hash]` are dynamic routes that can't be prerendered at build time; without the rewrite, a direct/refreshed visit to one 404s instead of falling through to client-side routing. Vercel otherwise auto-detects the Nuxt framework and runs `nuxt generate` with no further config.
+- Add `vercel.json` with a catch-all rewrite to Nuxt's static-hosting fallback file (`/(.*)` → `/200.html`) — needed because `/gh/[owner]/[repo]/[number]` is a dynamic route that can't be prerendered at build time; without the rewrite, a direct/refreshed visit 404s instead of falling through to client-side routing. Vercel otherwise auto-detects the Nuxt framework and runs `nuxt generate` with no further config.
 - Replace Vitesse placeholder content (`app/pages/index.vue`, `app/pages/hi/[id].vue`, `app/pages/[...all].vue`, `app/components/Logos.vue`, `Counter.vue`, `InputEntry.vue`, `PageView.vue`, `server/api/pageview.ts`, `app/composables/count.ts`, `app/composables/user.ts`) — all Vitesse demo cruft, delete.
 - Add `@antfu/design` (+ its UnoCSS preset into `uno.config.ts`), `@pierre/diffs`, `@tanstack/vue-virtual`, `unstorage` (persistence, see §7 — using its `indexedDB` driver, chosen so the storage backend can be swapped later, e.g. to sync with a real backend, without touching call sites), `picomatch` for glob-based rule-based-adapter rules, `valibot` for runtime schema validation of the canonical data structures.
 - Add Storybook (`storybook` + `@storybook/vue3-vite` builder, matching Nuxt's Vite pipeline) as a devDependency, config at root `.storybook/`.
@@ -95,7 +95,8 @@ app/
   pages/
     index.vue                  # empty/minimal landing (no dashboard per decision)
     gh/[owner]/[repo]/[number].vue
-    paste/[hash].vue           # renders a pasted/uploaded diff; hash = content hash of the raw text
+    upload.vue                # renders the pasted/uploaded diff currently held in sessionStorage;
+                              #   no route param — see §5's patch-parser/paste section
   fixtures/                    # shared between Storybook and tests
     real/                      # captured provider+grouping JSON snapshots
     synthetic/                 # hand-authored edge-case fixtures
@@ -289,9 +290,9 @@ export interface Provider {
 - Detects `Binary files a/... and b/... differ` / `GIT binary patch` → `isBinary: true`, `hunks: []`.
 - Parses each `@@ -oldStart,oldLines +newStart,newLines @@` block into a `DiffHunk`; `additions`/`deletions` are counted from `+`/`-` line prefixes.
 
-`PasteProvider` (id `'paste'`, capabilities `{ supportsAuth: false, supportsComments: false, requiresNetwork: false }`) accepts `{ kind: 'patch-text', text, title? }`, runs `parsePatch`, and builds a `PullRequestDiff` with `meta.provider: 'paste'`, `meta.id: 'paste:' + contentHash(text)`, and only the fields it can actually know (title, if supplied; everything else about base/head refs is omitted). The content hash (SHA-256 of the raw text, same primitive used for `FileChange.sha`) becomes both the meta `id` suffix and the `/paste/[hash]` route param — pasting the same diff twice resolves to the same URL and reuses its cache/review state.
+`PasteProvider` (id `'paste'`, capabilities `{ supportsAuth: false, supportsComments: false, requiresNetwork: false }`) accepts `{ kind: 'patch-text', text, title? }`, runs `parsePatch`, and builds a `PullRequestDiff` with `meta.provider: 'paste'`, `meta.id: 'paste:' + contentHash(text)`, and only the fields it can actually know (title, if supplied; everything else about base/head refs is omitted). The content hash (SHA-256 of the raw text, same primitive used for `FileChange.sha`) is used only as the internal `pr-cache` key (`pr:paste:{contentHash}`) — it is **not** put in the URL (a 64-char hex string is not a URL anyone wants), so pasting the same diff twice still dedupes/reuses cache and review state, it's just not addressable by link.
 
-Unlike `github`, a paste diff has no live source to refetch: if its `pr-entries` row gets LRU-evicted, the `/paste/{hash}` URL has nothing left to recover — this is an accepted, documented limitation (see `.agents/01-architecture.md`), not a bug to fix.
+The route (`/upload`, no param — see §10) is fed via `sessionStorage`, not the URL: `LoadDiffModal`'s submit handler writes the raw `{ text, title? }` to a fixed `sessionStorage` key, then navigates to `/upload`, which reads it back, calls `PasteProvider.fetchDiff`, and proceeds exactly like the github page from there. This means a paste is deliberately **not shareable as a link** (tab-scoped only) — a simplification, not a workaround: unlike `github`, a paste diff has no live source to refetch, so even a hash-addressed URL would only ever work for as long as its `pr-entries` row survives LRU eviction anyway (see `.agents/01-architecture.md`).
 
 ## 6. Analyze adapters (`app/analyze/`)
 
@@ -406,19 +407,19 @@ All components take only plain data props (`PullRequestDiff`, `GroupedResult`, `
 | `SettingsPanel.vue` | `modelValue: string` (PAT) | `update:modelValue` | pure form content, no direct storage access |
 | `SettingsModal.vue` | `open: boolean` | `update:open` | stateful dialog wrapper around `SettingsPanel`, wires to `useSettings` |
 | `LoadDiffPanel.vue` | — | `submit(text: string, title?: string)` | pure form content: textarea + file drop zone (reads dropped/selected file as text) |
-| `LoadDiffModal.vue` | `open: boolean` | `update:open` | stateful dialog wrapper; on submit, computes the content hash and `navigateTo('/paste/' + hash)` |
+| `LoadDiffModal.vue` | `open: boolean` | `update:open` | stateful dialog wrapper; on submit, writes `{ text, title? }` to `sessionStorage` and `navigateTo('/upload')` |
 
 Each gets a co-located `*.stories.ts` importing from `app/fixtures/{real,synthetic}/*.json`. Synthetic fixtures to author: empty group, single huge file (10k+ lines), binary file, renamed file, deeply-would-be-nested-but-capped-at-2-levels group, PR with zero files changed, and a partially-reviewed file set (for `FileTree`/`FileDiff`/`DiffView` stories exercising the checkbox + progress states). Real fixtures: capture by running `GithubProvider.fetchDiff` + `ruleBasedAdapter.analyze` against 1–2 real public PRs (small + large) via a one-off script, saved as JSON.
 
 `.storybook/main.ts` uses `@storybook/vue3-vite`, points `stories` at `app/components/**/*.stories.ts`, pulls in the UnoCSS-generated CSS so components render with real styling.
 
-## 10. Page wiring (`app/pages/gh/[owner]/[repo]/[number].vue`, `app/pages/paste/[hash].vue`, `app/layouts/default.vue`)
+## 10. Page wiring (`app/pages/gh/[owner]/[repo]/[number].vue`, `app/pages/upload.vue`, `app/layouts/default.vue`)
 
 `gh/[owner]/[repo]/[number].vue` flow: read route params → `usePullRequest({ kind: 'github-pr', owner, repo, number })` → check cache (`getEntry`) → if hit and fresh, use cached `diff` + `analyzedBy['rule-based']`; if hit but stale (headSha mismatch), show banner + use cached data until user clicks refresh; if miss, `provider.fetchDiff()` → `ruleBasedAdapter.analyze()` → `putEntry()` → render. In parallel, `useReviewedFiles()` batch-loads reviewed state for `diff.files` by sha via `review-cache.ts`. Pass resulting `diff`/`grouped`/`reviewed` into `<DiffView>`, and persist on its `update:reviewed` emit via `review-cache.ts`'s `setReviewed`.
 
-`paste/[hash].vue` flow: check cache by key `paste:{hash}` — a hit renders exactly like the github page (same `<DiffView>`, same `useReviewedFiles` wiring, no staleness check since there's no live source). A miss (e.g. direct navigation to a URL whose cache entry was evicted, or never populated) shows an empty/error state prompting the user to re-open `LoadDiffModal` and paste the diff again — there is nothing to fetch. The only way this route gets populated is via `LoadDiffModal`'s submit handler calling `PasteProvider.fetchDiff({ kind: 'patch-text', text })` then `putEntry()` before navigating.
+`upload.vue` flow (no route param): on mount, read the pending `{ text, title? }` back out of `sessionStorage` — if nothing is there (direct navigation, or the tab's `sessionStorage` was cleared/it's a fresh tab), show an empty state prompting the user to open `LoadDiffModal`. If present, call `PasteProvider.fetchDiff({ kind: 'patch-text', text, title })` → check `pr-cache` by the resulting content-hash key (a re-visit within the same tab session, e.g. after a reload, re-parses cheaply and hits cache instead of recomputing) → `ruleBasedAdapter.analyze()` if missing → `putEntry()` → render through the same `<DiffView>`/`useReviewedFiles` wiring as the github page, minus any staleness check (no live source to compare against).
 
-`layouts/default.vue` mounts `AppHeader.vue` (with the settings-trigger + load-diff-trigger buttons, `SettingsModal.vue`, and `LoadDiffModal.vue`) around every page, so both are reachable from the landing page or any PR/paste view without a dedicated route.
+`layouts/default.vue` mounts `AppHeader.vue` (with the settings-trigger + load-diff-trigger buttons, `SettingsModal.vue`, and `LoadDiffModal.vue`) around every page, so both are reachable from the landing page or any PR/upload view without a dedicated route.
 
 ---
 
@@ -435,7 +436,7 @@ Each gets a co-located `*.stories.ts` importing from `app/fixtures/{real,synthet
 9. Build components bottom-up: `FileDiff` (+ reviewed toolbar) → `FileTree` (+ reviewed checkboxes) → `GroupTree` → `PrHeader` → `DiffView` → `LoadDiffPanel`/`LoadDiffModal`.
 10. Set up Storybook; author synthetic fixtures (including partially-reviewed sets); capture real fixtures via a script using the provider + rule-based-adapter pipeline; write stories for every component.
 11. Build `useSettings` + `useReviewedFiles` composables, and `SettingsPanel`/`SettingsModal`/`AppHeader`/`layouts/default.vue`.
-12. Wire `/gh/owner/repo/number` and `/paste/[hash]` end-to-end; manual test with real public PRs (small, huge, renamed files, binary files, marking/unmarking files reviewed and confirming persistence across a simulated PR update) and with pasted/uploaded `.diff`/`.patch` files.
+12. Wire `/gh/owner/repo/number` and `/upload` end-to-end; manual test with real public PRs (small, huge, renamed files, binary files, marking/unmarking files reviewed and confirming persistence across a simulated PR update) and with pasted/uploaded `.diff`/`.patch` files (including a reload of `/upload` within the same tab session).
 13. Lint/typecheck/test pass (`pnpm lint`, `pnpm typecheck`, `pnpm test`).
 
 ---
@@ -449,3 +450,4 @@ Each gets a co-located `*.stories.ts` importing from `app/fixtures/{real,synthet
 - Landing/history dashboard: intentionally excluded even later per decision (stateless deep-links only).
 - Social/OG previews: intentionally excluded (no backend).
 - **Userscript + embedded sidepanel**: a browser userscript (Tampermonkey/Violentmonkey) that, when viewing a PR on github.com, embeds this app (pointed at the matching `/gh/owner/repo/number`) as a sidepanel alongside GitHub's own comment thread — so the grouped/summarized view sits next to the real conversation instead of replacing it. Not built this phase; noted now only so `netlify.toml` and the page shell don't accidentally foreclose it later (e.g. no restrictive `X-Frame-Options`/`frame-ancestors` should be added, and an eventual `?embed=1`-style compact layout — hiding `AppHeader` chrome — is a natural, low-cost hook to leave room for).
+- **VS Code extension ("devframe")**: similar idea, inside the editor instead of the browser — visualize the local working-tree diff or the PR matching the currently checked-out branch, à la the official GitHub Pull Requests and Issues extension. Depends on the `local` provider existing first; not built this phase.
