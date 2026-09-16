@@ -1,0 +1,149 @@
+# Architecture & design decisions
+
+Diffs is a SPA (deployed at diffs.antfu.dev) that renders a GitHub PR's diff at
+`/gh/{owner}/{repo}/{number}` — or an arbitrary pasted/uploaded unified diff at
+`/paste/{hash}` — grouped and summarized for easier review, with a rule-based
+fallback grouping when no LLM is configured. See `plans/` for the
+phase-by-phase implementation plans; this doc is the standing contract those
+plans (and any future work) MUST follow.
+
+## Invariants
+
+- Everything MUST run in the browser. There is no backend — no server routes,
+  no OAuth client-secret exchange, no edge functions. Auth is a user-pasted
+  GitHub PAT (optional for public repos); LLM access is a user-pasted key or
+  gateway token. This rules out anything that needs a server to keep a secret.
+- The app MUST build as a static SPA (`ssr: false`, `nuxt generate`) and
+  deploy as static files, on Vercel. `vercel.json` carries a catch-all
+  rewrite to Nuxt's `/200.html` fallback so the dynamic routes
+  (`/gh/[owner]/[repo]/[number]`, `/paste/[hash]`) work on direct
+  navigation/refresh, not just client-side routing after landing on `/`.
+- Nuxt auto-imports MUST stay disabled (`imports: { autoImport: false }`,
+  `components: false`). Every composable, component, and Nuxt utility
+  (`useRoute`, `#imports`, etc.) is imported explicitly.
+- Unit tests (Vitest) SHOULD be co-located with the source file they test
+  (`foo.ts` + `foo.test.ts`) wherever possible. This applies to every pure
+  module — `patch-parser`, analyze adapters, cache modules, provider
+  normalizers — not just a "utils" subset. A top-level `tests/` directory is
+  reserved for higher-level integration tests (multiple modules wired
+  together, e.g. provider + adapter + cache end-to-end), not a dumping
+  ground for what should be co-located unit tests.
+
+## Data flow: Provider -> Analyze adapter -> Cache -> View
+
+Two pluggable-adapter boundaries exist so that adding a data source or an
+analysis strategy later never touches the view layer:
+
+- **`Provider`** (`app/providers/`) fetches + normalizes a diff from some
+  source into the canonical `PullRequestDiff` shape, and declares its
+  capabilities (`supportsAuth`, `supportsComments`, ...). `FetchDiffParams` is
+  a discriminated union (by `kind`) so each provider only accepts params that
+  make sense for its source. Implementations:
+  - `github` — GitHub REST API (PR metadata + paginated file list/patches).
+  - `paste` — accepts raw unified-diff/patch text (pasted, or an uploaded
+    `.diff`/`.patch` file, e.g. GitHub's `.diff` endpoint or `git diff >
+    diff.patch` output) via the shared `app/patch-parser/`. Has no live
+    source: if its cache entry is evicted, its URL cannot be recovered — an
+    accepted limitation, not a bug.
+  - `local` (CLI-driven, diffing a working tree/commit range) is planned but
+    deferred — it will reuse the same `patch-parser` `paste` already uses.
+- **`app/patch-parser/`** parses unified-diff / git-extended-diff text (the
+  format shared by GitHub's `.diff` endpoint, `git diff` output, and plain
+  `diff -u`) into canonical `FileChange[]`. It is provider-agnostic
+  infrastructure, not itself a provider: `github`'s normalizer falls back to
+  it only for files whose `patch` GitHub's JSON API omitted (very large
+  diffs); `paste` uses it as its only parsing path; `local` will too.
+- **`AnalyzeAdapter`** (`app/analyze/`) turns a `PullRequestDiff` into a
+  `GroupedResult` (grouped files + optional summaries/walkthrough). Each
+  adapter lives in its own folder (`app/analyze/adapters/{id}/index.ts`):
+  - `rule-based` — implemented. Deterministic glob-pattern classification,
+    flat (1-level) groups, no LLM, no network call.
+  - `llm` — TODO, stub only. Will use the Vercel AI SDK, preferring the AI
+    Gateway with vendor-specific keys (OpenAI-compatible + Anthropic) as
+    fallback.
+  - `web-llm` — TODO, stub only. Fully in-browser model inference, no network
+    call at analyze time.
+  - LLM-sourced groups MAY nest one level (root group -> children, e.g.
+    `docs/featureA`); `rule-based` groups MUST stay flat. Depth is capped at 2
+    total — enforced structurally in the schema (child groups have no further
+    `children`), not by convention.
+- **View components** (`app/components/`) MUST stay pure and data-driven:
+  props in (`PullRequestDiff`, `GroupedResult`, reviewed-state sets), events
+  out (`update:reviewed`, etc.). They MUST NOT know which provider or analyze
+  adapter produced their data, and MUST NOT talk to storage directly — that
+  keeps them Storybook-friendly and provider/adapter-agnostic.
+
+## Canonical data structures
+
+All canonical shapes (`PullRequestDiff`, `GroupedResult`, `PrCacheEntry`,
+`FileReviewState`, ...) are defined as `valibot` schemas first, with the TS
+type derived via `v.InferOutput`. Runtime validation happens at the two
+boundaries that see untrusted/versioned data: normalizing a provider's raw
+API response, and reading an entry back out of storage.
+
+Every `FileChange` carries a `sha` — the provider's content-addressed hash
+for that file: GitHub's blob SHA (from the JSON API, or extracted from a
+parsed patch's `index <old>..<new>` line — git-generated diffs carry real
+blob shas even as plain text), falling back to a computed SHA-256 hash of the
+patch content only when no such line exists (e.g. a plain POSIX `diff -u`
+paste). This is the key primitive that lets the app tell whether a file
+actually changed between two fetches of the same PR without diffing patch
+text, and is also the key for persisted review state (see below).
+
+## Caching (unstorage, IndexedDB driver)
+
+Persistence goes through [`unstorage`](https://github.com/unjs/unstorage), not
+raw IndexedDB calls, specifically so the backend can be swapped later (e.g. a
+future sync/remote layer) without touching `pr-cache.ts`/`review-cache.ts`
+call sites — the same swappable-adapter shape as `Provider`/`AnalyzeAdapter`.
+Runtime uses the `indexedDB` driver; tests use the `memory` driver against
+identical code, no separate IndexedDB-mocking dependency needed.
+
+One `unstorage` instance, two logical collections via key prefix (unstorage
+is flat key-value, so there's no native "object store" split):
+
+- `pr:*` — raw diff + per-adapter `GroupedResult`s, keyed by
+  `pr:{provider}:{owner}/{repo}#{number}` for github or `pr:paste:{contentHash}`
+  for paste. App-managed LRU eviction (size/count budget), not left to browser
+  eviction heuristics. For `github`, staleness is detected by comparing
+  cached vs. live `headSha` and surfaced as a non-intrusive refresh banner —
+  the app MUST NOT silently auto-refetch (that could re-trigger a paid LLM
+  analysis) or silently go stale. `paste` entries have no live source, so no
+  staleness check applies; if evicted, the URL simply has nothing to show.
+- `review:*` — per-file "reviewed" marks, keyed by `review:{FileChange.sha}`,
+  not by path or PR. This is deliberate: if a PR gets new commits and a
+  file's `sha` is unchanged, its reviewed mark MUST survive; only files whose
+  `sha` changed lose their mark. Pruned opportunistically whenever `pr:*`
+  evicts, by walking the remaining entries' shas.
+
+## Explicitly out of scope for now
+
+These are deferred, not rejected — the abstractions above exist so they can
+land later without a rewrite:
+
+- `llm` / `web-llm` analyze adapters (stubs only).
+- Reading/posting GitHub PR review comments, formal review submission,
+  merging — gated behind `Provider.capabilities.supportsComments`.
+- `local` CLI provider.
+- Any landing/history dashboard (deep-links only: `/gh/owner/repo/number` and
+  nothing else) or social/OG link previews (no backend to render them).
+- A userscript (Tampermonkey/Violentmonkey) that embeds this app as a
+  sidepanel inside GitHub's own PR page, next to the real comment thread
+  (pointing an iframe at the matching `/gh/owner/repo/number`). Not built
+  yet, but the app SHOULD NOT gain anything that forecloses it later — no
+  restrictive `X-Frame-Options`/`frame-ancestors`, and an eventual compact
+  "embed" layout mode is expected.
+
+## UI conventions
+
+- Settings (GitHub PAT, later model keys) and loading a pasted/uploaded diff
+  are both modals/panels (`SettingsModal.vue`/`LoadDiffModal.vue` wrapping
+  pure `*Panel.vue` content), triggered from `AppHeader.vue`, mounted once in
+  `layouts/default.vue` — never routed pages.
+- Diff layout (split/unified) is user-toggleable; both are supported by
+  `@pierre/diffs`.
+- Large PRs are a first-class case, not an edge case: file lists and diff
+  content MUST be virtualized (`@tanstack/vue-virtual`).
+- Every component in `app/components/` gets a Storybook story, backed by a
+  mix of real captured fixtures (provider + rule-based adapter output on real
+  PRs) and hand-authored synthetic fixtures for edge cases.
