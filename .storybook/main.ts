@@ -1,5 +1,4 @@
 import type { StorybookConfig } from '@storybook/vue3-vite'
-import vue from '@vitejs/plugin-vue'
 import UnoCSS from 'unocss/vite'
 
 const config: StorybookConfig = {
@@ -10,10 +9,10 @@ const config: StorybookConfig = {
   },
   async viteFinal(config) {
     config.plugins ??= []
-    // @storybook/vue3-vite is meant to wire this up itself, but reliably fails to under
-    // this combination of pnpm hoisting + Vite 8's rolldown build - a long-standing,
-    // recurring upstream issue (storybookjs/storybook#28968, #20576, #26306).
-    config.plugins.push(vue())
+    // @storybook/vue3-vite already wires up @vitejs/plugin-vue itself - pushing a
+    // second instance (the old workaround here, for storybookjs/storybook#28968,
+    // #20576, #26306) now double-transforms every SFC and breaks the build ("At least
+    // one <template> or <script> is required"). Only UnoCSS still needs adding by hand.
     config.plugins.push(UnoCSS())
     return config
   },

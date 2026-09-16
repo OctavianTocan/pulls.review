@@ -5,18 +5,14 @@
 // @description  Adds a Diffs-powered review drawer to GitHub pull request pages
 // @author       antfu
 // @match        https://github.com/*/*/pull/*
-// @icon         https://diffs.antfu.dev/favicon.ico
+// @icon         https://github.com/favicon.ico
 // @require      https://diffs.antfu.dev/embed/diffs-embed.js
 // @grant        none
 // @run-at       document-idle
 // ==/UserScript==
 
-;(function () {
-  'use strict'
-
-  // Everything else - PR detection, the toggle tab, the resizable drawer, re-syncing
-  // on GitHub's Turbo SPA navigation - lives inside the custom element itself
-  // (app/embed/EmbedApp.ce.vue). Mount it once and get out of the way.
+;(() => {
+  // Mount the Diffs embed panel Web Component from diffs.antfu.dev
   if (!document.querySelector('diffs-embed-panel'))
     document.body.appendChild(document.createElement('diffs-embed-panel'))
 })()
