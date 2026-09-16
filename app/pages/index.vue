@@ -2,9 +2,10 @@
 import ActionButton from '@antfu/design/components/Action/ActionButton.vue'
 import FormTextInput from '@antfu/design/components/Form/FormTextInput.vue'
 import { computed, ref } from 'vue'
-import { navigateTo } from '#imports'
+import { useRouter } from 'vue-router'
 import AppHeader from '../components/AppHeader.vue'
 
+const router = useRouter()
 const url = ref('')
 
 const parsed = computed(() => {
@@ -18,7 +19,7 @@ const parsed = computed(() => {
 function go() {
   if (!parsed.value)
     return
-  navigateTo(`/gh/${parsed.value.owner}/${parsed.value.repo}/${parsed.value.number}`)
+  router.push(`/gh/${parsed.value.owner}/${parsed.value.repo}/${parsed.value.number}`)
 }
 </script>
 

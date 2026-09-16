@@ -2,8 +2,8 @@
 node_modules
 *.log
 dist
-.output
-.nuxt
 .env
 .idea/
 public/assets/fonts
+public/embed
+app/embed/uno-generated.css

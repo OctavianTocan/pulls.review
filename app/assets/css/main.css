@@ -12,6 +12,8 @@ html {
   scrollbar-gutter: stable;
 }
 
-html.dark {
+html.dark, .dark {
   color-scheme: dark;
+  background-color: #121212;
+  color: #ffffff;
 }

@@ -3,12 +3,13 @@ import ActionButton from '@antfu/design/components/Action/ActionButton.vue'
 import FeedbackEmptyState from '@antfu/design/components/Feedback/FeedbackEmptyState.vue'
 import FeedbackLoading from '@antfu/design/components/Feedback/FeedbackLoading.vue'
 import { onMounted, ref } from 'vue'
-import { navigateTo } from '#imports'
+import { useRouter } from 'vue-router'
 import DiffsPage from '../components/diff/DiffsPage.vue'
 import { UPLOAD_SESSION_STORAGE_KEY } from '../composables/uploadSession'
 import { usePullRequest } from '../composables/usePullRequest'
 import { useReviewedFiles } from '../composables/useReviewedFiles'
 
+const router = useRouter()
 const layout = ref<'split' | 'unified'>('unified')
 const hasPending = ref(false)
 
@@ -73,7 +74,7 @@ onMounted(loadAll)
             Go to the home page and use the upload button to paste or drop a diff.
           </template>
           <template #actions>
-            <ActionButton variant="primary" @click="navigateTo('/')">
+            <ActionButton variant="primary" @click="router.push('/')">
               Go home
             </ActionButton>
           </template>

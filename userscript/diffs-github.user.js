@@ -1,11 +1,12 @@
 // ==UserScript==
 // @name         Diffs for GitHub Pull Requests
 // @namespace    https://diffs.antfu.dev
-// @version      0.1.0
+// @version      0.2.0
 // @description  Adds a Diffs-powered review drawer to GitHub pull request pages
 // @author       antfu
 // @match        https://github.com/*/*/pull/*
 // @icon         https://diffs.antfu.dev/favicon.ico
+// @require      https://diffs.antfu.dev/embed/diffs-embed.js
 // @grant        none
 // @run-at       document-idle
 // ==/UserScript==
@@ -13,13 +14,12 @@
 ;(function () {
   'use strict'
 
-  const DIFFS_ORIGIN = 'https://diffs.antfu.dev'
   const DRAWER_WIDTH = '480px'
   const FONT = '-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif'
 
   let toggleEl
   let drawerEl
-  let iframeEl
+  let panelEl
   let open = false
   let currentPrKey
 
@@ -36,9 +36,8 @@
     toggleEl.style.right = open ? DRAWER_WIDTH : '0'
   }
 
-  // Built once, on the first PR page visited - hidden (not removed) when
-  // navigating away from a PR, since GitHub's SPA navigation keeps reusing this
-  // same document.
+  // Built once, on the first PR page visited - hidden (not removed) when navigating
+  // away from a PR, since GitHub's SPA navigation keeps reusing this same document.
   function ensureUI() {
     if (toggleEl)
       return
@@ -68,12 +67,21 @@
 
     header.append(title, closeButton)
 
-    iframeEl = document.createElement('iframe')
-    iframeEl.setAttribute('loading', 'lazy')
-    iframeEl.style.cssText = 'flex:1 1 auto;width:100%;border:none;'
-
-    drawerEl.append(header, iframeEl)
+    drawerEl.appendChild(header)
     document.body.appendChild(drawerEl)
+  }
+
+  // `usePullRequest` inside the component only reads its props once, at setup - like
+  // the main app's own routed page, a PR change needs a fresh element, not an attribute
+  // mutation on the existing one.
+  function mountPanel(pr) {
+    panelEl?.remove()
+    panelEl = document.createElement('diffs-embed-panel')
+    panelEl.style.cssText = 'flex:1 1 auto;min-height:0;display:block;overflow:auto;'
+    panelEl.setAttribute('owner', pr.owner)
+    panelEl.setAttribute('repo', pr.repo)
+    panelEl.setAttribute('number', pr.number)
+    drawerEl.appendChild(panelEl)
   }
 
   function syncForCurrentPage() {
@@ -93,7 +101,7 @@
     const key = `${pr.owner}/${pr.repo}#${pr.number}`
     if (key !== currentPrKey) {
       currentPrKey = key
-      iframeEl.src = `${DIFFS_ORIGIN}/gh/${pr.owner}/${pr.repo}/${pr.number}?embed`
+      mountPanel(pr)
     }
   }
 

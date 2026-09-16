@@ -16,10 +16,11 @@ shellEmulator: true
 packages: []
 
 overrides:
-  '@nuxt/devtools': 'catalog:build'
-  '@nuxt/kit': 'catalog:build'
+  # Force a single @unocss/core across the tree (e.g. @antfu/design's own nested
+  # copy) - a duplicate at a different version is a structural TS type mismatch
+  # in uno.config.ts's `presets` array, not just a wasted install.
+  '@unocss/core': 'catalog:build'
   chokidar: 'catalog:build'
-  nuxt: 'catalog:build'
   rollup: 4.62.5
   semver: 'catalog:build'
   unplugin: 'catalog:build'
@@ -33,15 +34,10 @@ allowBuilds:
 
 catalogs:
   build:
-    '@nuxt/devtools': ^4.0.0-alpha.20
-    '@nuxt/eslint': ^1.17.0
-    '@nuxt/kit': ^4.5.2
-    '@nuxtjs/color-mode': ^4.0.1
+    '@unocss/core': ^66.10.4
     '@unocss/eslint-config': ^66.10.4
-    '@unocss/nuxt': ^66.10.4
     '@vitejs/plugin-vue': ^6.0.9
     chokidar: ^5.0.0
-    nuxt: ^4.5.2
     semver: ^7.8.5
     unocss: ^66.10.4
     unplugin: ^3.3.0
@@ -70,6 +66,7 @@ catalogs:
     valibot: ^1.5.0
     vue: ^3.5.42
     vue-afloat: ^0.1.1
+    vue-router: ^4.6.4
   icons:
     '@iconify-json/carbon': ^1.2.27
     '@iconify-json/catppuccin': ^1.2.17

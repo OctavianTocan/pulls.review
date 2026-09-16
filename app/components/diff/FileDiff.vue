@@ -4,8 +4,8 @@ import ActionIconButton from '@antfu/design/components/Action/ActionIconButton.v
 import DisplayFilePath from '@antfu/design/components/Display/DisplayFilePath.vue'
 import FormCheckbox from '@antfu/design/components/Form/FormCheckbox.vue'
 import { FileDiff as PierreFileDiff, processFile } from '@pierre/diffs'
-import { onBeforeUnmount, onMounted, ref, useTemplateRef, watch } from 'vue'
-import { isDark } from '../../state/dark'
+import { inject, onBeforeUnmount, onMounted, ref, useTemplateRef, watch } from 'vue'
+import { isDark as globalIsDark, isDarkKey } from '../../state/dark'
 import DiffStats from './DiffStats.vue'
 import FileStatus from './FileStatus.vue'
 import { isNoisyFile } from './noisy-files'
@@ -20,6 +20,10 @@ const props = defineProps<{
 const emit = defineEmits<{
   'update:reviewed': [reviewed: boolean]
 }>()
+
+// Reads the embed's own scoped ref when provided (see `state/dark.ts`), otherwise the
+// app-wide singleton - never targets `document.documentElement` from inside the embed.
+const isDark = inject(isDarkKey, globalIsDark)
 
 const containerRef = useTemplateRef<HTMLDivElement>('container')
 const collapsed = ref(props.reviewed || isNoisyFile(props.file.path))

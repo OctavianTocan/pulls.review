@@ -2,5 +2,5 @@
 </script>
 
 <template>
-  <NuxtPage />
+  <RouterView />
 </template>

@@ -1,13 +1,13 @@
 <script setup lang="ts">
-import { useHead } from '#imports'
-import { isDark } from '~/state/dark'
+import { watchEffect } from 'vue'
+import { isDark } from '../state/dark'
 
-useHead({
-  meta: [{
-    id: 'theme-color',
-    name: 'theme-color',
-    content: () => isDark.value ? '#222222' : '#ffffff',
-  }],
+// No Nuxt `useHead` here - a dedicated meta tag (unconditional, unlike index.html's
+// static prefers-color-scheme pair) that mirrors the app's actual dark-mode state.
+const themeColorMeta = document.head.appendChild(document.createElement('meta'))
+themeColorMeta.name = 'theme-color'
+watchEffect(() => {
+  themeColorMeta.content = isDark.value ? '#222222' : '#ffffff'
 })
 
 function toggleDark() {
