@@ -5,8 +5,8 @@ import { defineConfig } from 'vite'
 /**
  * Separate build target from `vite.config.ts`: a single self-contained IIFE bundle
  * defining the `<diffs-embed-panel>` custom element, for the userscript to `@require`.
- * See `app/embed/main.ts`. No `unocss/vite` plugin - its CSS is a pre-generated file
- * instead (`build:embed:uno`), since `virtual:uno.css?inline` fails to resolve here.
+ * See `app/embed/main.ts`. No `unocss/vite` plugin - its CSS is a pre-generated,
+ * shadow-root-safe file instead (`build:embed:css`, see scripts/build-embed-css.ts).
  */
 export default defineConfig({
   plugins: [

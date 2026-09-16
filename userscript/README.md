@@ -7,6 +7,7 @@ Embeds a Diffs review drawer directly into `github.com` pull request pages.
 1. Install [Tampermonkey](https://www.tampermonkey.net/) or [Violentmonkey](https://violentmonkey.github.io/).
 2. Open [`diffs-github.user.js`](https://github.com/antfu/diffs/raw/refs/heads/main/userscript/diffs-github.user.js) and let your extension pick it up (or create a new script and paste its contents in).
 3. Visit any `github.com/{owner}/{repo}/pull/{number}` page - a "Diffs" tab appears on the right edge; click it to open the drawer.
+4. Drag the drawer's left edge to resize it - the width is remembered (`localStorage`, per-browser) for next time.
 
 The drawer renders a Vue custom element (`<diffs-embed-panel>`, `@require`d from
 `https://diffs.antfu.dev/embed/diffs-embed.js`) directly inside the GitHub page - not

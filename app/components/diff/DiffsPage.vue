@@ -48,7 +48,7 @@ function toggleGroup(key: string) {
 </script>
 
 <template>
-  <div>
+  <div class="color-base bg-base">
     <template v-if="isLoading && !diff">
       <div class="mxa px-4 py-12 max-w-500 w-full">
         <slot name="loading">

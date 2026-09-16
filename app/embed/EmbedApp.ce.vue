@@ -48,7 +48,7 @@ watch(() => diff.value?.meta.id, (id, previousId) => {
 </script>
 
 <template>
-  <div ref="root">
+  <div ref="root" class="color-base bg-base min-h-full">
     <DiffsPage
       :diff="diff"
       :grouped="grouped"

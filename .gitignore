@@ -6,4 +6,4 @@ dist
 .idea/
 public/assets/fonts
 public/embed
-app/embed/uno-generated.css
+app/embed/.generated

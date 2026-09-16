@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Diffs embed playground</title>
+    <style>
+      /*
+     * Everything here is deliberately plain, hand-written CSS - this page stands in
+     * for github.com's own page, which the real embed never gets to style. Nothing
+     * here reaches the <diffs-embed-panel> shadow root either way.
+     */
+      body {
+        margin: 0;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+        background: #f6f8fa;
+        color: #1f2328;
+      }
+      body.dark-host {
+        background: #0d1117;
+        color: #e6edf3;
+      }
+      #toolbar {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        align-items: center;
+        padding: 10px 12px;
+        border-bottom: 1px solid #d0d7de;
+      }
+      #toolbar input {
+        padding: 4px 8px;
+        border: 1px solid #d0d7de;
+        border-radius: 6px;
+        font-size: 13px;
+      }
+      #toolbar button {
+        padding: 5px 10px;
+        border: 1px solid #d0d7de;
+        border-radius: 6px;
+        background: #fff;
+        cursor: pointer;
+        font-size: 13px;
+      }
+      #panel-host {
+        height: calc(100vh - 53px);
+      }
+      diffs-embed-panel {
+        display: block;
+        height: 100%;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="toolbar">
+      <label>owner <input id="owner" value="antfu" /></label>
+      <label>repo <input id="repo" value="eslint-config" /></label>
+      <label>PR # <input id="number" value="861" /></label>
+      <button id="load" type="button">Load</button>
+      <button id="toggle-dark" type="button">Toggle host dark mode</button>
+    </div>
+    <div id="panel-host"></div>
+
+    <!--
+    Stands in for the userscript's `@require`: point this at wherever `diffs-embed.js`
+    is actually being served. `pnpm run build:embed` (or just `build:embed:css` +
+    `vite build --config vite.embed.config.ts`) writes it to public/embed/, which
+    `pnpm dev`'s main Vite server also serves verbatim at this same path - so running
+    `pnpm run playground:embedded` after a build just works.
+  -->
+    <script src="/embed/diffs-embed.js"></script>
+    <script>
+      const panelHost = document.getElementById('panel-host')
+      let panelEl
+
+      // Mirrors what the userscript reads from GitHub's own page to seed the embed's
+      // dark-mode ref - toggle it here to exercise that without needing github.com.
+      function setHostColorMode(mode) {
+        document.documentElement.dataset.colorMode = mode
+        document.body.classList.toggle('dark-host', mode === 'dark')
+      }
+      setHostColorMode('light')
+
+      function loadPanel() {
+        panelEl?.remove()
+        panelEl = document.createElement('diffs-embed-panel')
+        panelEl.setAttribute('owner', document.getElementById('owner').value.trim())
+        panelEl.setAttribute('repo', document.getElementById('repo').value.trim())
+        panelEl.setAttribute('number', document.getElementById('number').value.trim())
+        panelHost.appendChild(panelEl)
+      }
+
+      document.getElementById('load').addEventListener('click', loadPanel)
+      document.getElementById('toggle-dark').addEventListener('click', () => {
+        setHostColorMode(document.documentElement.dataset.colorMode === 'dark' ? 'light' : 'dark')
+        loadPanel()
+      })
+
+      loadPanel()
+    </script>
+  </body>
+</html>
