@@ -83,12 +83,12 @@ watch(() => props.reviewed, (isReviewed) => {
           aria-label="Mark as reviewed"
           @update:model-value="emit('update:reviewed', $event)"
         />
-        <FileStatus :status="file.status" />
         <DisplayFilePath :path="file.path" class="min-w-0" />
       </div>
       <div class="flex shrink-0 gap-2 items-center">
         <DiffStats v-if="!file.isBinary" :additions="file.additions" :deletions="file.deletions" />
         <span v-else class="text-xs op-fade">Binary file</span>
+        <FileStatus :status="file.status" />
         <ActionIconButton
           compact
           :icon="collapsed ? 'i-ph:caret-right' : 'i-ph:caret-down'"

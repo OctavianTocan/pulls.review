@@ -49,11 +49,24 @@ const rows = computed<TreeRow[]>(() => {
     for (const [key, child] of node.children) {
       if (child.file) {
         result.push({ key: `file:${child.file.path}`, depth, type: 'file', name: child.name, file: child.file })
+        continue
       }
-      else {
-        result.push({ key: `folder:${pathPrefix}${key}`, depth, type: 'folder', name: child.name })
-        walk(child, depth + 1, `${pathPrefix}${key}/`)
+
+      // Collapse a chain of single-child folders into one row, e.g.
+      // `src` -> `components` -> (diff, bar) renders as a single `src/components` row.
+      let name = child.name
+      let tail = child
+      let prefix = `${pathPrefix}${key}/`
+      while (tail.children.size === 1) {
+        const [onlyKey, onlyChild] = [...tail.children.entries()][0]!
+        if (onlyChild.file)
+          break
+        name += `/${onlyChild.name}`
+        tail = onlyChild
+        prefix += `${onlyKey}/`
       }
+      result.push({ key: `folder:${prefix}`, depth, type: 'folder', name })
+      walk(tail, depth + 1, prefix)
     }
   }
   walk(root, 0, '')
@@ -65,7 +78,7 @@ const scrollElRef = useTemplateRef<HTMLDivElement>('scrollEl')
 const virtualizer = useVirtualizer(computed(() => ({
   count: rows.value.length,
   getScrollElement: () => scrollElRef.value,
-  estimateSize: () => 32,
+  estimateSize: () => 24,
   overscan: 10,
 })))
 </script>
@@ -76,7 +89,7 @@ const virtualizer = useVirtualizer(computed(() => ({
       <div
         v-for="row in virtualizer.getVirtualItems().map(item => ({ item, row: rows[item.index]! }))"
         :key="row.row.key"
-        class="text-sm flex gap-1.5 h-8 items-center"
+        class="text-sm flex gap-1.5 items-center"
         :style="{
           position: 'absolute',
           top: 0,
@@ -96,9 +109,9 @@ const virtualizer = useVirtualizer(computed(() => ({
             :model-value="reviewed.has(row.row.file.sha)"
             @update:model-value="emit('update:reviewed', row.row.file.sha, $event)"
           />
-          <FileStatus :status="row.row.file.status" />
           <DisplayFilePath :path="row.row.name" :dim="false" class="flex-1 min-w-0" />
-          <DiffStats :additions="row.row.file.additions" :deletions="row.row.file.deletions" class="mr-2" />
+          <DiffStats :additions="row.row.file.additions" :deletions="row.row.file.deletions" />
+          <FileStatus :status="row.row.file.status" />
         </template>
       </div>
     </div>

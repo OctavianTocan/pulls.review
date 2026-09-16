@@ -2,7 +2,7 @@
 import type { GroupedResult } from '../../types/analyze'
 import type { PullRequestDiff } from '../../types/diff'
 import ActionToggleGroup from '@antfu/design/components/Action/ActionToggleGroup.vue'
-import DisplayProgressBar from '@antfu/design/components/Display/DisplayProgressBar.vue'
+import DisplayDonut from '@antfu/design/components/Display/DisplayDonut.vue'
 import { computed, ref } from 'vue'
 import DiffGroup from './DiffGroup.vue'
 import { resolveGroups } from './group-utils'
@@ -48,11 +48,9 @@ function toggleGroup(key: string) {
     <PrHeader :meta="diff.meta" />
 
     <div class="flex gap-4 items-center">
-      <div class="text-sm flex-1">
-        <div class="mb-1 flex justify-between">
-          <span>{{ reviewedCount }} / {{ diff.files.length }} files reviewed</span>
-        </div>
-        <DisplayProgressBar :value="progress" />
+      <div class="text-sm flex flex-1 gap-2 items-center">
+        <DisplayDonut :value="progress" :size="28" :thickness="3" />
+        <span>{{ reviewedCount }} / {{ diff.files.length }} files reviewed</span>
       </div>
       <ActionToggleGroup
         :model-value="layout"

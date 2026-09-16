@@ -52,6 +52,12 @@ export const PullRequestMetaSchema = v.object({
 })
 export type PullRequestMeta = v.InferOutput<typeof PullRequestMetaSchema>
 
+/**
+ * TODO: generate this, call it DiffsPayload, have top level id, title, provider, description?, url?, base?: { sha: string, ref: string }, head?: { sha: string, ref: string }, createdAt?, updatedAt?, and pullRequest?: PullRequestMeta
+ * So the same payload can be used for different sources like GitHub, local diffs, or pasted diffs universally.
+ *
+ * We should have a component to consume this, and then we could have isomorphic handling for differnet routes.
+ */
 export const PullRequestDiffSchema = v.object({
   meta: PullRequestMetaSchema,
   files: v.array(FileChangeSchema),

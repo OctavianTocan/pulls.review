@@ -1,14 +1,19 @@
 <script setup lang="ts">
-
+import AppHeader from './components/AppHeader.vue'
 </script>
 
 <template>
-  <NuxtLayout>
-    <NuxtPage />
-  </NuxtLayout>
+  <div class="flex flex-col min-h-screen">
+    <!-- TODO: AppHeader should only be in pages/index.vue, keep this root app simple -->
+    <AppHeader />
+    <main class="mx-auto px-4 py-6 flex-1 w-full">
+      <NuxtPage />
+    </main>
+  </div>
 </template>
 
 <style>
+/* TODO: extract this to a separate CSS file */
 html,
 body,
 #__nuxt {

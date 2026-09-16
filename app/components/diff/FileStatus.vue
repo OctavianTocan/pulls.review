@@ -14,17 +14,17 @@ const LETTER: Record<FileChangeStatus, string> = {
 }
 
 const COLOR_CLASS: Record<FileChangeStatus, string> = {
-  added: 'color-success-500',
-  removed: 'color-error-500',
-  modified: 'color-warning-500',
-  renamed: 'color-blue-500',
-  copied: 'color-blue-500',
+  added: 'color-success-500 bg-success-500:10',
+  removed: 'color-error-500 bg-error-500:10',
+  modified: 'color-warning-500 bg-warning-500:10',
+  renamed: 'color-blue-500 bg-blue-500:10',
+  copied: 'color-blue-500 bg-blue-500:10',
 }
 </script>
 
 <template>
   <span
-    class="text-xs font-bold font-mono inline-flex shrink-0 w-4 items-center justify-center"
+    class="text-xs font-mono rounded inline-flex shrink-0 w-4 items-center justify-center"
     :class="COLOR_CLASS[status]"
     :title="status"
   >{{ LETTER[status] }}</span>
