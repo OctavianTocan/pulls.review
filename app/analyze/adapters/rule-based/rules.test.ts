@@ -4,7 +4,7 @@ import { defaultRules } from './rules'
 
 function categorize(path: string): string {
   for (const rule of defaultRules) {
-    if (picomatch(rule.patterns)(path))
+    if (rule.patterns && picomatch(rule.patterns)(path))
       return rule.category
   }
   return 'code'

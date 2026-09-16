@@ -1,18 +1,17 @@
 <script setup lang="ts">
-import { useColorMode, useHead } from '#imports'
-
-const color = useColorMode()
+import { useHead } from '#imports'
+import { isDark } from '~/state/dark'
 
 useHead({
   meta: [{
     id: 'theme-color',
     name: 'theme-color',
-    content: () => color.value === 'dark' ? '#222222' : '#ffffff',
+    content: () => isDark.value ? '#222222' : '#ffffff',
   }],
 })
 
 function toggleDark() {
-  color.preference = color.value === 'dark' ? 'light' : 'dark'
+  isDark.value = !isDark.value
 }
 </script>
 

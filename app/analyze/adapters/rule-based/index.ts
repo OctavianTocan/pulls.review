@@ -5,7 +5,12 @@ import { defaultRules } from './rules'
 const FALLBACK_CATEGORY: DiffCategory = 'code'
 export const RULE_BASED_SCHEMA_VERSION = 1
 
-const matchers = defaultRules.map(rule => ({ category: rule.category, isMatch: picomatch(rule.patterns) }))
+const matchers = defaultRules.map(rule => ({
+  category: rule.category,
+  isMatch: rule.patterns
+    ? picomatch(rule.patterns)
+    : () => false,
+}))
 
 function categorize(path: string): DiffCategory {
   for (const { category, isMatch } of matchers) {
@@ -21,7 +26,6 @@ const CATEGORY_LABELS: Record<DiffCategory, string> = {
   docs: 'Docs',
   deps: 'Dependencies',
   config: 'Config',
-  build: 'Build',
   generated: 'Generated',
   other: 'Other',
 }
@@ -34,7 +38,6 @@ const CATEGORY_SUMMARIES: Record<DiffCategory, string> = {
   docs: 'Documentation updates.',
   deps: 'Dependency version changes.',
   config: 'Configuration changes.',
-  build: 'Build tooling changes.',
   generated: 'Generated or build output changes.',
   other: 'Other changes that don\'t fit an existing category.',
 }
@@ -49,7 +52,13 @@ export const ruleBasedAdapter: AnalyzeAdapter = {
       const category = categorize(file.path)
       let group = groupsByCategory.get(category)
       if (!group) {
-        group = { key: category, label: CATEGORY_LABELS[category], category, summary: CATEGORY_SUMMARIES[category], filePaths: [] }
+        group = {
+          key: category,
+          label: CATEGORY_LABELS[category],
+          category,
+          summary: CATEGORY_SUMMARIES[category],
+          filePaths: [],
+        }
         groupsByCategory.set(category, group)
       }
       group.filePaths.push(file.path)
@@ -57,7 +66,8 @@ export const ruleBasedAdapter: AnalyzeAdapter = {
 
     const result: GroupedResult = {
       source: 'rule-based',
-      groups: Array.from(groupsByCategory.values()),
+      groups: Array.from(groupsByCategory.values())
+        .sort((a, b) => defaultRules.findIndex(rule => rule.category === a.key) - defaultRules.findIndex(rule => rule.category === b.key)),
       generatedAt: new Date().toISOString(),
       schemaVersion: RULE_BASED_SCHEMA_VERSION,
     }

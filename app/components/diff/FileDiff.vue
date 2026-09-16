@@ -5,8 +5,10 @@ import DisplayFilePath from '@antfu/design/components/Display/DisplayFilePath.vu
 import FormCheckbox from '@antfu/design/components/Form/FormCheckbox.vue'
 import { FileDiff as PierreFileDiff, processFile } from '@pierre/diffs'
 import { onBeforeUnmount, onMounted, ref, useTemplateRef, watch } from 'vue'
+import { isDark } from '../../state/dark'
 import DiffStats from './DiffStats.vue'
 import FileStatus from './FileStatus.vue'
+import { isNoisyFile } from './noisy-files'
 import { ensurePierreDiffsShadowRoot } from './pierre-diffs-shadow'
 
 const props = defineProps<{
@@ -20,7 +22,7 @@ const emit = defineEmits<{
 }>()
 
 const containerRef = useTemplateRef<HTMLDivElement>('container')
-const collapsed = ref(props.reviewed)
+const collapsed = ref(props.reviewed || isNoisyFile(props.file.path))
 let instance: PierreFileDiff | undefined
 
 function buildUnifiedDiffText(file: FileChange): string {
@@ -57,7 +59,14 @@ function render() {
   instance?.cleanUp()
   // `disableFileHeader`: we render our own header (filename, status, +/-, reviewed
   // checkbox) above the diff body, so pierre's own file-header row would be redundant.
-  instance = new PierreFileDiff({ diffStyle: props.layout, disableErrorHandling: false, disableFileHeader: true }, undefined, true)
+  // `themeType`: defaults to `'system'` (OS-level `prefers-color-scheme`) otherwise,
+  // ignoring our own dark-mode toggle entirely - pin it to the app's actual state.
+  instance = new PierreFileDiff({
+    diffStyle: props.layout,
+    themeType: isDark.value ? 'dark' : 'light',
+    disableErrorHandling: false,
+    disableFileHeader: true,
+  }, undefined, true)
   instance.render({ fileDiff, fileContainer: containerRef.value })
 }
 
@@ -66,17 +75,31 @@ onBeforeUnmount(() => instance?.cleanUp())
 
 watch(() => [props.layout, collapsed.value, props.file], () => render(), { deep: false, flush: 'post' })
 
+watch(isDark, (dark) => {
+  instance?.setThemeType(dark ? 'dark' : 'light')
+})
+
 watch(() => props.reviewed, (isReviewed) => {
   // Auto-collapse a file once it's marked reviewed (and re-expand it if unmarked) - it's
   // already handled, no need to keep it open. `collapsed`'s initial value above mirrors
   // this for a file that's already reviewed on first render.
   collapsed.value = isReviewed
 })
+
+defineExpose({
+  /** Called by the file tree's "jump to file" navigation, which can't reach `collapsed` otherwise. */
+  expand: () => { collapsed.value = false },
+})
 </script>
 
 <template>
-  <div class="border border-base rounded-lg overflow-hidden">
-    <header class="px-2 py-1.5 bg-raised flex gap-2 items-center justify-between">
+  <div :id="`file-${file.sha}`" class="border border-base rounded-lg overflow-hidden scroll-mt-45">
+    <!-- TODO: This header should also be sticky -->
+    <header
+      class="px-2 py-1.5 bg-raised flex gap-2 items-center justify-between"
+      role="button"
+      @click.self="collapsed = !collapsed"
+    >
       <div class="text-sm flex gap-2 min-w-0 items-center">
         <FormCheckbox
           :model-value="reviewed"

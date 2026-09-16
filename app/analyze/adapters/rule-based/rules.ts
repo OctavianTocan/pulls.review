@@ -2,15 +2,64 @@ import type { DiffCategory } from '../../../types/analyze'
 
 export interface CategoryRule {
   category: DiffCategory
-  patterns: string[]
+  patterns?: string[]
 }
+
+/**
+ * Generated/lockfile-style output - shared with `noisy-files.ts`, which collapses
+ * these by default in the diff view, so the two "this file is noise" notions
+ * (grouping category vs. default-collapsed) can't drift apart.
+ */
+export const GENERATED_PATTERNS = [
+  '**/*.generated.*',
+  '**/pnpm-lock.yaml',
+  '**/yarn.lock',
+  '**/package-lock.json',
+  '**/dist/**',
+  '**/*.lock',
+]
 
 /** Evaluated in order, first match wins. Fallback category (no rule matches) is 'code'. */
 export const defaultRules: CategoryRule[] = [
-  { category: 'tests', patterns: ['**/*.test.*', '**/*.spec.*', '**/__tests__/**', '**/test/**'] },
-  { category: 'docs', patterns: ['**/*.md', '**/*.mdx', 'docs/**', 'README*'] },
-  { category: 'deps', patterns: ['package.json', 'pnpm-lock.yaml', 'yarn.lock', 'package-lock.json', 'pnpm-workspace.yaml'] },
-  { category: 'config', patterns: ['*.config.*', '.*rc', '.*rc.*', '.github/**', 'tsconfig*.json'] },
-  { category: 'build', patterns: ['Dockerfile', 'vite.config.*', 'rollup.config.*', 'esbuild.config.*'] },
-  { category: 'generated', patterns: ['**/*.generated.*', '**/dist/**', '**/*.lock'] },
+  {
+    category: 'code',
+  },
+  {
+    category: 'config',
+    patterns: [
+      '*.config.*',
+      '**/package.json',
+      '**/pnpm-workspace.yaml',
+      '.*rc',
+      '.*rc.*',
+      '.github/**',
+      '.git*',
+      '**/tsconfig*.json',
+      '**/Dockerfile',
+    ],
+  },
+  {
+    category: 'docs',
+    patterns: [
+      '**/*.md',
+      '**/*.mdx',
+      '**/*.mdc',
+      '**/docs/**',
+      '**/README*',
+    ],
+  },
+  {
+    category: 'tests',
+    patterns: [
+      '**/*.test.*',
+      '**/*.spec.*',
+      '**/__tests__/**',
+      '**/test/**',
+      '**/tests/**',
+    ],
+  },
+  {
+    category: 'generated',
+    patterns: GENERATED_PATTERNS,
+  },
 ]

@@ -176,70 +176,12 @@ catalogs:
     '@unocss/nuxt':
       specifier: ^66.10.4
       version: 66.10.4
-    unocss:
-      specifier: ^66.10.4
-      version: 66.10.4
-  default:
-    '@antfu/design':
-      specifier: ^0.5.1
-      version: 0.5.1
-    '@antfu/utils':
-      specifier: ^9.3.0
-      version: 9.3.0
-    '@iconify-json/catppuccin':
-      specifier: ^1.2.17
-      version: 1.2.17
-    '@iconify-json/ph':
-      specifier: ^1.2.2
-      version: 1.2.2
-    '@pierre/diffs':
-      specifier: ^1.4.2
-      version: 1.4.2
-    '@storybook/vue3-vite':
-      specifier: ^10.6.0
-      version: 10.6.0
-    '@tanstack/vue-virtual':
-      specifier: ^3.13.39
-      version: 3.13.39
-    '@types/picomatch':
-      specifier: ^4.0.3
-      version: 4.0.3
     '@vitejs/plugin-vue':
       specifier: ^6.0.9
       version: 6.0.9
-    '@vue/test-utils':
-      specifier: ^2.5.0
-      version: 2.5.0
-    colorjs.io:
-      specifier: ^0.7.1
-      version: 0.7.1
-    happy-dom:
-      specifier: ^20.14.5
-      version: 20.14.5
-    idb-keyval:
-      specifier: ^6.3.0
-      version: 6.3.0
-    picomatch:
-      specifier: ^4.0.7
-      version: 4.0.7
-    reka-ui:
-      specifier: ^2.10.4
-      version: 2.10.4
-    storybook:
-      specifier: ^10.6.0
-      version: 10.6.0
-    unstorage:
-      specifier: ^1.17.5
-      version: 1.17.5
-    valibot:
-      specifier: ^1.5.0
-      version: 1.5.0
-    vitest:
-      specifier: ^5.0.1
-      version: 5.0.1
-    vue-afloat:
-      specifier: ^0.1.1
-      version: 0.1.1
+    unocss:
+      specifier: ^66.10.4
+      version: 66.10.4
   dev:
     '@antfu/eslint-config':
       specifier: ^9.5.1
@@ -247,6 +189,9 @@ catalogs:
     '@types/node':
       specifier: ^26.6.1
       version: 26.6.1
+    '@types/picomatch':
+      specifier: ^4.0.3
+      version: 4.0.3
     eslint:
       specifier: ^10.10.0
       version: 10.10.0
@@ -266,19 +211,75 @@ catalogs:
       specifier: ^3.3.11
       version: 3.3.11
   frontend:
+    '@antfu/design':
+      specifier: ^0.5.1
+      version: 0.5.1
+    '@antfu/utils':
+      specifier: ^9.3.0
+      version: 9.3.0
+    '@pierre/diffs':
+      specifier: ^1.4.2
+      version: 1.4.2
+    '@tanstack/vue-virtual':
+      specifier: ^3.13.39
+      version: 3.13.39
     '@vueuse/core':
       specifier: ^14.4.0
       version: 14.4.0
+    colorjs.io:
+      specifier: ^0.7.1
+      version: 0.7.1
+    idb-keyval:
+      specifier: ^6.3.0
+      version: 6.3.0
+    picomatch:
+      specifier: ^4.0.7
+      version: 4.0.7
+    reka-ui:
+      specifier: ^2.10.4
+      version: 2.10.4
+    unstorage:
+      specifier: ^1.17.5
+      version: 1.17.5
+    valibot:
+      specifier: ^1.5.0
+      version: 1.5.0
     vue:
       specifier: ^3.5.42
       version: 3.5.42
+    vue-afloat:
+      specifier: ^0.1.1
+      version: 0.1.1
   icons:
     '@iconify-json/carbon':
       specifier: ^1.2.27
       version: 1.2.27
+    '@iconify-json/catppuccin':
+      specifier: ^1.2.17
+      version: 1.2.17
+    '@iconify-json/ph':
+      specifier: ^1.2.2
+      version: 1.2.2
     '@iconify-json/twemoji':
       specifier: ^1.2.5
       version: 1.2.5
+  storybook:
+    '@storybook/vue3-vite':
+      specifier: ^10.6.0
+      version: 10.6.0
+    storybook:
+      specifier: ^10.6.0
+      version: 10.6.0
+  testing:
+    '@vue/test-utils':
+      specifier: ^2.5.0
+      version: 2.5.0
+    happy-dom:
+      specifier: ^20.14.5
+      version: 20.14.5
+    vitest:
+      specifier: ^5.0.1
+      version: 5.0.1
 
 overrides:
   '@nuxt/devtools': ^4.0.0-alpha.20
@@ -296,43 +297,43 @@ importers:
   .:
     dependencies:
       '@antfu/design':
-        specifier: 'catalog:'
+        specifier: catalog:frontend
         version: 0.5.1(@antfu/utils@9.3.0)(@iconify-json/catppuccin@1.2.17)(@tanstack/vue-virtual@3.13.39(vue@3.5.42(typescript@6.0.3)))(@unocss/core@66.10.0)(colorjs.io@0.7.1)(reka-ui@2.10.4(vue@3.5.42(typescript@6.0.3)))(unocss@66.10.4(@unocss/webpack@66.10.4(esbuild@0.28.2)(rolldown@1.2.8)(rollup@4.62.5)(vite@8.3.0))(esbuild@0.28.2)(rolldown@1.2.8)(rollup@4.62.5)(srvx@0.12.7)(vite@8.3.0))(vue-afloat@0.1.1(vue@3.5.42(typescript@6.0.3)))(vue@3.5.42(typescript@6.0.3))
       '@antfu/utils':
-        specifier: 'catalog:'
+        specifier: catalog:frontend
         version: 9.3.0
       '@pierre/diffs':
-        specifier: 'catalog:'
+        specifier: catalog:frontend
         version: 1.4.2(@shikijs/themes@4.4.3)
       '@tanstack/vue-virtual':
-        specifier: 'catalog:'
+        specifier: catalog:frontend
         version: 3.13.39(vue@3.5.42(typescript@6.0.3))
       '@vueuse/core':
         specifier: catalog:frontend
         version: 14.4.0(vue@3.5.42(typescript@6.0.3))
       colorjs.io:
-        specifier: 'catalog:'
+        specifier: catalog:frontend
         version: 0.7.1
       idb-keyval:
-        specifier: 'catalog:'
+        specifier: catalog:frontend
         version: 6.3.0
       picomatch:
-        specifier: 'catalog:'
+        specifier: catalog:frontend
         version: 4.0.7
       reka-ui:
-        specifier: 'catalog:'
+        specifier: catalog:frontend
         version: 2.10.4(vue@3.5.42(typescript@6.0.3))
       unstorage:
-        specifier: 'catalog:'
+        specifier: catalog:frontend
         version: 1.17.5(db0@0.3.4)(idb-keyval@6.3.0)(ioredis@5.11.1(supports-color@10.2.2))
       valibot:
-        specifier: 'catalog:'
+        specifier: catalog:frontend
         version: 1.5.0(typescript@6.0.3)
       vue:
         specifier: catalog:frontend
         version: 3.5.42(typescript@6.0.3)
       vue-afloat:
-        specifier: 'catalog:'
+        specifier: catalog:frontend
         version: 0.1.1(vue@3.5.42(typescript@6.0.3))
     devDependencies:
       '@antfu/eslint-config':
@@ -342,10 +343,10 @@ importers:
         specifier: catalog:icons
         version: 1.2.27
       '@iconify-json/catppuccin':
-        specifier: 'catalog:'
+        specifier: catalog:icons
         version: 1.2.17
       '@iconify-json/ph':
-        specifier: 'catalog:'
+        specifier: catalog:icons
         version: 1.2.2
       '@iconify-json/twemoji':
         specifier: catalog:icons
@@ -360,13 +361,13 @@ importers:
         specifier: catalog:build
         version: 4.0.1(magic-string@1.2.2)(magicast@0.5.4)(rolldown@1.2.8)(unplugin@3.3.0(esbuild@0.28.2)(rolldown@1.2.8)(rollup@4.62.5)(vite@8.3.0))
       '@storybook/vue3-vite':
-        specifier: 'catalog:'
+        specifier: catalog:storybook
         version: 10.6.0(storybook@10.6.0(prettier@3.9.6))(typescript@6.0.3)(vite@8.3.0)(vue@3.5.42(typescript@6.0.3))
       '@types/node':
         specifier: catalog:dev
         version: 26.6.1
       '@types/picomatch':
-        specifier: 'catalog:'
+        specifier: catalog:dev
         version: 4.0.3
       '@unocss/eslint-config':
         specifier: catalog:build
@@ -375,10 +376,10 @@ importers:
         specifier: catalog:build
         version: 66.10.4(esbuild@0.28.2)(magic-string@1.2.2)(magicast@0.5.4)(rolldown@1.2.8)(rollup@4.62.5)(srvx@0.12.7)(unplugin@3.3.0(esbuild@0.28.2)(rolldown@1.2.8)(rollup@4.62.5)(vite@8.3.0))(vite@8.3.0)
       '@vitejs/plugin-vue':
-        specifier: 'catalog:'
+        specifier: catalog:build
         version: 6.0.9(vite@8.3.0)(vue@3.5.42(typescript@6.0.3))
       '@vue/test-utils':
-        specifier: 'catalog:'
+        specifier: catalog:testing
         version: 2.5.0(@vue/compiler-dom@3.5.42)(@vue/server-renderer@3.5.42)(vue@3.5.42(typescript@6.0.3))
       eslint:
         specifier: catalog:dev
@@ -393,13 +394,13 @@ importers:
         specifier: catalog:dev
         version: 4.2.1(eslint@10.10.0(jiti@2.7.0)(supports-color@10.2.2))
       happy-dom:
-        specifier: 'catalog:'
+        specifier: catalog:testing
         version: 20.14.5
       nuxt:
         specifier: ^4.5.2
         version: 4.5.2(ea4b6af2fe396cfa46105b9c31fcf14b)
       storybook:
-        specifier: 'catalog:'
+        specifier: catalog:storybook
         version: 10.6.0(prettier@3.9.6)
       typescript:
         specifier: catalog:dev
@@ -411,7 +412,7 @@ importers:
         specifier: ^8.3.0
         version: 8.3.0(@types/node@26.6.1)(@vitejs/devtools@0.7.4)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.50.0)(yaml@2.9.0)
       vitest:
-        specifier: 'catalog:'
+        specifier: catalog:testing
         version: 5.0.1(@types/node@26.6.1)(happy-dom@20.14.5)(vite@8.3.0)
       vue-tsc:
         specifier: catalog:dev

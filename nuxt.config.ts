@@ -3,7 +3,6 @@ import { appDescription } from './app/constants/index'
 export default defineNuxtConfig({
   modules: [
     '@unocss/nuxt',
-    '@nuxtjs/color-mode',
     '@nuxt/eslint',
   ],
 
@@ -37,11 +36,11 @@ export default defineNuxtConfig({
     },
   },
 
-  css: ['@antfu/design/styles.css', '~/assets/css/main.css'],
-
-  colorMode: {
-    classSuffix: '',
-  },
+  css: [
+    '@antfu/design/styles.css',
+    'vue-afloat/style.css',
+    '~/assets/css/main.css',
+  ],
 
   future: {
     compatibilityVersion: 4,

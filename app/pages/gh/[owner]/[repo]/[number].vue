@@ -4,7 +4,7 @@ import FeedbackEmptyState from '@antfu/design/components/Feedback/FeedbackEmptyS
 import FeedbackLoading from '@antfu/design/components/Feedback/FeedbackLoading.vue'
 import { computed, onMounted, ref, watch } from 'vue'
 import { useRoute } from '#imports'
-import DiffView from '../../../../components/diff/DiffView.vue'
+import DiffsPage from '../../../../components/diff/DiffsPage.vue'
 import { usePullRequest } from '../../../../composables/usePullRequest'
 import { useReviewedFiles } from '../../../../composables/useReviewedFiles'
 import { useSettings } from '../../../../composables/useSettings'
@@ -38,37 +38,38 @@ watch(() => diff.value?.meta.id, (id, previousId) => {
 </script>
 
 <template>
-  <main class="mx-auto px-4 py-6 w-full">
-    <FeedbackLoading v-if="isLoading && !diff" text="Loading pull request…" />
-    <FeedbackEmptyState
-      v-else-if="error"
-      icon="i-ph:warning"
-      title="Couldn't load this pull request"
+  <main>
+    <DiffsPage
+      :diff="diff"
+      :grouped="grouped"
+      :layout="layout"
+      :reviewed="reviewed"
+      :is-loading="isLoading"
+      :error="error"
+      :is-stale="isStale"
+      @update:layout="layout = $event"
+      @update:reviewed="(sha, isReviewed) => toggle(sha, isReviewed)"
+      @retry="loadAll"
+      @refresh="refresh"
     >
-      <template #hint>
-        {{ error.message }}
+      <template #loading>
+        <FeedbackLoading text="Loading pull request…" />
       </template>
-      <template #actions>
-        <ActionButton variant="primary" @click="loadAll">
-          Retry
-        </ActionButton>
+      <template #error="{ error: err, retry }">
+        <FeedbackEmptyState
+          icon="i-ph:warning"
+          title="Couldn't load this pull request"
+        >
+          <template #hint>
+            {{ err.message }}
+          </template>
+          <template #actions>
+            <ActionButton variant="primary" @click="retry">
+              Retry
+            </ActionButton>
+          </template>
+        </FeedbackEmptyState>
       </template>
-    </FeedbackEmptyState>
-    <template v-else-if="diff && grouped">
-      <div v-if="isStale" class="text-sm mb-4 px-3 py-2 border border-base rounded-lg bg-raised flex gap-3 items-center justify-between">
-        <span>This pull request has new commits since it was cached.</span>
-        <ActionButton size="sm" @click="refresh">
-          Refresh
-        </ActionButton>
-      </div>
-      <DiffView
-        :diff="diff"
-        :grouped="grouped"
-        :layout="layout"
-        :reviewed="reviewed"
-        @update:layout="layout = $event"
-        @update:reviewed="(sha, isReviewed) => toggle(sha, isReviewed)"
-      />
-    </template>
+    </DiffsPage>
   </main>
 </template>

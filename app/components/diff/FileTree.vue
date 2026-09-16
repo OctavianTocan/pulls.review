@@ -4,6 +4,7 @@ import DisplayFileIcon from '@antfu/design/components/Display/DisplayFileIcon.vu
 import DisplayFilePath from '@antfu/design/components/Display/DisplayFilePath.vue'
 import FormCheckbox from '@antfu/design/components/Form/FormCheckbox.vue'
 import { useVirtualizer } from '@tanstack/vue-virtual'
+import { CheckboxIndicator, CheckboxRoot } from 'reka-ui'
 import { computed, useTemplateRef } from 'vue'
 import DiffStats from './DiffStats.vue'
 import FileStatus from './FileStatus.vue'
@@ -15,6 +16,7 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   'update:reviewed': [sha: string, reviewed: boolean]
+  'navigate': [sha: string]
 }>()
 
 interface TreeRow {
@@ -23,6 +25,8 @@ interface TreeRow {
   type: 'folder' | 'file'
   name: string
   file?: FileChange
+  /** Folder rows only: every file nested under it, for the folder-level checkbox. */
+  files?: FileChange[]
 }
 
 const rows = computed<TreeRow[]>(() => {
@@ -42,6 +46,13 @@ const rows = computed<TreeRow[]>(() => {
       node = child
     }
     node.children.set(`\0file:${file.path}`, { name: segments[segments.length - 1]!, children: new Map(), file })
+  }
+
+  function collectFiles(node: Node): FileChange[] {
+    const result: FileChange[] = []
+    for (const child of node.children.values())
+      result.push(...(child.file ? [child.file] : collectFiles(child)))
+    return result
   }
 
   const result: TreeRow[] = []
@@ -65,13 +76,27 @@ const rows = computed<TreeRow[]>(() => {
         tail = onlyChild
         prefix += `${onlyKey}/`
       }
-      result.push({ key: `folder:${prefix}`, depth, type: 'folder', name })
+      result.push({ key: `folder:${prefix}`, depth, type: 'folder', name, files: collectFiles(tail) })
       walk(tail, depth + 1, prefix)
     }
   }
   walk(root, 0, '')
   return result
 })
+
+function folderState(files: FileChange[]): boolean | 'indeterminate' {
+  const reviewedCount = files.filter(file => props.reviewed.has(file.sha)).length
+  if (reviewedCount === 0)
+    return false
+  return reviewedCount === files.length ? true : 'indeterminate'
+}
+
+// One `update:reviewed` per file, same as clicking each checkbox individually - there's
+// no batched API on the reviewed-state store, so a very large folder toggles as N writes.
+function toggleFolder(files: FileChange[], reviewed: boolean) {
+  for (const file of files)
+    emit('update:reviewed', file.sha, reviewed)
+}
 
 const scrollElRef = useTemplateRef<HTMLDivElement>('scrollEl')
 
@@ -101,6 +126,16 @@ const virtualizer = useVirtualizer(computed(() => ({
         }"
       >
         <template v-if="row.row.type === 'folder'">
+          <CheckboxRoot
+            class="outline-none border border-base rounded bg-raised flex shrink-0 h-4 w-4 transition items-center justify-center data-[state=checked]:border-primary-500 data-[state=indeterminate]:border-primary-500 data-[state=checked]:bg-primary-500 data-[state=indeterminate]:bg-primary-500 focus-visible:ring-2 focus-visible:ring-primary-500/40"
+            :model-value="folderState(row.row.files!)"
+            :aria-label="`Mark all files in ${row.row.name} as reviewed`"
+            @update:model-value="value => toggleFolder(row.row.files!, value === true)"
+          >
+            <CheckboxIndicator class="text-white">
+              <div :class="folderState(row.row.files!) === 'indeterminate' ? 'i-ph:minus-bold' : 'i-ph:check-bold'" class="text-micro mt--1px" aria-hidden="true" />
+            </CheckboxIndicator>
+          </CheckboxRoot>
           <DisplayFileIcon directory :path="row.row.name" class="op-fade" />
           <span class="op-fade truncate">{{ row.row.name }}</span>
         </template>
@@ -109,9 +144,15 @@ const virtualizer = useVirtualizer(computed(() => ({
             :model-value="reviewed.has(row.row.file.sha)"
             @update:model-value="emit('update:reviewed', row.row.file.sha, $event)"
           />
-          <DisplayFilePath :path="row.row.name" :dim="false" class="flex-1 min-w-0" />
-          <DiffStats :additions="row.row.file.additions" :deletions="row.row.file.deletions" />
-          <FileStatus :status="row.row.file.status" />
+          <button
+            type="button"
+            class="text-left flex flex-1 gap-1.5 min-w-0 items-center"
+            @click="emit('navigate', row.row.file.sha)"
+          >
+            <DisplayFilePath :path="row.row.name" :dim="false" class="flex-1 min-w-0" />
+            <DiffStats :additions="row.row.file.additions" :deletions="row.row.file.deletions" />
+            <FileStatus :status="row.row.file.status" />
+          </button>
         </template>
       </div>
     </div>

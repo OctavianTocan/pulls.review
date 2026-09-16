@@ -4,7 +4,7 @@ import * as v from 'valibot'
 export const GroupSourceSchema = v.picklist(['rule-based', 'llm', 'web-llm'])
 export type GroupSource = v.InferOutput<typeof GroupSourceSchema>
 
-export const DiffCategorySchema = v.picklist(['code', 'tests', 'docs', 'deps', 'config', 'build', 'generated', 'other'])
+export const DiffCategorySchema = v.picklist(['code', 'tests', 'docs', 'deps', 'config', 'generated', 'other'])
 export type DiffCategory = v.InferOutput<typeof DiffCategorySchema>
 
 /**

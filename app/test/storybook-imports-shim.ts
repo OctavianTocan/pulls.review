@@ -1,12 +1,8 @@
-// Storybook runs components through plain Vite, not Nuxt, so `#imports` (Nuxt's
-// virtual auto-import module) doesn't exist there. This is a minimal stand-in for
-// just the bits our components/composables pull from it, aliased in .storybook/main.ts.
-import { reactive } from 'vue'
-
-export function useColorMode(): { value: 'light' | 'dark', preference: 'light' | 'dark' | 'system' } {
-  return reactive({ value: 'light', preference: 'system' }) as any
-}
-
+/**
+ * Storybook runs components through plain Vite, not Nuxt, so `#imports` (Nuxt's
+ * virtual auto-import module) doesn't exist there. This is a minimal stand-in for
+ * just the bits our components/composables pull from it, aliased in .storybook/main.ts.
+ */
 export function useHead(): void {}
 
 export function useRoute(): { params: Record<string, string> } {
