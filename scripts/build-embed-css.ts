@@ -39,13 +39,6 @@ function namespaceShadowCssVars(css: string): string {
   return css.replaceAll('--un-', '--un-diffs-embed-')
 }
 
-// `vue-afloat` (tooltips/dropdowns via `@antfu/design`) keys its theming off
-// `:root`-scoped custom properties, which never reaches a shadow tree - `:host` is the
-// shadow-tree equivalent scoping root.
-function scopeRootToHost(css: string): string {
-  return css.replace(/:root\b/g, ':host')
-}
-
 async function main() {
   const root = fileURLToPath(new URL('..', import.meta.url))
   const embedDir = join(root, 'app/embed')
@@ -78,14 +71,15 @@ async function main() {
 
   const reset = await fs.readFile(require.resolve('@unocss/reset/tailwind.css'), 'utf-8')
   const mainCss = await fs.readFile(join(root, 'app/assets/css/main.css'), 'utf-8')
-  const vueAfloatCss = scopeRootToHost(await fs.readFile(require.resolve('vue-afloat/style.css'), 'utf-8'))
 
   const { css: unoCss } = await generator.generate(tokens)
   // Dedicated pass for the surface safelist (see its own comment) - always present,
   // even for tokens the extractor above missed in a dynamically-assembled string.
   const { css: surfacesCss } = await generator.generate(SURFACE_SAFELIST.join(' '))
 
-  let css = [reset, vueAfloatCss, mainCss, unoCss, surfacesCss].join('\n')
+  // No vue-afloat CSS here - its JS is aliased to a no-op in vite.embed.config.ts
+  // (it teleports outside the shadow root), so its classes/vars never apply to anything.
+  let css = [reset, mainCss, unoCss, surfacesCss].join('\n')
   css = namespaceShadowCssVars(css)
   css = transform({
     filename: 'diffs-embed.css',

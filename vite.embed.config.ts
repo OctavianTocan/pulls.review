@@ -12,6 +12,13 @@ export default defineConfig({
   plugins: [
     vue(),
   ],
+  resolve: {
+    alias: {
+      // Teleports to document.body, escaping the shadow root - see
+      // app/embed/vue-afloat-noop.ts.
+      'vue-afloat': fileURLToPath(new URL('./app/embed/vue-afloat-noop.ts', import.meta.url)),
+    },
+  },
   // Nothing to serve verbatim for this build, and its outDir sits inside the main
   // build's publicDir - disable the public-dir copy so it doesn't duplicate into itself.
   publicDir: false,

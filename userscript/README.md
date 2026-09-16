@@ -27,3 +27,7 @@ Known limitations (heavily work in progress):
 - The `@require`d bundle is a few MB (full Shiki syntax highlighting, not code-split,
   since GitHub's CSP also blocks any further runtime chunk request) and loads on
   every matching PR page visit, whether or not the drawer is opened.
+- Tooltips (hover hints on icon buttons, etc.) are silently disabled in the embed:
+  `vue-afloat` teleports its popper content to `document.body`, which would escape the
+  shadow root and render unstyled directly in GitHub's own page, so it's aliased to a
+  no-op there instead (see `app/embed/vue-afloat-noop.ts`).
