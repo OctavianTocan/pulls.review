@@ -1,0 +1,53 @@
+{
+  "diff": {
+    "meta": {
+      "provider": "github",
+      "id": "github:antfu/diffs#1",
+      "title": "Example pull request",
+      "description": "An example description for Storybook fixtures.",
+      "author": "antfu",
+      "baseRef": "main",
+      "headRef": "feature/example",
+      "baseSha": "base0000",
+      "headSha": "head0000",
+      "createdAt": "2026-09-16T00:00:00.000Z",
+      "updatedAt": "2026-09-16T00:00:00.000Z",
+      "url": "https://github.com/antfu/diffs/pull/1"
+    },
+    "files": [
+      {
+        "path": "src/generated/huge.ts",
+        "status": "modified",
+        "additions": 100,
+        "deletions": 100,
+        "isBinary": false,
+        "sha": "huge001",
+        "hunks": [
+          {
+            "header": "@@ -1,300 +1,300 @@",
+            "oldStart": 1,
+            "oldLines": 300,
+            "newStart": 1,
+            "newLines": 300,
+            "patch": " context line 1\n context line 2\n context line 3\n context line 4\n context line 5\n context line 6\n context line 7\n context line 8\n context line 9\n context line 10\n context line 11\n context line 12\n context line 13\n context line 14\n context line 15\n context line 16\n context line 17\n context line 18\n context line 19\n context line 20\n context line 21\n context line 22\n context line 23\n context line 24\n context line 25\n context line 26\n context line 27\n context line 28\n context line 29\n context line 30\n context line 31\n context line 32\n context line 33\n context line 34\n context line 35\n context line 36\n context line 37\n context line 38\n context line 39\n context line 40\n context line 41\n context line 42\n context line 43\n context line 44\n context line 45\n context line 46\n context line 47\n context line 48\n context line 49\n context line 50\n context line 51\n context line 52\n context line 53\n context line 54\n context line 55\n context line 56\n context line 57\n context line 58\n context line 59\n context line 60\n context line 61\n context line 62\n context line 63\n context line 64\n context line 65\n context line 66\n context line 67\n context line 68\n context line 69\n context line 70\n context line 71\n context line 72\n context line 73\n context line 74\n context line 75\n context line 76\n context line 77\n context line 78\n context line 79\n context line 80\n context line 81\n context line 82\n context line 83\n context line 84\n context line 85\n context line 86\n context line 87\n context line 88\n context line 89\n context line 90\n context line 91\n context line 92\n context line 93\n context line 94\n context line 95\n context line 96\n context line 97\n context line 98\n context line 99\n context line 100\n context line 101\n context line 102\n context line 103\n context line 104\n context line 105\n context line 106\n context line 107\n context line 108\n context line 109\n context line 110\n context line 111\n context line 112\n context line 113\n context line 114\n context line 115\n context line 116\n context line 117\n context line 118\n context line 119\n context line 120\n context line 121\n context line 122\n context line 123\n context line 124\n context line 125\n context line 126\n context line 127\n context line 128\n context line 129\n context line 130\n context line 131\n context line 132\n context line 133\n context line 134\n context line 135\n context line 136\n context line 137\n context line 138\n context line 139\n context line 140\n context line 141\n context line 142\n context line 143\n context line 144\n context line 145\n context line 146\n context line 147\n context line 148\n context line 149\n context line 150\n context line 151\n context line 152\n context line 153\n context line 154\n context line 155\n context line 156\n context line 157\n context line 158\n context line 159\n context line 160\n context line 161\n context line 162\n context line 163\n context line 164\n context line 165\n context line 166\n context line 167\n context line 168\n context line 169\n context line 170\n context line 171\n context line 172\n context line 173\n context line 174\n context line 175\n context line 176\n context line 177\n context line 178\n context line 179\n context line 180\n context line 181\n context line 182\n context line 183\n context line 184\n context line 185\n context line 186\n context line 187\n context line 188\n context line 189\n context line 190\n context line 191\n context line 192\n context line 193\n context line 194\n context line 195\n context line 196\n context line 197\n context line 198\n context line 199\n context line 200\n-removed line 1\n-removed line 2\n-removed line 3\n-removed line 4\n-removed line 5\n-removed line 6\n-removed line 7\n-removed line 8\n-removed line 9\n-removed line 10\n-removed line 11\n-removed line 12\n-removed line 13\n-removed line 14\n-removed line 15\n-removed line 16\n-removed line 17\n-removed line 18\n-removed line 19\n-removed line 20\n-removed line 21\n-removed line 22\n-removed line 23\n-removed line 24\n-removed line 25\n-removed line 26\n-removed line 27\n-removed line 28\n-removed line 29\n-removed line 30\n-removed line 31\n-removed line 32\n-removed line 33\n-removed line 34\n-removed line 35\n-removed line 36\n-removed line 37\n-removed line 38\n-removed line 39\n-removed line 40\n-removed line 41\n-removed line 42\n-removed line 43\n-removed line 44\n-removed line 45\n-removed line 46\n-removed line 47\n-removed line 48\n-removed line 49\n-removed line 50\n-removed line 51\n-removed line 52\n-removed line 53\n-removed line 54\n-removed line 55\n-removed line 56\n-removed line 57\n-removed line 58\n-removed line 59\n-removed line 60\n-removed line 61\n-removed line 62\n-removed line 63\n-removed line 64\n-removed line 65\n-removed line 66\n-removed line 67\n-removed line 68\n-removed line 69\n-removed line 70\n-removed line 71\n-removed line 72\n-removed line 73\n-removed line 74\n-removed line 75\n-removed line 76\n-removed line 77\n-removed line 78\n-removed line 79\n-removed line 80\n-removed line 81\n-removed line 82\n-removed line 83\n-removed line 84\n-removed line 85\n-removed line 86\n-removed line 87\n-removed line 88\n-removed line 89\n-removed line 90\n-removed line 91\n-removed line 92\n-removed line 93\n-removed line 94\n-removed line 95\n-removed line 96\n-removed line 97\n-removed line 98\n-removed line 99\n-removed line 100\n+added line 1\n+added line 2\n+added line 3\n+added line 4\n+added line 5\n+added line 6\n+added line 7\n+added line 8\n+added line 9\n+added line 10\n+added line 11\n+added line 12\n+added line 13\n+added line 14\n+added line 15\n+added line 16\n+added line 17\n+added line 18\n+added line 19\n+added line 20\n+added line 21\n+added line 22\n+added line 23\n+added line 24\n+added line 25\n+added line 26\n+added line 27\n+added line 28\n+added line 29\n+added line 30\n+added line 31\n+added line 32\n+added line 33\n+added line 34\n+added line 35\n+added line 36\n+added line 37\n+added line 38\n+added line 39\n+added line 40\n+added line 41\n+added line 42\n+added line 43\n+added line 44\n+added line 45\n+added line 46\n+added line 47\n+added line 48\n+added line 49\n+added line 50\n+added line 51\n+added line 52\n+added line 53\n+added line 54\n+added line 55\n+added line 56\n+added line 57\n+added line 58\n+added line 59\n+added line 60\n+added line 61\n+added line 62\n+added line 63\n+added line 64\n+added line 65\n+added line 66\n+added line 67\n+added line 68\n+added line 69\n+added line 70\n+added line 71\n+added line 72\n+added line 73\n+added line 74\n+added line 75\n+added line 76\n+added line 77\n+added line 78\n+added line 79\n+added line 80\n+added line 81\n+added line 82\n+added line 83\n+added line 84\n+added line 85\n+added line 86\n+added line 87\n+added line 88\n+added line 89\n+added line 90\n+added line 91\n+added line 92\n+added line 93\n+added line 94\n+added line 95\n+added line 96\n+added line 97\n+added line 98\n+added line 99\n+added line 100"
+          }
+        ]
+      }
+    ]
+  },
+  "grouped": {
+    "source": "rule-based",
+    "groups": [
+      {
+        "key": "code",
+        "label": "code",
+        "category": "code",
+        "filePaths": [
+          "src/generated/huge.ts"
+        ]
+      }
+    ],
+    "generatedAt": "2026-09-16T00:00:00.000Z",
+    "schemaVersion": 1
+  }
+}

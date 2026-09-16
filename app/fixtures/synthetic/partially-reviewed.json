@@ -1,0 +1,128 @@
+{
+  "diff": {
+    "meta": {
+      "provider": "github",
+      "id": "github:antfu/diffs#1",
+      "title": "Example pull request",
+      "description": "An example description for Storybook fixtures.",
+      "author": "antfu",
+      "baseRef": "main",
+      "headRef": "feature/example",
+      "baseSha": "base0000",
+      "headSha": "head0000",
+      "createdAt": "2026-09-16T00:00:00.000Z",
+      "updatedAt": "2026-09-16T00:00:00.000Z",
+      "url": "https://github.com/antfu/diffs/pull/1"
+    },
+    "files": [
+      {
+        "path": "src/a.ts",
+        "status": "modified",
+        "additions": 2,
+        "deletions": 1,
+        "isBinary": false,
+        "sha": "sha-a",
+        "hunks": [
+          {
+            "header": "@@ -1,2 +1,3 @@",
+            "oldStart": 1,
+            "oldLines": 2,
+            "newStart": 1,
+            "newLines": 3,
+            "patch": " context\n-old\n+new\n+extra"
+          }
+        ]
+      },
+      {
+        "path": "src/b.ts",
+        "status": "added",
+        "additions": 5,
+        "deletions": 0,
+        "isBinary": false,
+        "sha": "sha-b",
+        "hunks": [
+          {
+            "header": "@@ -0,0 +1,5 @@",
+            "oldStart": 0,
+            "oldLines": 0,
+            "newStart": 1,
+            "newLines": 5,
+            "patch": "+line1\n+line2\n+line3\n+line4\n+line5"
+          }
+        ]
+      },
+      {
+        "path": "src/c.test.ts",
+        "status": "modified",
+        "additions": 3,
+        "deletions": 0,
+        "isBinary": false,
+        "sha": "sha-c",
+        "hunks": [
+          {
+            "header": "@@ -1,1 +1,4 @@",
+            "oldStart": 1,
+            "oldLines": 1,
+            "newStart": 1,
+            "newLines": 4,
+            "patch": " context\n+it('a', () => {})\n+it('b', () => {})\n+it('c', () => {})"
+          }
+        ]
+      },
+      {
+        "path": "README.md",
+        "status": "modified",
+        "additions": 1,
+        "deletions": 1,
+        "isBinary": false,
+        "sha": "sha-d",
+        "hunks": [
+          {
+            "header": "@@ -1,1 +1,1 @@",
+            "oldStart": 1,
+            "oldLines": 1,
+            "newStart": 1,
+            "newLines": 1,
+            "patch": "-Old title\n+New title"
+          }
+        ]
+      }
+    ]
+  },
+  "grouped": {
+    "source": "rule-based",
+    "groups": [
+      {
+        "key": "code",
+        "label": "code",
+        "category": "code",
+        "filePaths": [
+          "src/a.ts",
+          "src/b.ts"
+        ]
+      },
+      {
+        "key": "tests",
+        "label": "tests",
+        "category": "tests",
+        "filePaths": [
+          "src/c.test.ts"
+        ]
+      },
+      {
+        "key": "docs",
+        "label": "docs",
+        "category": "docs",
+        "filePaths": [
+          "README.md"
+        ]
+      }
+    ],
+    "generatedAt": "2026-09-16T00:00:00.000Z",
+    "schemaVersion": 1
+  },
+  "reviewedShas": [
+    "sha-a",
+    "sha-c"
+  ]
+}

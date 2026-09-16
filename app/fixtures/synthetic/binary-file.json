@@ -1,0 +1,44 @@
+{
+  "diff": {
+    "meta": {
+      "provider": "github",
+      "id": "github:antfu/diffs#1",
+      "title": "Example pull request",
+      "description": "An example description for Storybook fixtures.",
+      "author": "antfu",
+      "baseRef": "main",
+      "headRef": "feature/example",
+      "baseSha": "base0000",
+      "headSha": "head0000",
+      "createdAt": "2026-09-16T00:00:00.000Z",
+      "updatedAt": "2026-09-16T00:00:00.000Z",
+      "url": "https://github.com/antfu/diffs/pull/1"
+    },
+    "files": [
+      {
+        "path": "assets/logo.png",
+        "status": "modified",
+        "additions": 0,
+        "deletions": 0,
+        "isBinary": true,
+        "sha": "bin00001",
+        "hunks": []
+      }
+    ]
+  },
+  "grouped": {
+    "source": "rule-based",
+    "groups": [
+      {
+        "key": "other",
+        "label": "other",
+        "category": "other",
+        "filePaths": [
+          "assets/logo.png"
+        ]
+      }
+    ],
+    "generatedAt": "2026-09-16T00:00:00.000Z",
+    "schemaVersion": 1
+  }
+}

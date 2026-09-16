@@ -141,6 +141,9 @@ catalogs:
     '@types/picomatch':
       specifier: ^4.0.3
       version: 4.0.3
+    '@vitejs/plugin-vue':
+      specifier: ^6.0.8
+      version: 6.0.8
     '@vue/test-utils':
       specifier: ^2.5.0
       version: 2.5.0
@@ -302,6 +305,9 @@ importers:
       '@unocss/nuxt':
         specifier: catalog:build
         version: 66.10.0(@devframes/hub-ui@0.9.15(@devframes/hub@0.9.15(crossws@0.4.12(srvx@0.12.7))(devframe@0.9.15(srvx@0.12.7)))(@devframes/json-render@0.9.15(@devframes/hub@0.9.15(crossws@0.4.12(srvx@0.12.7))(devframe@0.9.15(srvx@0.12.7)))(devframe@0.9.15(srvx@0.12.7)))(devframe@0.9.15(srvx@0.12.7)))(@devframes/hub@0.9.15(crossws@0.4.12(srvx@0.12.7))(devframe@0.9.15(srvx@0.12.7)))(crossws@0.4.12(srvx@0.12.7))(esbuild@0.28.2)(magic-string@1.2.2)(magicast@0.5.4)(rolldown@1.2.5)(rollup@4.62.5)(srvx@0.12.7)(unplugin@3.3.0(esbuild@0.28.2)(rolldown@1.2.5)(rollup@4.62.5)(vite@8.2.2))(vite@8.2.2)
+      '@vitejs/plugin-vue':
+        specifier: 'catalog:'
+        version: 6.0.8(vite@8.2.2)(vue@3.5.42(typescript@6.0.3))
       '@vue/test-utils':
         specifier: 'catalog:'
         version: 2.5.0(@vue/compiler-dom@3.5.42)(@vue/server-renderer@3.5.42)(vue@3.5.42(typescript@6.0.3))

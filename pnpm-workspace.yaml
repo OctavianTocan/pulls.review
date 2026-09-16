@@ -38,6 +38,7 @@ catalog:
   '@storybook/vue3-vite': ^10.6.0
   '@tanstack/vue-virtual': ^3.13.39
   '@types/picomatch': ^4.0.3
+  '@vitejs/plugin-vue': ^6.0.8
   '@vue/test-utils': ^2.5.0
   colorjs.io: ^0.7.1
   happy-dom: ^20.14.5

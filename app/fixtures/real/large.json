@@ -1,0 +1,656 @@
+{
+  "diff": {
+    "meta": {
+      "provider": "github",
+      "id": "github:vuejs/core#12349",
+      "title": "perf(reactivity): ports `alien-signals` 0.4.4",
+      "description": "`alien-signals`(https://github.com/stackblitz/alien-signals) is a research-oriented signal library rewritten based on Vue 3.4's reactivity system. It sets several constraints to ensure the high-performance implementation of a reactivity system. (Currently, it is the fastest implementation among all signal libraries)\r\n\r\nThis PR ports the https://github.com/stackblitz/alien-signals/blob/master/src/system.ts code to https://github.com/vuejs/core/blob/main/packages/reactivity/src/effect.ts to leverage all the optimizations discovered by `alien-signals`.\r\n\r\n### Benefits\r\n\r\n- Lower memory usage: Memory usage is reduced by ~13% (2.3MB -> 2.0MB) when creating a large number of ref, computed, and effect instances.\r\n- Higher performance: Various performance tests now generally yield better results, especially in scenarios where a large number of computeds are read after changing a ref. Vue 3.5 had significant performance drawbacks in this case (a characteristic of pull-model reactivity systems, it can be reproduced in https://github.com/transitive-bullshit/js-reactivity-benchmark), and the current implementation resolves this issue, achieving over 30x performance improvement (proportional to scale).\r\n- Better code abstraction: The previous scheduling logic had coupling with external implementations (such as Dep cleanup, debug events, recurse effect handling). The current implementation eliminates these couplings.\r\n\r\n### Benchmark Results\r\n\r\n#### computed\r\n\r\n```\r\n     name                                                                    hz     min     max    mean     p75     p99    p995    p999     rme  samples\r\n   · create computed                                               6,111,709.97  0.0000  0.3307  0.0002  0.0002  0.0002  0.0002  0.0003  ±0.53%  3055856  [1.28x] ⇑\r\n     create computed                                               4,790,560.55  0.0001  2.8602  0.0002  0.0002  0.0003  0.0003  0.0005  ±1.19%  2395281  (baseline)\r\n   · write ref, don't read computed (without effect)               3,725,946.87  0.0002  0.1777  0.0003  0.0003  0.0003  0.0003  0.0004  ±0.16%  1862974  [1.19x] ⇑\r\n     write ref, don't read computed (without effect)               3,138,437.74  0.0002  1.4873  0.0003  0.0003  0.0004  0.0004  0.0005  ±1.21%  1569219  (baseline)\r\n   · write ref, don't read computed (with effect)                  1,629,737.97  0.0005  0.1867  0.0006  0.0006  0.0007  0.0007  0.0008  ±0.11%   814869  [1.20x] ⇑\r\n     write ref, don't read computed (with effect)                  1,362,345.64  0.0006  0.1455  0.0007  0.0008  0.0008  0.0008  0.0010  ±0.13%   681173  (baseline)\r\n   · write ref, read computed (without effect)                     1,961,824.76  0.0004  0.1808  0.0005  0.0005  0.0005  0.0006  0.0007  ±0.12%   980913  [1.06x] ⇑\r\n     write ref, read computed (without effect)                     1,848,260.85  0.0004  0.1488  0.0005  0.0005  0.0006  0.0006  0.0007  ±0.13%   924131  (baseline)\r\n   · write ref, read computed (with effect)                        1,475,801.43  0.0005  0.2211  0.0007  0.0007  0.0008  0.0008  0.0010  ±0.12%   737901  [1.14x] ⇑\r\n     write ref, read computed (with effect)                        1,296,434.21  0.0007  0.2508  0.0008  0.0008  0.0008  0.0009  0.0011  ±0.16%   648218  (baseline)\r\n   · write ref, don't read 1000 computeds (without effect)         3,300,382.44  0.0002  0.1930  0.0003  0.0003  0.0003  0.0004  0.0004  ±0.14%  1650192  [1.03x] ⇑\r\n     write ref, don't read 1000 computeds (without effect)         3,189,502.88  0.0002  0.1763  0.0003  0.0003  0.0003  0.0004  0.0005  ±0.14%  1594752  (baseline)\r\n   · write ref, don't read 1000 computeds (with multiple effects)      3,222.67  0.3063  0.5532  0.3103  0.3108  0.3488  0.3917  0.5250  ±0.19%     1612  [1.38x] ⇑\r\n     write ref, don't read 1000 computeds (with multiple effects)      2,329.65  0.4206  0.6286  0.4292  0.4292  0.4997  0.5215  0.5671  ±0.19%     1165  (baseline)\r\n   · write ref, don't read 1000 computeds (with single effect)         3,734.95  0.2648  0.3821  0.2677  0.2683  0.2855  0.2986  0.3510  ±0.09%     1868  [1.71x] ⇑\r\n     write ref, don't read 1000 computeds (with single effect)         2,186.19  0.4434  0.6528  0.4574  0.4565  0.5061  0.5221  0.5846  ±0.16%     1094  (baseline)\r\n   · write ref, read 1000 computeds (no effect)                        4,694.97  0.2105  0.3849  0.2130  0.2142  0.2301  0.2382  0.3271  ±0.12%     2348  [1.26x] ⇑\r\n     write ref, read 1000 computeds (no effect)                        3,718.71  0.2292  9.4632  0.2689  0.2329  1.0790  2.5163  6.3315  ±5.98%     1860  (baseline)\r\n   · write ref, read 1000 computeds (with multiple effects)            2,845.64  0.3453  0.6213  0.3514  0.3512  0.4014  0.4358  0.5546  ±0.21%     1423  [1.33x] ⇑\r\n     write ref, read 1000 computeds (with multiple effects)            2,142.70  0.4569  0.7351  0.4667  0.4664  0.5183  0.5565  0.6951  ±0.22%     1072  (baseline)\r\n   · write ref, read 1000 computeds (with single effect)               2,265.62  0.4338  0.9382  0.4414  0.4392  0.5991  0.6087  0.6304  ±0.36%     1133  [1.48x] ⇑\r\n     write ref, read 1000 computeds (with single effect)               1,529.78  0.6415  0.8937  0.6537  0.6526  0.7195  0.7378  0.8937  ±0.18%      765  (baseline)\r\n   · 1000 refs, read 1 computed (without effect)                      19,686.23  0.0490  0.1665  0.0508  0.0495  0.0595  0.0631  0.0935  ±0.16%     9844  [3.41x] ⇑\r\n     1000 refs, read 1 computed (without effect)                       5,775.97  0.1611  0.3445  0.1731  0.1746  0.2057  0.2170  0.2689  ±0.18%     2888  (baseline)\r\n   · 1000 refs, read 1 computed (with effect)                         22,764.26  0.0427  0.1713  0.0439  0.0430  0.0534  0.0585  0.0983  ±0.16%    11383  [3.63x] ⇑\r\n     1000 refs, read 1 computed (with effect)                          6,268.22  0.1492  0.3157  0.1595  0.1620  0.1907  0.2024  0.2408  ±0.18%     3135  (baseline)\r\n```\r\n\r\n#### effect\r\n\r\n```\r\n     name                                                       hz      min      max     mean      p75      p99     p995     p999     rme  samples\r\n   · single ref invoke                                2,422,374.37   0.0003   0.1300   0.0004   0.0004   0.0005   0.0005   0.0006  ±0.12%  1211188  [1.08x] ⇑\r\n     single ref invoke                                2,253,296.36   0.0003   0.1473   0.0004   0.0005   0.0005   0.0005   0.0006  ±0.15%  1126649  (baseline)\r\n   · create an effect that tracks 1 refs              3,041,716.41   0.0002   0.2316   0.0003   0.0003   0.0004   0.0005   0.0006  ±0.39%  1520859  [1.32x] ⇑\r\n     create an effect that tracks 1 refs              2,305,307.54   0.0003   0.1655   0.0004   0.0004   0.0005   0.0005   0.0008  ±0.32%  1152654  (baseline)\r\n   · create an effect that tracks 10 refs               477,709.54   0.0019   0.2655   0.0021   0.0021   0.0023   0.0025   0.0036  ±0.38%   238855  [1.57x] ⇑\r\n     create an effect that tracks 10 refs               303,939.27   0.0031   0.2318   0.0033   0.0032   0.0035   0.0037   0.0183  ±0.34%   151970  (baseline)\r\n   · create an effect that tracks 100 refs               51,529.46   0.0188   0.2940   0.0194   0.0190   0.0267   0.0342   0.1052  ±0.38%    25765  [1.62x] ⇑\r\n     create an effect that tracks 100 refs               31,753.65   0.0306   0.2372   0.0315   0.0309   0.0464   0.0528   0.1848  ±0.34%    15877  (baseline)\r\n   · create an effect that tracks 1000 refs               5,185.44   0.1884   0.4357   0.1928   0.1896   0.3253   0.3712   0.4210  ±0.41%     2593  [1.65x] ⇑\r\n     create an effect that tracks 1000 refs               3,135.25   0.3067   1.2006   0.3190   0.3107   0.5374   0.7059   1.1851  ±0.83%     1568  (baseline)\r\n   · create and stop an effect that tracks 1 refs     2,643,923.29   0.0003   0.2466   0.0004   0.0004   0.0005   0.0006   0.0008  ±0.40%  1321998  [1.25x] ⇑\r\n     create and stop an effect that tracks 1 refs     2,108,885.94   0.0003   0.1770   0.0005   0.0005   0.0005   0.0006   0.0008  ±0.35%  1054443  (baseline)\r\n   · create and stop an effect that tracks 10 refs      434,027.52   0.0022   0.2420   0.0023   0.0023   0.0024   0.0026   0.0038  ±0.28%   217014  [1.59x] ⇑\r\n     create and stop an effect that tracks 10 refs      272,235.14   0.0035   0.3079   0.0037   0.0036   0.0040   0.0041   0.0193  ±0.36%   136118  (baseline)\r\n   · create and stop an effect that tracks 100 refs      46,683.59   0.0209   0.2881   0.0214   0.0212   0.0246   0.0315   0.0809  ±0.33%    23342  [1.66x] ⇑\r\n     create and stop an effect that tracks 100 refs      28,075.59   0.0343   3.7334   0.0356   0.0348   0.0508   0.0602   0.1706  ±1.48%    14038  (baseline)\r\n   · create and stop an effect that tracks 1000 refs      4,674.21   0.2099   0.5031   0.2139   0.2114   0.2932   0.3995   0.4782  ±0.38%     2338  [1.65x] ⇑\r\n     create and stop an effect that tracks 1000 refs      2,829.92   0.3445   0.5768   0.3534   0.3499   0.4938   0.5118   0.5708  ±0.34%     1415  (baseline)\r\n   · 1 effect, mutate 10 refs                           131,308.76   0.0074   0.2790   0.0076   0.0076   0.0079   0.0081   0.0197  ±0.15%    65655  [2.37x] ⇑\r\n     1 effect, mutate 10 refs                            55,475.14   0.0177   0.1079   0.0180   0.0179   0.0215   0.0318   0.0527  ±0.14%    27738  (baseline)\r\n   · 1 effect, mutate 100 refs                            2,163.50   0.4568   0.8003   0.4622   0.4609   0.5471   0.6069   0.7550  ±0.26%     1082  [3.27x] ⇑\r\n     1 effect, mutate 100 refs                              660.75   1.4944   1.8873   1.5134   1.5197   1.6387   1.7310   1.8873  ±0.24%      331  (baseline)\r\n   · 1 effect, mutate 1000 refs                            23.1906  42.8559  43.6757  43.1209  43.1839  43.6757  43.6757  43.6757  ±0.39%       12  [3.47x] ⇑\r\n     1 effect, mutate 1000 refs                             6.6868   149.16   149.78   149.55   149.71   149.78   149.78   149.78  ±0.10%       10  (baseline)\r\n   · 10 refs branch toggle                            1,186,713.31   0.0004   6.0071   0.0008   0.0010   0.0011   0.0014   0.0015  ±4.92%   593357  [1.75x] ⇑\r\n     10 refs branch toggle                              678,007.23   0.0007   0.2123   0.0015   0.0022   0.0022   0.0023   0.0049  ±0.23%   339004  (baseline)\r\n   · 100 refs branch toggle                             303,335.02   0.0009   0.1054   0.0033   0.0055   0.0057   0.0057   0.0110  ±0.37%   151669  [3.03x] ⇑\r\n     100 refs branch toggle                              99,958.91   0.0029   1.4980   0.0100   0.0166   0.0173   0.0242   0.0396  ±0.88%    49981  (baseline)\r\n   · 1000 refs branch toggle                             33,959.34   0.0069   0.1933   0.0294   0.0513   0.0547   0.0595   0.0819  ±1.14%    16981  [3.26x] ⇑\r\n     1000 refs branch toggle                             10,416.41   0.0265   0.4061   0.0960   0.1623   0.1861   0.2043   0.3517  ±1.97%     5209  (baseline)\r\n   · 1 ref invoking 10 effects                          946,141.80   0.0009   0.0576   0.0011   0.0011   0.0011   0.0012   0.0014  ±0.08%   473071  [1.53x] ⇑\r\n     1 ref invoking 10 effects                          617,154.17   0.0013   2.1592   0.0016   0.0014   0.0020   0.0020   0.0193  ±2.15%   308578  (baseline)\r\n   · 1 ref invoking 100 effects                         137,515.93   0.0069   0.1466   0.0073   0.0073   0.0075   0.0078   0.0228  ±0.13%    68758  [1.51x] ⇑\r\n     1 ref invoking 100 effects                          91,193.89   0.0105   0.2659   0.0110   0.0110   0.0114   0.0187   0.0313  ±0.16%    45597  (baseline)\r\n   · 1 ref invoking 1000 effects                         13,791.02   0.0704   0.1650   0.0725   0.0727   0.0858   0.0947   0.1325  ±0.13%     6896  [1.48x] ⇑\r\n     1 ref invoking 1000 effects                          9,339.78   0.1047   0.1980   0.1071   0.1069   0.1265   0.1379   0.1740  ±0.13%     4670  (baseline)\r\n```\r\n\r\n#### ref\r\n\r\n```\r\n     name                       hz     min     max    mean     p75     p99    p995    p999     rme  samples\r\n   · create ref       4,648,340.74  0.0001  1.8655  0.0002  0.0002  0.0003  0.0003  0.0004  ±0.89%  2324171  [1.09x] ⇑\r\n     create ref       4,261,204.35  0.0001  0.1899  0.0002  0.0003  0.0003  0.0003  0.0005  ±0.15%  2130603  (baseline)\r\n   · write ref        3,817,925.50  0.0002  0.1143  0.0003  0.0003  0.0003  0.0003  0.0004  ±0.08%  1908963  [1.18x] ⇑\r\n     write ref        3,248,551.04  0.0002  0.2231  0.0003  0.0003  0.0003  0.0004  0.0005  ±0.16%  1624276  (baseline)\r\n   · read ref        11,485,907.61  0.0000  0.1316  0.0001  0.0001  0.0001  0.0001  0.0002  ±0.13%  5742954  [1.02x] ⇑\r\n     read ref        11,264,635.57  0.0000  0.1458  0.0001  0.0001  0.0001  0.0001  0.0002  ±0.18%  5632318  (baseline)\r\n   · write/read ref   3,576,071.66  0.0002  0.2868  0.0003  0.0003  0.0003  0.0003  0.0004  ±0.12%  1788036  [1.33x] ⇑\r\n     write/read ref   2,694,391.71  0.0002  1.0205  0.0004  0.0004  0.0004  0.0005  0.0008  ±0.94%  1347196  (baseline)\r\n```\r\n\r\n### Potential Improvements\r\n\r\n- ~~Merging `dirtyLevel`, `canPropagate`, `pauseLevel`, and `allowRecurse` into one attribute should further reduce memory usage. Reaching the lowest memory usage is not the purpose of this PR, so we will not implement it here currently.~~ Completed when update to alien-signals 0.4.4",
+      "author": "johnsoncodehk",
+      "baseRef": "minor",
+      "headRef": "alien-signals",
+      "baseSha": "6eb29d345aa73746207f80c89ee8b37ff7b949c9",
+      "headSha": "cab5ecfdc2395ae88934a9af87cbe548ae84ea0a",
+      "createdAt": "2024-11-09T01:44:36Z",
+      "updatedAt": "2024-12-24T22:06:37Z",
+      "url": "https://github.com/vuejs/core/pull/12349"
+    },
+    "files": [
+      {
+        "path": "packages/reactivity/__tests__/computed.spec.ts",
+        "status": "modified",
+        "additions": 7,
+        "deletions": 6,
+        "isBinary": false,
+        "sha": "1e807df17a02c514b8470ea7e95dbc6ce66bf9e6",
+        "hunks": [
+          {
+            "header": "@@ -25,8 +25,9 @@ import {",
+            "oldStart": 25,
+            "oldLines": 8,
+            "newStart": 25,
+            "newLines": 9,
+            "patch": "   toRaw,\n   triggerRef,\n } from '../src'\n-import { EffectFlags, pauseTracking, resetTracking } from '../src/effect'\n import type { ComputedRef, ComputedRefImpl } from '../src/computed'\n+import { pauseTracking, resetTracking } from '../src/effect'\n+import { SubscriberFlags } from '../src/system'\n \n describe('reactivity/computed', () => {\n   it('should return updated value', () => {"
+          },
+          {
+            "header": "@@ -409,9 +410,9 @@ describe('reactivity/computed', () => {",
+            "oldStart": 409,
+            "oldLines": 9,
+            "newStart": 410,
+            "newLines": 9,
+            "patch": "     a.value++\n     e.value\n \n-    expect(e.deps!.dep).toBe(b.dep)\n-    expect(e.deps!.nextDep!.dep).toBe(d.dep)\n-    expect(e.deps!.nextDep!.nextDep!.dep).toBe(c.dep)\n+    expect(e.deps!.dep).toBe(b)\n+    expect(e.deps!.nextDep!.dep).toBe(d)\n+    expect(e.deps!.nextDep!.nextDep!.dep).toBe(c)\n     expect(cSpy).toHaveBeenCalledTimes(2)\n \n     a.value++"
+          },
+          {
+            "header": "@@ -466,8 +467,8 @@ describe('reactivity/computed', () => {",
+            "oldStart": 466,
+            "oldLines": 8,
+            "newStart": 467,
+            "newLines": 8,
+            "patch": "     const c2 = computed(() => c1.value) as unknown as ComputedRefImpl\n \n     c2.value\n-    expect(c1.flags & EffectFlags.DIRTY).toBeFalsy()\n-    expect(c2.flags & EffectFlags.DIRTY).toBeFalsy()\n+    expect(c1.flags & SubscriberFlags.Dirtys).toBe(0)\n+    expect(c2.flags & SubscriberFlags.Dirtys).toBe(0)\n   })\n \n   it('should chained computeds dirtyLevel update with first computed effect', () => {"
+          }
+        ]
+      },
+      {
+        "path": "packages/reactivity/__tests__/effect.spec.ts",
+        "status": "modified",
+        "additions": 14,
+        "deletions": 19,
+        "isBinary": false,
+        "sha": "20f0244a7bc8fd3d3d4860298fd72119da97bb1d",
+        "hunks": [
+          {
+            "header": "@@ -1,3 +1,14 @@",
+            "oldStart": 1,
+            "oldLines": 3,
+            "newStart": 1,
+            "newLines": 14,
+            "patch": "+import {\n+  computed,\n+  h,\n+  nextTick,\n+  nodeOps,\n+  ref,\n+  render,\n+  serializeInner,\n+} from '@vue/runtime-test'\n+import { ITERATE_KEY, getDepFromReactive } from '../src/dep'\n+import { onEffectCleanup, pauseTracking, resetTracking } from '../src/effect'\n import {\n   type DebuggerEvent,\n   type ReactiveEffectRunner,"
+          },
+          {
+            "header": "@@ -11,23 +22,7 @@ import {",
+            "oldStart": 11,
+            "oldLines": 23,
+            "newStart": 22,
+            "newLines": 7,
+            "patch": "   stop,\n   toRaw,\n } from '../src/index'\n-import { type Dep, ITERATE_KEY, getDepFromReactive } from '../src/dep'\n-import {\n-  computed,\n-  h,\n-  nextTick,\n-  nodeOps,\n-  ref,\n-  render,\n-  serializeInner,\n-} from '@vue/runtime-test'\n-import {\n-  endBatch,\n-  onEffectCleanup,\n-  pauseTracking,\n-  resetTracking,\n-  startBatch,\n-} from '../src/effect'\n+import { type Dependency, endBatch, startBatch } from '../src/system'\n \n describe('reactivity/effect', () => {\n   it('should run the passed function once (wrapped by a effect)', () => {"
+          },
+          {
+            "header": "@@ -1183,12 +1178,12 @@ describe('reactivity/effect', () => {",
+            "oldStart": 1183,
+            "oldLines": 12,
+            "newStart": 1178,
+            "newLines": 12,
+            "patch": "   })\n \n   describe('dep unsubscribe', () => {\n-    function getSubCount(dep: Dep | undefined) {\n+    function getSubCount(dep: Dependency | undefined) {\n       let count = 0\n       let sub = dep!.subs\n       while (sub) {\n         count++\n-        sub = sub.prevSub\n+        sub = sub.nextSub\n       }\n       return count\n     }"
+          }
+        ]
+      },
+      {
+        "path": "packages/reactivity/__tests__/gc.spec.ts",
+        "status": "modified",
+        "additions": 35,
+        "deletions": 2,
+        "isBinary": false,
+        "sha": "55499ec0a5e4107a67c56ffecf74c6898d393222",
+        "hunks": [
+          {
+            "header": "@@ -2,6 +2,7 @@ import {",
+            "oldStart": 2,
+            "oldLines": 6,
+            "newStart": 2,
+            "newLines": 7,
+            "patch": "   type ComputedRef,\n   computed,\n   effect,\n+  effectScope,\n   reactive,\n   shallowRef as ref,\n   toRaw,"
+          },
+          {
+            "header": "@@ -19,7 +20,7 @@ describe.skipIf(!global.gc)('reactivity/gc', () => {",
+            "oldStart": 19,
+            "oldLines": 7,
+            "newStart": 20,
+            "newLines": 7,
+            "patch": "   }\n \n   // #9233\n-  it('should release computed cache', async () => {\n+  it.todo('should release computed cache', async () => {\n     const src = ref<{} | undefined>({})\n     // @ts-expect-error ES2021 API\n     const srcRef = new WeakRef(src.value!)"
+          },
+          {
+            "header": "@@ -34,7 +35,7 @@ describe.skipIf(!global.gc)('reactivity/gc', () => {",
+            "oldStart": 34,
+            "oldLines": 7,
+            "newStart": 35,
+            "newLines": 7,
+            "patch": "     expect(srcRef.deref()).toBeUndefined()\n   })\n \n-  it('should release reactive property dep', async () => {\n+  it.todo('should release reactive property dep', async () => {\n     const src = reactive({ foo: 1 })\n \n     let c: ComputedRef | undefined = computed(() => src.foo)"
+          },
+          {
+            "header": "@@ -79,4 +80,36 @@ describe.skipIf(!global.gc)('reactivity/gc', () => {",
+            "oldStart": 79,
+            "oldLines": 4,
+            "newStart": 80,
+            "newLines": 36,
+            "patch": "     src.foo++\n     expect(spy).toHaveBeenCalledTimes(2)\n   })\n+\n+  it('should release computed that untrack by effect', async () => {\n+    const src = ref(0)\n+    // @ts-expect-error ES2021 API\n+    const c = new WeakRef(computed(() => src.value))\n+    const scope = effectScope()\n+\n+    scope.run(() => {\n+      effect(() => c.deref().value)\n+    })\n+\n+    expect(c.deref()).toBeDefined()\n+    scope.stop()\n+    await gc()\n+    expect(c.deref()).toBeUndefined()\n+  })\n+\n+  it('should release computed that untrack by effectScope', async () => {\n+    const src = ref(0)\n+    // @ts-expect-error ES2021 API\n+    const c = new WeakRef(computed(() => src.value))\n+    const scope = effectScope()\n+\n+    scope.run(() => {\n+      c.deref().value\n+    })\n+\n+    expect(c.deref()).toBeDefined()\n+    scope.stop()\n+    await gc()\n+    expect(c.deref()).toBeUndefined()\n+  })\n })"
+          }
+        ]
+      },
+      {
+        "path": "packages/reactivity/src/arrayInstrumentations.ts",
+        "status": "modified",
+        "additions": 4,
+        "deletions": 3,
+        "isBinary": false,
+        "sha": "8d578c7d860d62304783a629165392a609d91d4f",
+        "hunks": [
+          {
+            "header": "@@ -1,8 +1,9 @@",
+            "oldStart": 1,
+            "oldLines": 8,
+            "newStart": 1,
+            "newLines": 9,
+            "patch": "+import { isArray } from '@vue/shared'\n import { TrackOpTypes } from './constants'\n-import { endBatch, pauseTracking, resetTracking, startBatch } from './effect'\n-import { isProxy, isShallow, toRaw, toReactive } from './reactive'\n import { ARRAY_ITERATE_KEY, track } from './dep'\n-import { isArray } from '@vue/shared'\n+import { pauseTracking, resetTracking } from './effect'\n+import { isProxy, isShallow, toRaw, toReactive } from './reactive'\n+import { endBatch, startBatch } from './system'\n \n /**\n  * Track array iteration and return:"
+          }
+        ]
+      },
+      {
+        "path": "packages/reactivity/src/computed.ts",
+        "status": "modified",
+        "additions": 101,
+        "deletions": 66,
+        "isBinary": false,
+        "sha": "12f2b249aa009009d92313d0ad4fe87fa9ce1eda",
+        "hunks": [
+          {
+            "header": "@@ -1,17 +1,27 @@",
+            "oldStart": 1,
+            "oldLines": 17,
+            "newStart": 1,
+            "newLines": 27,
+            "patch": "-import { isFunction } from '@vue/shared'\n+import { hasChanged, isFunction } from '@vue/shared'\n+import { ReactiveFlags, TrackOpTypes } from './constants'\n+import { onTrack, setupFlagsHandler } from './debug'\n import {\n   type DebuggerEvent,\n   type DebuggerOptions,\n-  EffectFlags,\n-  type Subscriber,\n   activeSub,\n-  batch,\n-  refreshComputed,\n+  activeTrackId,\n+  nextTrackId,\n+  setActiveSub,\n } from './effect'\n+import { activeEffectScope } from './effectScope'\n import type { Ref } from './ref'\n+import {\n+  type Dependency,\n+  type IComputed,\n+  type Link,\n+  SubscriberFlags,\n+  checkDirty,\n+  endTrack,\n+  link,\n+  startTrack,\n+} from './system'\n import { warn } from './warning'\n-import { Dep, type Link, globalVersion } from './dep'\n-import { ReactiveFlags, TrackOpTypes } from './constants'\n \n declare const ComputedRefSymbol: unique symbol\n declare const WritableComputedRefSymbol: unique symbol"
+          },
+          {
+            "header": "@@ -44,15 +54,23 @@ export interface WritableComputedOptions<T, S = T> {",
+            "oldStart": 44,
+            "oldLines": 15,
+            "newStart": 54,
+            "newLines": 23,
+            "patch": "  * @private exported by @vue/reactivity for Vue core use, but not exported from\n  * the main vue package\n  */\n-export class ComputedRefImpl<T = any> implements Subscriber {\n+export class ComputedRefImpl<T = any> implements IComputed {\n   /**\n    * @internal\n    */\n-  _value: any = undefined\n-  /**\n-   * @internal\n-   */\n-  readonly dep: Dep = new Dep(this)\n+  _value: T | undefined = undefined\n+  version = 0\n+\n+  // Dependency\n+  subs: Link | undefined = undefined\n+  subsTail: Link | undefined = undefined\n+  lastTrackedId = 0\n+\n+  // Subscriber\n+  deps: Link | undefined = undefined\n+  depsTail: Link | undefined = undefined\n+  flags: SubscriberFlags = SubscriberFlags.Dirty\n+\n   /**\n    * @internal\n    */"
+          },
+          {
+            "header": "@@ -63,34 +81,39 @@ export class ComputedRefImpl<T = any> implements Subscriber {",
+            "oldStart": 63,
+            "oldLines": 34,
+            "newStart": 81,
+            "newLines": 39,
+            "patch": "    */\n   readonly __v_isReadonly: boolean\n   // TODO isolatedDeclarations ReactiveFlags.IS_READONLY\n-  // A computed is also a subscriber that tracks other deps\n-  /**\n-   * @internal\n-   */\n-  deps?: Link = undefined\n-  /**\n-   * @internal\n-   */\n-  depsTail?: Link = undefined\n-  /**\n-   * @internal\n-   */\n-  flags: EffectFlags = EffectFlags.DIRTY\n-  /**\n-   * @internal\n-   */\n-  globalVersion: number = globalVersion - 1\n-  /**\n-   * @internal\n-   */\n-  isSSR: boolean\n-  /**\n-   * @internal\n-   */\n-  next?: Subscriber = undefined\n \n   // for backwards compat\n-  effect: this = this\n+  get effect(): this {\n+    return this\n+  }\n+  // for backwards compat\n+  get dep(): Dependency {\n+    return this\n+  }\n+  // for backwards compat\n+  get _dirty(): boolean {\n+    const flags = this.flags\n+    if (flags & SubscriberFlags.Dirty) {\n+      return true\n+    } else if (flags & SubscriberFlags.ToCheckDirty) {\n+      if (checkDirty(this.deps!)) {\n+        this.flags |= SubscriberFlags.Dirty\n+        return true\n+      } else {\n+        this.flags &= ~SubscriberFlags.ToCheckDirty\n+        return false\n+      }\n+    }\n+    return false\n+  }\n+  set _dirty(v: boolean) {\n+    if (v) {\n+      this.flags |= SubscriberFlags.Dirty\n+    } else {\n+      this.flags &= ~SubscriberFlags.Dirtys\n+    }\n+  }\n+\n   // dev only\n   onTrack?: (event: DebuggerEvent) => void\n   // dev only"
+          },
+          {
+            "header": "@@ -105,43 +128,34 @@ export class ComputedRefImpl<T = any> implements Subscriber {",
+            "oldStart": 105,
+            "oldLines": 43,
+            "newStart": 128,
+            "newLines": 34,
+            "patch": "   constructor(\n     public fn: ComputedGetter<T>,\n     private readonly setter: ComputedSetter<T> | undefined,\n-    isSSR: boolean,\n   ) {\n     this[ReactiveFlags.IS_READONLY] = !setter\n-    this.isSSR = isSSR\n-  }\n-\n-  /**\n-   * @internal\n-   */\n-  notify(): true | void {\n-    this.flags |= EffectFlags.DIRTY\n-    if (\n-      !(this.flags & EffectFlags.NOTIFIED) &&\n-      // avoid infinite self recursion\n-      activeSub !== this\n-    ) {\n-      batch(this, true)\n-      return true\n-    } else if (__DEV__) {\n-      // TODO warn\n+    if (__DEV__) {\n+      setupFlagsHandler(this)\n     }\n   }\n \n   get value(): T {\n-    const link = __DEV__\n-      ? this.dep.track({\n+    if (this._dirty) {\n+      this.update()\n+    }\n+    if (activeTrackId !== 0 && this.lastTrackedId !== activeTrackId) {\n+      if (__DEV__) {\n+        onTrack(activeSub!, {\n           target: this,\n           type: TrackOpTypes.GET,\n           key: 'value',\n         })\n-      : this.dep.track()\n-    refreshComputed(this)\n-    // sync version after evaluation\n-    if (link) {\n-      link.version = this.dep.version\n+      }\n+      this.lastTrackedId = activeTrackId\n+      link(this, activeSub!).version = this.version\n+    } else if (\n+      activeEffectScope !== undefined &&\n+      this.lastTrackedId !== activeEffectScope.trackId\n+    ) {\n+      link(this, activeEffectScope)\n     }\n-    return this._value\n+    return this._value!\n   }\n \n   set value(newValue) {"
+          },
+          {
+            "header": "@@ -151,6 +165,27 @@ export class ComputedRefImpl<T = any> implements Subscriber {",
+            "oldStart": 151,
+            "oldLines": 6,
+            "newStart": 165,
+            "newLines": 27,
+            "patch": "       warn('Write operation failed: computed value is readonly')\n     }\n   }\n+\n+  update(): boolean {\n+    const prevSub = activeSub\n+    const prevTrackId = activeTrackId\n+    setActiveSub(this, nextTrackId())\n+    startTrack(this)\n+    const oldValue = this._value\n+    let newValue: T\n+    try {\n+      newValue = this.fn(oldValue)\n+    } finally {\n+      setActiveSub(prevSub, prevTrackId)\n+      endTrack(this)\n+    }\n+    if (hasChanged(oldValue, newValue)) {\n+      this._value = newValue\n+      this.version++\n+      return true\n+    }\n+    return false\n+  }\n }\n \n /**"
+          },
+          {
+            "header": "@@ -209,7 +244,7 @@ export function computed<T>(",
+            "oldStart": 209,
+            "oldLines": 7,
+            "newStart": 244,
+            "newLines": 7,
+            "patch": "     setter = getterOrOptions.set\n   }\n \n-  const cRef = new ComputedRefImpl(getter, setter, isSSR)\n+  const cRef = new ComputedRefImpl(getter, setter)\n \n   if (__DEV__ && debugOptions && !isSSR) {\n     cRef.onTrack = debugOptions.onTrack"
+          }
+        ]
+      },
+      {
+        "path": "packages/reactivity/src/debug.ts",
+        "status": "added",
+        "additions": 72,
+        "deletions": 0,
+        "isBinary": false,
+        "sha": "41908a0d1243cbf3704af86a3eafc32bffc1e013",
+        "hunks": [
+          {
+            "header": "@@ -0,0 +1,72 @@",
+            "oldStart": 0,
+            "oldLines": 0,
+            "newStart": 1,
+            "newLines": 72,
+            "patch": "+import { extend } from '@vue/shared'\n+import type { DebuggerEventExtraInfo, ReactiveEffectOptions } from './effect'\n+import { type Link, type Subscriber, SubscriberFlags } from './system'\n+\n+export const triggerEventInfos: DebuggerEventExtraInfo[] = []\n+\n+export function onTrack(\n+  sub: Link['sub'],\n+  debugInfo: DebuggerEventExtraInfo,\n+): void {\n+  if (!__DEV__) {\n+    throw new Error(\n+      `Internal error: onTrack should be called only in development.`,\n+    )\n+  }\n+  if ((sub as ReactiveEffectOptions).onTrack) {\n+    ;(sub as ReactiveEffectOptions).onTrack!(\n+      extend(\n+        {\n+          effect: sub,\n+        },\n+        debugInfo,\n+      ),\n+    )\n+  }\n+}\n+\n+export function onTrigger(sub: Link['sub']): void {\n+  if (!__DEV__) {\n+    throw new Error(\n+      `Internal error: onTrigger should be called only in development.`,\n+    )\n+  }\n+  if ((sub as ReactiveEffectOptions).onTrigger) {\n+    const debugInfo = triggerEventInfos[triggerEventInfos.length - 1]\n+    ;(sub as ReactiveEffectOptions).onTrigger!(\n+      extend(\n+        {\n+          effect: sub,\n+        },\n+        debugInfo,\n+      ),\n+    )\n+  }\n+}\n+\n+export function setupFlagsHandler(target: Subscriber): void {\n+  if (!__DEV__) {\n+    throw new Error(\n+      `Internal error: setupFlagsHandler should be called only in development.`,\n+    )\n+  }\n+  // @ts-expect-error\n+  target._flags = target.flags\n+  Object.defineProperty(target, 'flags', {\n+    get() {\n+      // @ts-expect-error\n+      return target._flags\n+    },\n+    set(value) {\n+      if (\n+        // @ts-expect-error\n+        !(target._flags >> SubscriberFlags.DirtyFlagsIndex) &&\n+        !!(value >> SubscriberFlags.DirtyFlagsIndex)\n+      ) {\n+        onTrigger(this)\n+      }\n+      // @ts-expect-error\n+      target._flags = value\n+    },\n+  })\n+}"
+          }
+        ]
+      },
+      {
+        "path": "packages/reactivity/src/dep.ts",
+        "status": "modified",
+        "additions": 41,
+        "deletions": 232,
+        "isBinary": false,
+        "sha": "5c9b84739d4bc7f94049dc6a491548c1c1ecfa8c",
+        "hunks": [
+          {
+            "header": "@@ -1,230 +1,38 @@",
+            "oldStart": 1,
+            "oldLines": 230,
+            "newStart": 1,
+            "newLines": 38,
+            "patch": "-import { extend, isArray, isIntegerKey, isMap, isSymbol } from '@vue/shared'\n-import type { ComputedRefImpl } from './computed'\n+import { isArray, isIntegerKey, isMap, isSymbol } from '@vue/shared'\n import { type TrackOpTypes, TriggerOpTypes } from './constants'\n+import { onTrack, triggerEventInfos } from './debug'\n+import { activeSub, activeTrackId } from './effect'\n import {\n-  type DebuggerEventExtraInfo,\n-  EffectFlags,\n-  type Subscriber,\n-  activeSub,\n+  type Dependency,\n+  type Link,\n   endBatch,\n-  shouldTrack,\n+  link,\n+  propagate,\n   startBatch,\n-} from './effect'\n+} from './system'\n \n-/**\n- * Incremented every time a reactive change happens\n- * This is used to give computed a fast path to avoid re-compute when nothing\n- * has changed.\n- */\n-export let globalVersion = 0\n-\n-/**\n- * Represents a link between a source (Dep) and a subscriber (Effect or Computed).\n- * Deps and subs have a many-to-many relationship - each link between a\n- * dep and a sub is represented by a Link instance.\n- *\n- * A Link is also a node in two doubly-linked lists - one for the associated\n- * sub to track all its deps, and one for the associated dep to track all its\n- * subs.\n- *\n- * @internal\n- */\n-export class Link {\n-  /**\n-   * - Before each effect run, all previous dep links' version are reset to -1\n-   * - During the run, a link's version is synced with the source dep on access\n-   * - After the run, links with version -1 (that were never used) are cleaned\n-   *   up\n-   */\n-  version: number\n-\n-  /**\n-   * Pointers for doubly-linked lists\n-   */\n-  nextDep?: Link\n-  prevDep?: Link\n-  nextSub?: Link\n-  prevSub?: Link\n-  prevActiveLink?: Link\n+class Dep implements Dependency {\n+  _subs: Link | undefined = undefined\n+  subsTail: Link | undefined = undefined\n+  lastTrackedId = 0\n \n   constructor(\n-    public sub: Subscriber,\n-    public dep: Dep,\n-  ) {\n-    this.version = dep.version\n-    this.nextDep =\n-      this.prevDep =\n-      this.nextSub =\n-      this.prevSub =\n-      this.prevActiveLink =\n-        undefined\n-  }\n-}\n-\n-/**\n- * @internal\n- */\n-export class Dep {\n-  version = 0\n-  /**\n-   * Link between this dep and the current active effect\n-   */\n-  activeLink?: Link = undefined\n-\n-  /**\n-   * Doubly linked list representing the subscribing effects (tail)\n-   */\n-  subs?: Link = undefined\n-\n-  /**\n-   * Doubly linked list representing the subscribing effects (head)\n-   * DEV only, for invoking onTrigger hooks in correct order\n-   */\n-  subsHead?: Link\n-\n-  /**\n-   * For object property deps cleanup\n-   */\n-  map?: KeyToDepMap = undefined\n-  key?: unknown = undefined\n+    private map: KeyToDepMap,\n+    private key: unknown,\n+  ) {}\n \n-  /**\n-   * Subscriber counter\n-   */\n-  sc: number = 0\n-\n-  constructor(public computed?: ComputedRefImpl | undefined) {\n-    if (__DEV__) {\n-      this.subsHead = undefined\n-    }\n+  get subs(): Link | undefined {\n+    return this._subs\n   }\n \n-  track(debugInfo?: DebuggerEventExtraInfo): Link | undefined {\n-    if (!activeSub || !shouldTrack || activeSub === this.computed) {\n-      return\n-    }\n-\n-    let link = this.activeLink\n-    if (link === undefined || link.sub !== activeSub) {\n-      link = this.activeLink = new Link(activeSub, this)\n-\n-      // add the link to the activeEffect as a dep (as tail)\n-      if (!activeSub.deps) {\n-        activeSub.deps = activeSub.depsTail = link\n-      } else {\n-        link.prevDep = activeSub.depsTail\n-        activeSub.depsTail!.nextDep = link\n-        activeSub.depsTail = link\n-      }\n-\n-      addSub(link)\n-    } else if (link.version === -1) {\n-      // reused from last run - already a sub, just sync version\n-      link.version = this.version\n-\n-      // If this dep has a next, it means it's not at the tail - move it to the\n-      // tail. This ensures the effect's dep list is in the order they are\n-      // accessed during evaluation.\n-      if (link.nextDep) {\n-        const next = link.nextDep\n-        next.prevDep = link.prevDep\n-        if (link.prevDep) {\n-          link.prevDep.nextDep = next\n-        }\n-\n-        link.prevDep = activeSub.depsTail\n-        link.nextDep = undefined\n-        activeSub.depsTail!.nextDep = link\n-        activeSub.depsTail = link\n-\n-        // this was the head - point to the new head\n-        if (activeSub.deps === link) {\n-          activeSub.deps = next\n-        }\n-      }\n-    }\n-\n-    if (__DEV__ && activeSub.onTrack) {\n-      activeSub.onTrack(\n-        extend(\n-          {\n-            effect: activeSub,\n-          },\n-          debugInfo,\n-        ),\n-      )\n-    }\n-\n-    return link\n-  }\n-\n-  trigger(debugInfo?: DebuggerEventExtraInfo): void {\n-    this.version++\n-    globalVersion++\n-    this.notify(debugInfo)\n-  }\n-\n-  notify(debugInfo?: DebuggerEventExtraInfo): void {\n-    startBatch()\n-    try {\n-      if (__DEV__) {\n-        // subs are notified and batched in reverse-order and then invoked in\n-        // original order at the end of the batch, but onTrigger hooks should\n-        // be invoked in original order here.\n-        for (let head = this.subsHead; head; head = head.nextSub) {\n-          if (head.sub.onTrigger && !(head.sub.flags & EffectFlags.NOTIFIED)) {\n-            head.sub.onTrigger(\n-              extend(\n-                {\n-                  effect: head.sub,\n-                },\n-                debugInfo,\n-              ),\n-            )\n-          }\n-        }\n-      }\n-      for (let link = this.subs; link; link = link.prevSub) {\n-        if (link.sub.notify()) {\n-          // if notify() returns `true`, this is a computed. Also call notify\n-          // on its dep - it's called here instead of inside computed's notify\n-          // in order to reduce call stack depth.\n-          ;(link.sub as ComputedRefImpl).dep.notify()\n-        }\n-      }\n-    } finally {\n-      endBatch()\n+  set subs(value: Link | undefined) {\n+    this._subs = value\n+    if (value === undefined) {\n+      this.map.delete(this.key)\n     }\n   }\n }\n \n-function addSub(link: Link) {\n-  link.dep.sc++\n-  if (link.sub.flags & EffectFlags.TRACKING) {\n-    const computed = link.dep.computed\n-    // computed getting its first subscriber\n-    // enable tracking + lazily subscribe to all its deps\n-    if (computed && !link.dep.subs) {\n-      computed.flags |= EffectFlags.TRACKING | EffectFlags.DIRTY\n-      for (let l = computed.deps; l; l = l.nextDep) {\n-        addSub(l)\n-      }\n-    }\n-\n-    const currentTail = link.dep.subs\n-    if (currentTail !== link) {\n-      link.prevSub = currentTail\n-      if (currentTail) currentTail.nextSub = link\n-    }\n-\n-    if (__DEV__ && link.dep.subsHead === undefined) {\n-      link.dep.subsHead = link\n-    }\n-\n-    link.dep.subs = link\n-  }\n-}\n-\n // The main WeakMap that stores {target -> key -> dep} connections.\n // Conceptually, it's easier to think of a dependency as a Dep class\n // which maintains a Set of subscribers, but we simply store them as"
+          },
+          {
+            "header": "@@ -254,25 +62,25 @@ export const ARRAY_ITERATE_KEY: unique symbol = Symbol(",
+            "oldStart": 254,
+            "oldLines": 25,
+            "newStart": 62,
+            "newLines": 25,
+            "patch": "  * @param key - Identifier of the reactive property to track.\n  */\n export function track(target: object, type: TrackOpTypes, key: unknown): void {\n-  if (shouldTrack && activeSub) {\n+  if (activeTrackId > 0) {\n     let depsMap = targetMap.get(target)\n     if (!depsMap) {\n       targetMap.set(target, (depsMap = new Map()))\n     }\n     let dep = depsMap.get(key)\n     if (!dep) {\n-      depsMap.set(key, (dep = new Dep()))\n-      dep.map = depsMap\n-      dep.key = key\n+      depsMap.set(key, (dep = new Dep(depsMap, key)))\n     }\n-    if (__DEV__) {\n-      dep.track({\n-        target,\n-        type,\n-        key,\n-      })\n-    } else {\n-      dep.track()\n+    if (dep.lastTrackedId !== activeTrackId) {\n+      if (__DEV__) {\n+        onTrack(activeSub!, {\n+          target,\n+          type,\n+          key,\n+        })\n+      }\n+      dep.lastTrackedId = activeTrackId\n+      link(dep, activeSub!)\n     }\n   }\n }"
+          },
+          {
+            "header": "@@ -296,23 +104,24 @@ export function trigger(",
+            "oldStart": 296,
+            "oldLines": 23,
+            "newStart": 104,
+            "newLines": 24,
+            "patch": "   const depsMap = targetMap.get(target)\n   if (!depsMap) {\n     // never been tracked\n-    globalVersion++\n     return\n   }\n \n-  const run = (dep: Dep | undefined) => {\n-    if (dep) {\n+  const run = (dep: Dependency | undefined) => {\n+    if (dep !== undefined && dep.subs !== undefined) {\n       if (__DEV__) {\n-        dep.trigger({\n+        triggerEventInfos.push({\n           target,\n           type,\n           key,\n           newValue,\n           oldValue,\n           oldTarget,\n         })\n-      } else {\n-        dep.trigger()\n+      }\n+      propagate(dep.subs)\n+      if (__DEV__) {\n+        triggerEventInfos.pop()\n       }\n     }\n   }"
+          },
+          {
+            "header": "@@ -385,7 +194,7 @@ export function trigger(",
+            "oldStart": 385,
+            "oldLines": 7,
+            "newStart": 194,
+            "newLines": 7,
+            "patch": " export function getDepFromReactive(\n   object: any,\n   key: string | number | symbol,\n-): Dep | undefined {\n+): Dependency | undefined {\n   const depMap = targetMap.get(object)\n   return depMap && depMap.get(key)\n }"
+          }
+        ]
+      },
+      {
+        "path": "packages/reactivity/src/effect.ts",
+        "status": "modified",
+        "additions": 121,
+        "deletions": 379,
+        "isBinary": false,
+        "sha": "d0aa92b330ad71a89ca9307b5f23c3d0e1792fc5",
+        "hunks": [
+          {
+            "header": "@@ -1,8 +1,16 @@",
+            "oldStart": 1,
+            "oldLines": 8,
+            "newStart": 1,
+            "newLines": 16,
+            "patch": "-import { extend, hasChanged } from '@vue/shared'\n-import type { ComputedRefImpl } from './computed'\n+import { extend } from '@vue/shared'\n import type { TrackOpTypes, TriggerOpTypes } from './constants'\n-import { type Link, globalVersion } from './dep'\n+import { setupFlagsHandler } from './debug'\n import { activeEffectScope } from './effectScope'\n+import {\n+  type IEffect,\n+  type Link,\n+  type Subscriber,\n+  SubscriberFlags,\n+  checkDirty,\n+  endTrack,\n+  startTrack,\n+} from './system'\n import { warn } from './warning'\n \n export type EffectScheduler = (...args: any[]) => any"
+          },
+          {
+            "header": "@@ -27,7 +35,6 @@ export interface DebuggerOptions {",
+            "oldStart": 27,
+            "oldLines": 7,
+            "newStart": 35,
+            "newLines": 6,
+            "patch": " \n export interface ReactiveEffectOptions extends DebuggerOptions {\n   scheduler?: EffectScheduler\n-  allowRecurse?: boolean\n   onStop?: () => void\n }\n "
+          },
+          {
+            "header": "@@ -36,78 +43,29 @@ export interface ReactiveEffectRunner<T = any> {",
+            "oldStart": 36,
+            "oldLines": 78,
+            "newStart": 43,
+            "newLines": 29,
+            "patch": "   effect: ReactiveEffect\n }\n \n-export let activeSub: Subscriber | undefined\n-\n export enum EffectFlags {\n   /**\n    * ReactiveEffect only\n    */\n-  ACTIVE = 1 << 0,\n-  RUNNING = 1 << 1,\n-  TRACKING = 1 << 2,\n-  NOTIFIED = 1 << 3,\n-  DIRTY = 1 << 4,\n-  ALLOW_RECURSE = 1 << 5,\n-  PAUSED = 1 << 6,\n+  ALLOW_RECURSE = 1 << 2,\n+  PAUSED = 1 << 3,\n+  NOTIFIED = 1 << 4,\n+  STOP = 1 << 5,\n }\n \n-/**\n- * Subscriber is a type that tracks (or subscribes to) a list of deps.\n- */\n-export interface Subscriber extends DebuggerOptions {\n-  /**\n-   * Head of the doubly linked list representing the deps\n-   * @internal\n-   */\n-  deps?: Link\n-  /**\n-   * Tail of the same list\n-   * @internal\n-   */\n-  depsTail?: Link\n-  /**\n-   * @internal\n-   */\n-  flags: EffectFlags\n-  /**\n-   * @internal\n-   */\n-  next?: Subscriber\n-  /**\n-   * returning `true` indicates it's a computed that needs to call notify\n-   * on its dep too\n-   * @internal\n-   */\n-  notify(): true | void\n-}\n+export class ReactiveEffect<T = any> implements IEffect, ReactiveEffectOptions {\n+  nextNotify: IEffect | undefined = undefined\n \n-const pausedQueueEffects = new WeakSet<ReactiveEffect>()\n+  // Subscriber\n+  deps: Link | undefined = undefined\n+  depsTail: Link | undefined = undefined\n+  flags: number = SubscriberFlags.Dirty\n \n-export class ReactiveEffect<T = any>\n-  implements Subscriber, ReactiveEffectOptions\n-{\n-  /**\n-   * @internal\n-   */\n-  deps?: Link = undefined\n-  /**\n-   * @internal\n-   */\n-  depsTail?: Link = undefined\n-  /**\n-   * @internal\n-   */\n-  flags: EffectFlags = EffectFlags.ACTIVE | EffectFlags.TRACKING\n-  /**\n-   * @internal\n-   */\n-  next?: Subscriber = undefined\n   /**\n    * @internal\n    */\n   cleanup?: () => void = undefined\n \n-  scheduler?: EffectScheduler = undefined\n   onStop?: () => void\n   onTrack?: (event: DebuggerEvent) => void\n   onTrigger?: (event: DebuggerEvent) => void"
+          },
+          {
+            "header": "@@ -116,52 +74,59 @@ export class ReactiveEffect<T = any>",
+            "oldStart": 116,
+            "oldLines": 52,
+            "newStart": 74,
+            "newLines": 59,
+            "patch": "     if (activeEffectScope && activeEffectScope.active) {\n       activeEffectScope.effects.push(this)\n     }\n+    if (__DEV__) {\n+      setupFlagsHandler(this)\n+    }\n+  }\n+\n+  get active(): boolean {\n+    return !(this.flags & EffectFlags.STOP)\n   }\n \n   pause(): void {\n-    this.flags |= EffectFlags.PAUSED\n+    if (!(this.flags & EffectFlags.PAUSED)) {\n+      this.flags |= EffectFlags.PAUSED\n+    }\n   }\n \n   resume(): void {\n-    if (this.flags & EffectFlags.PAUSED) {\n+    const flags = this.flags\n+    if (flags & EffectFlags.PAUSED) {\n       this.flags &= ~EffectFlags.PAUSED\n-      if (pausedQueueEffects.has(this)) {\n-        pausedQueueEffects.delete(this)\n-        this.trigger()\n-      }\n+    }\n+    if (flags & EffectFlags.NOTIFIED) {\n+      this.flags &= ~EffectFlags.NOTIFIED\n+      this.notify()\n     }\n   }\n \n-  /**\n-   * @internal\n-   */\n   notify(): void {\n-    if (\n-      this.flags & EffectFlags.RUNNING &&\n-      !(this.flags & EffectFlags.ALLOW_RECURSE)\n-    ) {\n-      return\n+    const flags = this.flags\n+    if (!(flags & EffectFlags.PAUSED)) {\n+      this.scheduler()\n+    } else {\n+      this.flags |= EffectFlags.NOTIFIED\n     }\n-    if (!(this.flags & EffectFlags.NOTIFIED)) {\n-      batch(this)\n+  }\n+\n+  scheduler(): void {\n+    if (this.dirty) {\n+      this.run()\n     }\n   }\n \n   run(): T {\n     // TODO cleanupEffect\n \n-    if (!(this.flags & EffectFlags.ACTIVE)) {\n+    if (!this.active) {\n       // stopped during cleanup\n       return this.fn()\n     }\n-\n-    this.flags |= EffectFlags.RUNNING\n     cleanupEffect(this)\n-    prepareDeps(this)\n-    const prevEffect = activeSub\n-    const prevShouldTrack = shouldTrack\n-    activeSub = this\n-    shouldTrack = true\n+    const prevSub = activeSub\n+    const prevTrackId = activeTrackId\n+    setActiveSub(this, nextTrackId())\n+    startTrack(this)\n \n     try {\n       return this.fn()"
+          },
+          {
+            "header": "@@ -172,299 +137,42 @@ export class ReactiveEffect<T = any>",
+            "oldStart": 172,
+            "oldLines": 299,
+            "newStart": 137,
+            "newLines": 42,
+            "patch": "             'this is likely a Vue internal bug.',\n         )\n       }\n-      cleanupDeps(this)\n-      activeSub = prevEffect\n-      shouldTrack = prevShouldTrack\n-      this.flags &= ~EffectFlags.RUNNING\n+      setActiveSub(prevSub, prevTrackId)\n+      endTrack(this)\n+      if (\n+        this.flags & SubscriberFlags.CanPropagate &&\n+        this.flags & EffectFlags.ALLOW_RECURSE\n+      ) {\n+        this.flags &= ~SubscriberFlags.CanPropagate\n+        this.notify()\n+      }\n     }\n   }\n \n   stop(): void {\n-    if (this.flags & EffectFlags.ACTIVE) {\n-      for (let link = this.deps; link; link = link.nextDep) {\n-        removeSub(link)\n-      }\n-      this.deps = this.depsTail = undefined\n+    if (this.active) {\n+      startTrack(this)\n+      endTrack(this)\n       cleanupEffect(this)\n       this.onStop && this.onStop()\n-      this.flags &= ~EffectFlags.ACTIVE\n-    }\n-  }\n-\n-  trigger(): void {\n-    if (this.flags & EffectFlags.PAUSED) {\n-      pausedQueueEffects.add(this)\n-    } else if (this.scheduler) {\n-      this.scheduler()\n-    } else {\n-      this.runIfDirty()\n-    }\n-  }\n-\n-  /**\n-   * @internal\n-   */\n-  runIfDirty(): void {\n-    if (isDirty(this)) {\n-      this.run()\n+      this.flags |= EffectFlags.STOP\n     }\n   }\n \n   get dirty(): boolean {\n-    return isDirty(this)\n-  }\n-}\n-\n-/**\n- * For debugging\n- */\n-// function printDeps(sub: Subscriber) {\n-//   let d = sub.deps\n-//   let ds = []\n-//   while (d) {\n-//     ds.push(d)\n-//     d = d.nextDep\n-//   }\n-//   return ds.map(d => ({\n-//     id: d.id,\n-//     prev: d.prevDep?.id,\n-//     next: d.nextDep?.id,\n-//   }))\n-// }\n-\n-let batchDepth = 0\n-let batchedSub: Subscriber | undefined\n-let batchedComputed: Subscriber | undefined\n-\n-export function batch(sub: Subscriber, isComputed = false): void {\n-  sub.flags |= EffectFlags.NOTIFIED\n-  if (isComputed) {\n-    sub.next = batchedComputed\n-    batchedComputed = sub\n-    return\n-  }\n-  sub.next = batchedSub\n-  batchedSub = sub\n-}\n-\n-/**\n- * @internal\n- */\n-export function startBatch(): void {\n-  batchDepth++\n-}\n-\n-/**\n- * Run batched effects when all batches have ended\n- * @internal\n- */\n-export function endBatch(): void {\n-  if (--batchDepth > 0) {\n-    return\n-  }\n-\n-  if (batchedComputed) {\n-    let e: Subscriber | undefined = batchedComputed\n-    batchedComputed = undefined\n-    while (e) {\n-      const next: Subscriber | undefined = e.next\n-      e.next = undefined\n-      e.flags &= ~EffectFlags.NOTIFIED\n-      e = next\n-    }\n-  }\n-\n-  let error: unknown\n-  while (batchedSub) {\n-    let e: Subscriber | undefined = batchedSub\n-    batchedSub = undefined\n-    while (e) {\n-      const next: Subscriber | undefined = e.next\n-      e.next = undefined\n-      e.flags &= ~EffectFlags.NOTIFIED\n-      if (e.flags & EffectFlags.ACTIVE) {\n-        try {\n-          // ACTIVE flag is effect-only\n-          ;(e as ReactiveEffect).trigger()\n-        } catch (err) {\n-          if (!error) error = err\n-        }\n-      }\n-      e = next\n-    }\n-  }\n-\n-  if (error) throw error\n-}\n-\n-function prepareDeps(sub: Subscriber) {\n-  // Prepare deps for tracking, starting from the head\n-  for (let link = sub.deps; link; link = link.nextDep) {\n-    // set all previous deps' (if any) version to -1 so that we can track\n-    // which ones are unused after the run\n-    link.version = -1\n-    // store previous active sub if link was being used in another context\n-    link.prevActiveLink = link.dep.activeLink\n-    link.dep.activeLink = link\n-  }\n-}\n-\n-function cleanupDeps(sub: Subscriber) {\n-  // Cleanup unsued deps\n-  let head\n-  let tail = sub.depsTail\n-  let link = tail\n-  while (link) {\n-    const prev = link.prevDep\n-    if (link.version === -1) {\n-      if (link === tail) tail = prev\n-      // unused - remove it from the dep's subscribing effect list\n-      removeSub(link)\n-      // also remove it from this effect's dep list\n-      removeDep(link)\n-    } else {\n-      // The new head is the last node seen which wasn't removed\n-      // from the doubly-linked list\n-      head = link\n-    }\n-\n-    // restore previous active link if any\n-    link.dep.activeLink = link.prevActiveLink\n-    link.prevActiveLink = undefined\n-    link = prev\n-  }\n-  // set the new head & tail\n-  sub.deps = head\n-  sub.depsTail = tail\n-}\n-\n-function isDirty(sub: Subscriber): boolean {\n-  for (let link = sub.deps; link; link = link.nextDep) {\n-    if (\n-      link.dep.version !== link.version ||\n-      (link.dep.computed &&\n-        (refreshComputed(link.dep.computed) ||\n-          link.dep.version !== link.version))\n-    ) {\n+    const flags = this.flags\n+    if (flags & SubscriberFlags.Dirty) {\n       return true\n-    }\n-  }\n-  // @ts-expect-error only for backwards compatibility where libs manually set\n-  // this flag - e.g. Pinia's testing module\n-  if (sub._dirty) {\n-    return true\n-  }\n-  return false\n-}\n-\n-/**\n- * Returning false indicates the refresh failed\n- * @internal\n- */\n-export function refreshComputed(computed: ComputedRefImpl): undefined {\n-  if (\n-    computed.flags & EffectFlags.TRACKING &&\n-    !(computed.flags & EffectFlags.DIRTY)\n-  ) {\n-    return\n-  }\n-  computed.flags &= ~EffectFlags.DIRTY\n-\n-  // Global version fast path when no reactive changes has happened since\n-  // last refresh.\n-  if (computed.globalVersion === globalVersion) {\n-    return\n-  }\n-  computed.globalVersion = globalVersion\n-\n-  const dep = computed.dep\n-  computed.flags |= EffectFlags.RUNNING\n-  // In SSR there will be no render effect, so the computed has no subscriber\n-  // and therefore tracks no deps, thus we cannot rely on the dirty check.\n-  // Instead, computed always re-evaluate and relies on the globalVersion\n-  // fast path above for caching.\n-  if (\n-    dep.version > 0 &&\n-    !computed.isSSR &&\n-    computed.deps &&\n-    !isDirty(computed)\n-  ) {\n-    computed.flags &= ~EffectFlags.RUNNING\n-    return\n-  }\n-\n-  const prevSub = activeSub\n-  const prevShouldTrack = shouldTrack\n-  activeSub = computed\n-  shouldTrack = true\n-\n-  try {\n-    prepareDeps(computed)\n-    const value = computed.fn(computed._value)\n-    if (dep.version === 0 || hasChanged(value, computed._value)) {\n-      computed._value = value\n-      dep.version++\n-    }\n-  } catch (err) {\n-    dep.version++\n-    throw err\n-  } finally {\n-    activeSub = prevSub\n-    shouldTrack = prevShouldTrack\n-    cleanupDeps(computed)\n-    computed.flags &= ~EffectFlags.RUNNING\n-  }\n-}\n-\n-function removeSub(link: Link, soft = false) {\n-  const { dep, prevSub, nextSub } = link\n-  if (prevSub) {\n-    prevSub.nextSub = nextSub\n-    link.prevSub = undefined\n-  }\n-  if (nextSub) {\n-    nextSub.prevSub = prevSub\n-    link.nextSub = undefined\n-  }\n-  if (__DEV__ && dep.subsHead === link) {\n-    // was previous head, point new head to next\n-    dep.subsHead = nextSub\n-  }\n-\n-  if (dep.subs === link) {\n-    // was previous tail, point new tail to prev\n-    dep.subs = prevSub\n-\n-    if (!prevSub && dep.computed) {\n-      // if computed, unsubscribe it from all its deps so this computed and its\n-      // value can be GCed\n-      dep.computed.flags &= ~EffectFlags.TRACKING\n-      for (let l = dep.computed.deps; l; l = l.nextDep) {\n-        // here we are only \"soft\" unsubscribing because the computed still keeps\n-        // referencing the deps and the dep should not decrease its sub count\n-        removeSub(l, true)\n+    } else if (flags & SubscriberFlags.ToCheckDirty) {\n+      if (checkDirty(this.deps!)) {\n+        this.flags |= SubscriberFlags.Dirty\n+        return true\n+      } else {\n+        this.flags &= ~SubscriberFlags.ToCheckDirty\n+        return false\n       }\n     }\n-  }\n-\n-  if (!soft && !--dep.sc && dep.map) {\n-    // #11979\n-    // property dep no longer has effect subscribers, delete it\n-    // this mostly is for the case where an object is kept in memory but only a\n-    // subset of its properties is tracked at one time\n-    dep.map.delete(dep.key)\n-  }\n-}\n-\n-function removeDep(link: Link) {\n-  const { prevDep, nextDep } = link\n-  if (prevDep) {\n-    prevDep.nextDep = nextDep\n-    link.prevDep = undefined\n-  }\n-  if (nextDep) {\n-    nextDep.prevDep = prevDep\n-    link.nextDep = undefined\n+    return false\n   }\n }\n "
+          },
+          {
+            "header": "@@ -505,34 +213,55 @@ export function stop(runner: ReactiveEffectRunner): void {",
+            "oldStart": 505,
+            "oldLines": 34,
+            "newStart": 213,
+            "newLines": 55,
+            "patch": "   runner.effect.stop()\n }\n \n-/**\n- * @internal\n- */\n-export let shouldTrack = true\n-const trackStack: boolean[] = []\n+const resetTrackingStack: [sub: typeof activeSub, trackId: number][] = []\n \n /**\n  * Temporarily pauses tracking.\n  */\n export function pauseTracking(): void {\n-  trackStack.push(shouldTrack)\n-  shouldTrack = false\n+  resetTrackingStack.push([activeSub, activeTrackId])\n+  activeSub = undefined\n+  activeTrackId = 0\n }\n \n /**\n  * Re-enables effect tracking (if it was paused).\n  */\n export function enableTracking(): void {\n-  trackStack.push(shouldTrack)\n-  shouldTrack = true\n+  const isPaused = activeSub === undefined\n+  if (!isPaused) {\n+    // Add the current active effect to the trackResetStack so it can be\n+    // restored by calling resetTracking.\n+    resetTrackingStack.push([activeSub, activeTrackId])\n+  } else {\n+    // Add a placeholder to the trackResetStack so we can it can be popped\n+    // to restore the previous active effect.\n+    resetTrackingStack.push([undefined, 0])\n+    for (let i = resetTrackingStack.length - 1; i >= 0; i--) {\n+      if (resetTrackingStack[i][0] !== undefined) {\n+        ;[activeSub, activeTrackId] = resetTrackingStack[i]\n+        break\n+      }\n+    }\n+  }\n }\n \n /**\n  * Resets the previous global effect tracking state.\n  */\n export function resetTracking(): void {\n-  const last = trackStack.pop()\n-  shouldTrack = last === undefined ? true : last\n+  if (__DEV__ && resetTrackingStack.length === 0) {\n+    warn(\n+      `resetTracking() was called when there was no active tracking ` +\n+        `to reset.`,\n+    )\n+  }\n+  if (resetTrackingStack.length) {\n+    ;[activeSub, activeTrackId] = resetTrackingStack.pop()!\n+  } else {\n+    activeSub = undefined\n+    activeTrackId = 0\n+  }\n }\n \n /**"
+          },
+          {
+            "header": "@@ -561,7 +290,7 @@ export function onEffectCleanup(fn: () => void, failSilently = false): void {",
+            "oldStart": 561,
+            "oldLines": 7,
+            "newStart": 290,
+            "newLines": 7,
+            "patch": " function cleanupEffect(e: ReactiveEffect) {\n   const { cleanup } = e\n   e.cleanup = undefined\n-  if (cleanup) {\n+  if (cleanup !== undefined) {\n     // run cleanup without active effect\n     const prevSub = activeSub\n     activeSub = undefined"
+          },
+          {
+            "header": "@@ -572,3 +301,16 @@ function cleanupEffect(e: ReactiveEffect) {",
+            "oldStart": 572,
+            "oldLines": 3,
+            "newStart": 301,
+            "newLines": 16,
+            "patch": "     }\n   }\n }\n+\n+export let activeSub: Subscriber | undefined = undefined\n+export let activeTrackId = 0\n+export let lastTrackId = 0\n+export const nextTrackId = (): number => ++lastTrackId\n+\n+export function setActiveSub(\n+  sub: Subscriber | undefined,\n+  trackId: number,\n+): void {\n+  activeSub = sub\n+  activeTrackId = trackId\n+}"
+          }
+        ]
+      },
+      {
+        "path": "packages/reactivity/src/effectScope.ts",
+        "status": "modified",
+        "additions": 33,
+        "deletions": 25,
+        "isBinary": false,
+        "sha": "b03cbc2800f750fdc959a8968606a8398c919fbc",
+        "hunks": [
+          {
+            "header": "@@ -1,13 +1,23 @@",
+            "oldStart": 1,
+            "oldLines": 13,
+            "newStart": 1,
+            "newLines": 23,
+            "patch": "-import type { ReactiveEffect } from './effect'\n+import { EffectFlags, type ReactiveEffect, nextTrackId } from './effect'\n+import {\n+  type Link,\n+  type Subscriber,\n+  SubscriberFlags,\n+  endTrack,\n+  startTrack,\n+} from './system'\n import { warn } from './warning'\n \n export let activeEffectScope: EffectScope | undefined\n \n-export class EffectScope {\n-  /**\n-   * @internal\n-   */\n-  private _active = true\n+export class EffectScope implements Subscriber {\n+  // Subscriber: In order to collect orphans computeds\n+  deps: Link | undefined = undefined\n+  depsTail: Link | undefined = undefined\n+  flags: number = SubscriberFlags.None\n+\n+  trackId: number = nextTrackId()\n+\n   /**\n    * @internal\n    */"
+          },
+          {
+            "header": "@@ -17,8 +27,6 @@ export class EffectScope {",
+            "oldStart": 17,
+            "oldLines": 8,
+            "newStart": 27,
+            "newLines": 6,
+            "patch": "    */\n   cleanups: (() => void)[] = []\n \n-  private _isPaused = false\n-\n   /**\n    * only assigned by undetached scope\n    * @internal"
+          },
+          {
+            "header": "@@ -47,12 +55,12 @@ export class EffectScope {",
+            "oldStart": 47,
+            "oldLines": 12,
+            "newStart": 55,
+            "newLines": 12,
+            "patch": "   }\n \n   get active(): boolean {\n-    return this._active\n+    return !(this.flags & EffectFlags.STOP)\n   }\n \n   pause(): void {\n-    if (this._active) {\n-      this._isPaused = true\n+    if (!(this.flags & EffectFlags.PAUSED)) {\n+      this.flags |= EffectFlags.PAUSED\n       let i, l\n       if (this.scopes) {\n         for (i = 0, l = this.scopes.length; i < l; i++) {"
+          },
+          {
+            "header": "@@ -69,24 +77,22 @@ export class EffectScope {",
+            "oldStart": 69,
+            "oldLines": 24,
+            "newStart": 77,
+            "newLines": 22,
+            "patch": "    * Resumes the effect scope, including all child scopes and effects.\n    */\n   resume(): void {\n-    if (this._active) {\n-      if (this._isPaused) {\n-        this._isPaused = false\n-        let i, l\n-        if (this.scopes) {\n-          for (i = 0, l = this.scopes.length; i < l; i++) {\n-            this.scopes[i].resume()\n-          }\n-        }\n-        for (i = 0, l = this.effects.length; i < l; i++) {\n-          this.effects[i].resume()\n+    if (this.flags & EffectFlags.PAUSED) {\n+      this.flags &= ~EffectFlags.PAUSED\n+      let i, l\n+      if (this.scopes) {\n+        for (i = 0, l = this.scopes.length; i < l; i++) {\n+          this.scopes[i].resume()\n         }\n       }\n+      for (i = 0, l = this.effects.length; i < l; i++) {\n+        this.effects[i].resume()\n+      }\n     }\n   }\n \n   run<T>(fn: () => T): T | undefined {\n-    if (this._active) {\n+    if (this.active) {\n       const currentEffectScope = activeEffectScope\n       try {\n         activeEffectScope = this"
+          },
+          {
+            "header": "@@ -116,8 +122,10 @@ export class EffectScope {",
+            "oldStart": 116,
+            "oldLines": 8,
+            "newStart": 122,
+            "newLines": 10,
+            "patch": "   }\n \n   stop(fromParent?: boolean): void {\n-    if (this._active) {\n-      this._active = false\n+    if (this.active) {\n+      this.flags |= EffectFlags.STOP\n+      startTrack(this)\n+      endTrack(this)\n       let i, l\n       for (i = 0, l = this.effects.length; i < l; i++) {\n         this.effects[i].stop()"
+          }
+        ]
+      },
+      {
+        "path": "packages/reactivity/src/ref.ts",
+        "status": "modified",
+        "additions": 49,
+        "deletions": 30,
+        "isBinary": false,
+        "sha": "1778ea7ea1e891988adb78fdeff13a7db420de03",
+        "hunks": [
+          {
+            "header": "@@ -5,7 +5,11 @@ import {",
+            "oldStart": 5,
+            "oldLines": 7,
+            "newStart": 5,
+            "newLines": 11,
+            "patch": "   isFunction,\n   isObject,\n } from '@vue/shared'\n-import { Dep, getDepFromReactive } from './dep'\n+import type { ComputedRef, WritableComputedRef } from './computed'\n+import { ReactiveFlags, TrackOpTypes, TriggerOpTypes } from './constants'\n+import { onTrack, triggerEventInfos } from './debug'\n+import { getDepFromReactive } from './dep'\n+import { activeSub, activeTrackId } from './effect'\n import {\n   type Builtin,\n   type ShallowReactiveMarker,"
+          },
+          {
+            "header": "@@ -16,8 +20,7 @@ import {",
+            "oldStart": 16,
+            "oldLines": 8,
+            "newStart": 20,
+            "newLines": 7,
+            "patch": "   toRaw,\n   toReactive,\n } from './reactive'\n-import type { ComputedRef, WritableComputedRef } from './computed'\n-import { ReactiveFlags, TrackOpTypes, TriggerOpTypes } from './constants'\n+import { type Dependency, type Link, link, propagate } from './system'\n import { warn } from './warning'\n \n declare const RefSymbol: unique symbol"
+          },
+          {
+            "header": "@@ -105,12 +108,15 @@ function createRef(rawValue: unknown, shallow: boolean) {",
+            "oldStart": 105,
+            "oldLines": 12,
+            "newStart": 108,
+            "newLines": 15,
+            "patch": " /**\n  * @internal\n  */\n-class RefImpl<T = any> {\n+class RefImpl<T = any> implements Dependency {\n+  // Dependency\n+  subs: Link | undefined = undefined\n+  subsTail: Link | undefined = undefined\n+  lastTrackedId = 0\n+\n   _value: T\n   private _rawValue: T\n \n-  dep: Dep = new Dep()\n-\n   public readonly [ReactiveFlags.IS_REF] = true\n   public readonly [ReactiveFlags.IS_SHALLOW]: boolean = false\n "
+          },
+          {
+            "header": "@@ -120,16 +126,12 @@ class RefImpl<T = any> {",
+            "oldStart": 120,
+            "oldLines": 16,
+            "newStart": 126,
+            "newLines": 12,
+            "patch": "     this[ReactiveFlags.IS_SHALLOW] = isShallow\n   }\n \n+  get dep() {\n+    return this\n+  }\n+\n   get value() {\n-    if (__DEV__) {\n-      this.dep.track({\n-        target: this,\n-        type: TrackOpTypes.GET,\n-        key: 'value',\n-      })\n-    } else {\n-      this.dep.track()\n-    }\n+    trackRef(this)\n     return this._value\n   }\n "
+          },
+          {
+            "header": "@@ -144,15 +146,17 @@ class RefImpl<T = any> {",
+            "oldStart": 144,
+            "oldLines": 15,
+            "newStart": 146,
+            "newLines": 17,
+            "patch": "       this._rawValue = newValue\n       this._value = useDirectValue ? newValue : toReactive(newValue)\n       if (__DEV__) {\n-        this.dep.trigger({\n+        triggerEventInfos.push({\n           target: this,\n           type: TriggerOpTypes.SET,\n           key: 'value',\n           newValue,\n           oldValue,\n         })\n-      } else {\n-        this.dep.trigger()\n+      }\n+      triggerRef(this as unknown as Ref)\n+      if (__DEV__) {\n+        triggerEventInfos.pop()\n       }\n     }\n   }"
+          },
+          {
+            "header": "@@ -185,17 +189,23 @@ class RefImpl<T = any> {",
+            "oldStart": 185,
+            "oldLines": 17,
+            "newStart": 189,
+            "newLines": 23,
+            "patch": "  */\n export function triggerRef(ref: Ref): void {\n   // ref may be an instance of ObjectRefImpl\n-  if ((ref as unknown as RefImpl).dep) {\n+  const dep = (ref as unknown as RefImpl).dep\n+  if (dep !== undefined && dep.subs !== undefined) {\n+    propagate(dep.subs)\n+  }\n+}\n+\n+function trackRef(dep: Dependency) {\n+  if (activeTrackId !== 0 && dep.lastTrackedId !== activeTrackId) {\n     if (__DEV__) {\n-      ;(ref as unknown as RefImpl).dep.trigger({\n-        target: ref,\n-        type: TriggerOpTypes.SET,\n+      onTrack(activeSub!, {\n+        target: dep,\n+        type: TrackOpTypes.GET,\n         key: 'value',\n-        newValue: (ref as unknown as RefImpl)._value,\n       })\n-    } else {\n-      ;(ref as unknown as RefImpl).dep.trigger()\n     }\n+    dep.lastTrackedId = activeTrackId\n+    link(dep, activeSub!)\n   }\n }\n "
+          },
+          {
+            "header": "@@ -287,8 +297,11 @@ export type CustomRefFactory<T> = (",
+            "oldStart": 287,
+            "oldLines": 8,
+            "newStart": 297,
+            "newLines": 11,
+            "patch": "   set: (value: T) => void\n }\n \n-class CustomRefImpl<T> {\n-  public dep: Dep\n+class CustomRefImpl<T> implements Dependency {\n+  // Dependency\n+  subs: Link | undefined = undefined\n+  subsTail: Link | undefined = undefined\n+  lastTrackedId = 0\n \n   private readonly _get: ReturnType<CustomRefFactory<T>>['get']\n   private readonly _set: ReturnType<CustomRefFactory<T>>['set']"
+          },
+          {
+            "header": "@@ -298,12 +311,18 @@ class CustomRefImpl<T> {",
+            "oldStart": 298,
+            "oldLines": 12,
+            "newStart": 311,
+            "newLines": 18,
+            "patch": "   public _value: T = undefined!\n \n   constructor(factory: CustomRefFactory<T>) {\n-    const dep = (this.dep = new Dep())\n-    const { get, set } = factory(dep.track.bind(dep), dep.trigger.bind(dep))\n+    const { get, set } = factory(\n+      () => trackRef(this),\n+      () => triggerRef(this as unknown as Ref),\n+    )\n     this._get = get\n     this._set = set\n   }\n \n+  get dep() {\n+    return this\n+  }\n+\n   get value() {\n     return (this._value = this._get())\n   }"
+          },
+          {
+            "header": "@@ -366,7 +385,7 @@ class ObjectRefImpl<T extends object, K extends keyof T> {",
+            "oldStart": 366,
+            "oldLines": 7,
+            "newStart": 385,
+            "newLines": 7,
+            "patch": "     this._object[this._key] = newVal\n   }\n \n-  get dep(): Dep | undefined {\n+  get dep(): Dependency | undefined {\n     return getDepFromReactive(toRaw(this._object), this._key)\n   }\n }"
+          }
+        ]
+      },
+      {
+        "path": "packages/reactivity/src/system.ts",
+        "status": "added",
+        "additions": 366,
+        "deletions": 0,
+        "isBinary": false,
+        "sha": "f34562b4f9667bbe7b7576d16b4c111fae249eb1",
+        "hunks": [
+          {
+            "header": "@@ -0,0 +1,366 @@",
+            "oldStart": 0,
+            "oldLines": 0,
+            "newStart": 1,
+            "newLines": 366,
+            "patch": "+// Ported from https://github.com/stackblitz/alien-signals/blob/v0.4.4/src/system.ts\n+\n+export interface IEffect extends Subscriber {\n+  nextNotify: IEffect | undefined\n+  notify(): void\n+}\n+\n+export interface IComputed extends Dependency, Subscriber {\n+  version: number\n+  update(): boolean\n+}\n+\n+export interface Dependency {\n+  subs: Link | undefined\n+  subsTail: Link | undefined\n+  lastTrackedId?: number\n+}\n+\n+export interface Subscriber {\n+  flags: SubscriberFlags\n+  deps: Link | undefined\n+  depsTail: Link | undefined\n+}\n+\n+export interface Link {\n+  dep: Dependency | IComputed | (Dependency & IEffect)\n+  sub: Subscriber | IComputed | (Dependency & IEffect) | IEffect\n+  version: number\n+  // Reuse to link prev stack in checkDirty\n+  // Reuse to link prev stack in propagate\n+  prevSub: Link | undefined\n+  nextSub: Link | undefined\n+  // Reuse to link next released link in linkPool\n+  nextDep: Link | undefined\n+}\n+\n+export enum SubscriberFlags {\n+  None = 0,\n+  Tracking = 1 << 0,\n+  CanPropagate = 1 << 1,\n+  // RunInnerEffects = 1 << 2, // Not used in Vue\n+  // 2~5 are using in EffectFlags\n+  ToCheckDirty = 1 << 6,\n+  Dirty = 1 << 7,\n+  Dirtys = SubscriberFlags.ToCheckDirty | SubscriberFlags.Dirty,\n+\n+  DirtyFlagsIndex = 6,\n+}\n+\n+let batchDepth = 0\n+let queuedEffects: IEffect | undefined\n+let queuedEffectsTail: IEffect | undefined\n+let linkPool: Link | undefined\n+\n+export function startBatch(): void {\n+  ++batchDepth\n+}\n+\n+export function endBatch(): void {\n+  if (!--batchDepth) {\n+    drainQueuedEffects()\n+  }\n+}\n+\n+function drainQueuedEffects(): void {\n+  while (queuedEffects !== undefined) {\n+    const effect = queuedEffects\n+    const queuedNext = effect.nextNotify\n+    if (queuedNext !== undefined) {\n+      effect.nextNotify = undefined\n+      queuedEffects = queuedNext\n+    } else {\n+      queuedEffects = undefined\n+      queuedEffectsTail = undefined\n+    }\n+    effect.notify()\n+  }\n+}\n+\n+export function link(dep: Dependency, sub: Subscriber): Link {\n+  const currentDep = sub.depsTail\n+  const nextDep = currentDep !== undefined ? currentDep.nextDep : sub.deps\n+  if (nextDep !== undefined && nextDep.dep === dep) {\n+    sub.depsTail = nextDep\n+    return nextDep\n+  } else {\n+    return linkNewDep(dep, sub, nextDep, currentDep)\n+  }\n+}\n+\n+function linkNewDep(\n+  dep: Dependency,\n+  sub: Subscriber,\n+  nextDep: Link | undefined,\n+  depsTail: Link | undefined,\n+): Link {\n+  let newLink: Link\n+\n+  if (linkPool !== undefined) {\n+    newLink = linkPool\n+    linkPool = newLink.nextDep\n+    newLink.nextDep = nextDep\n+    newLink.dep = dep\n+    newLink.sub = sub\n+  } else {\n+    newLink = {\n+      dep,\n+      sub,\n+      version: 0,\n+      nextDep,\n+      prevSub: undefined,\n+      nextSub: undefined,\n+    }\n+  }\n+\n+  if (depsTail === undefined) {\n+    sub.deps = newLink\n+  } else {\n+    depsTail.nextDep = newLink\n+  }\n+\n+  if (dep.subs === undefined) {\n+    dep.subs = newLink\n+  } else {\n+    const oldTail = dep.subsTail!\n+    newLink.prevSub = oldTail\n+    oldTail.nextSub = newLink\n+  }\n+\n+  sub.depsTail = newLink\n+  dep.subsTail = newLink\n+\n+  return newLink\n+}\n+\n+export function propagate(subs: Link): void {\n+  let targetFlag = SubscriberFlags.Dirty\n+  let link = subs\n+  let stack = 0\n+  let nextSub: Link | undefined\n+\n+  top: do {\n+    const sub = link.sub\n+    const subFlags = sub.flags\n+\n+    if (!(subFlags & SubscriberFlags.Tracking)) {\n+      let canPropagate = !(subFlags >> SubscriberFlags.DirtyFlagsIndex)\n+      if (!canPropagate && subFlags & SubscriberFlags.CanPropagate) {\n+        sub.flags &= ~SubscriberFlags.CanPropagate\n+        canPropagate = true\n+      }\n+      if (canPropagate) {\n+        sub.flags |= targetFlag\n+        const subSubs = (sub as Dependency).subs\n+        if (subSubs !== undefined) {\n+          if (subSubs.nextSub !== undefined) {\n+            subSubs.prevSub = subs\n+            subs = subSubs\n+            ++stack\n+          }\n+          link = subSubs\n+          targetFlag = SubscriberFlags.ToCheckDirty\n+          continue\n+        }\n+        if ('notify' in sub) {\n+          if (queuedEffectsTail !== undefined) {\n+            queuedEffectsTail.nextNotify = sub\n+          } else {\n+            queuedEffects = sub\n+          }\n+          queuedEffectsTail = sub\n+        }\n+      } else if (!(sub.flags & targetFlag)) {\n+        sub.flags |= targetFlag\n+      }\n+    } else if (isValidLink(link, sub)) {\n+      if (!(subFlags >> SubscriberFlags.DirtyFlagsIndex)) {\n+        sub.flags |= targetFlag | SubscriberFlags.CanPropagate\n+        const subSubs = (sub as Dependency).subs\n+        if (subSubs !== undefined) {\n+          if (subSubs.nextSub !== undefined) {\n+            subSubs.prevSub = subs\n+            subs = subSubs\n+            ++stack\n+          }\n+          link = subSubs\n+          targetFlag = SubscriberFlags.ToCheckDirty\n+          continue\n+        }\n+      } else if (!(sub.flags & targetFlag)) {\n+        sub.flags |= targetFlag\n+      }\n+    }\n+\n+    if ((nextSub = subs.nextSub) === undefined) {\n+      if (stack) {\n+        let dep = subs.dep\n+        do {\n+          --stack\n+          const depSubs = dep.subs!\n+          const prevLink = depSubs.prevSub!\n+          depSubs.prevSub = undefined\n+          link = subs = prevLink.nextSub!\n+          if (subs !== undefined) {\n+            targetFlag = stack\n+              ? SubscriberFlags.ToCheckDirty\n+              : SubscriberFlags.Dirty\n+            continue top\n+          }\n+          dep = prevLink.dep\n+        } while (stack)\n+      }\n+      break\n+    }\n+    if (link !== subs) {\n+      targetFlag = stack ? SubscriberFlags.ToCheckDirty : SubscriberFlags.Dirty\n+    }\n+    link = subs = nextSub\n+  } while (true)\n+\n+  if (!batchDepth) {\n+    drainQueuedEffects()\n+  }\n+}\n+\n+function isValidLink(subLink: Link, sub: Subscriber) {\n+  const depsTail = sub.depsTail\n+  if (depsTail !== undefined) {\n+    let link = sub.deps!\n+    do {\n+      if (link === subLink) {\n+        return true\n+      }\n+      if (link === depsTail) {\n+        break\n+      }\n+      link = link.nextDep!\n+    } while (link !== undefined)\n+  }\n+  return false\n+}\n+\n+export function checkDirty(deps: Link): boolean {\n+  let stack = 0\n+  let dirty: boolean\n+  let nextDep: Link | undefined\n+\n+  top: do {\n+    dirty = false\n+    const dep = deps.dep\n+    if ('update' in dep) {\n+      if (dep.version !== deps.version) {\n+        dirty = true\n+      } else {\n+        const depFlags = dep.flags\n+        if (depFlags & SubscriberFlags.Dirty) {\n+          dirty = dep.update()\n+        } else if (depFlags & SubscriberFlags.ToCheckDirty) {\n+          dep.subs!.prevSub = deps\n+          deps = dep.deps!\n+          ++stack\n+          continue\n+        }\n+      }\n+    }\n+    if (dirty || (nextDep = deps.nextDep) === undefined) {\n+      if (stack) {\n+        let sub = deps.sub as IComputed\n+        do {\n+          --stack\n+          const subSubs = sub.subs!\n+          const prevLink = subSubs.prevSub!\n+          subSubs.prevSub = undefined\n+          if (dirty) {\n+            if (sub.update()) {\n+              sub = prevLink.sub as IComputed\n+              dirty = true\n+              continue\n+            }\n+          } else {\n+            sub.flags &= ~SubscriberFlags.Dirtys\n+          }\n+          deps = prevLink.nextDep!\n+          if (deps !== undefined) {\n+            continue top\n+          }\n+          sub = prevLink.sub as IComputed\n+          dirty = false\n+        } while (stack)\n+      }\n+      return dirty\n+    }\n+    deps = nextDep\n+  } while (true)\n+}\n+\n+export function startTrack(sub: Subscriber): void {\n+  sub.depsTail = undefined\n+  sub.flags =\n+    (sub.flags & ~(SubscriberFlags.CanPropagate | SubscriberFlags.Dirtys)) |\n+    SubscriberFlags.Tracking\n+}\n+\n+export function endTrack(sub: Subscriber): void {\n+  const depsTail = sub.depsTail\n+  if (depsTail !== undefined) {\n+    if (depsTail.nextDep !== undefined) {\n+      clearTrack(depsTail.nextDep)\n+      depsTail.nextDep = undefined\n+    }\n+  } else if (sub.deps !== undefined) {\n+    clearTrack(sub.deps)\n+    sub.deps = undefined\n+  }\n+  sub.flags &= ~SubscriberFlags.Tracking\n+}\n+\n+function clearTrack(link: Link): void {\n+  do {\n+    const dep = link.dep\n+    const nextDep = link.nextDep\n+    const nextSub = link.nextSub\n+    const prevSub = link.prevSub\n+\n+    if (nextSub !== undefined) {\n+      nextSub.prevSub = prevSub\n+      link.nextSub = undefined\n+    } else {\n+      dep.subsTail = prevSub\n+      if ('lastTrackedId' in dep) {\n+        dep.lastTrackedId = 0\n+      }\n+    }\n+\n+    if (prevSub !== undefined) {\n+      prevSub.nextSub = nextSub\n+      link.prevSub = undefined\n+    } else {\n+      dep.subs = nextSub\n+    }\n+\n+    // @ts-expect-error\n+    link.dep = undefined\n+    // @ts-expect-error\n+    link.sub = undefined\n+    link.nextDep = linkPool\n+    linkPool = link\n+\n+    if (dep.subs === undefined && 'deps' in dep) {\n+      if ('notify' in dep) {\n+        dep.flags &= ~SubscriberFlags.Dirtys\n+      } else {\n+        dep.flags |= SubscriberFlags.Dirty\n+      }\n+      const depDeps = dep.deps\n+      if (depDeps !== undefined) {\n+        link = depDeps\n+        dep.depsTail!.nextDep = nextDep\n+        dep.deps = undefined\n+        dep.depsTail = undefined\n+        continue\n+      }\n+    }\n+    link = nextDep!\n+  } while (link !== undefined)\n+}"
+          }
+        ]
+      },
+      {
+        "path": "packages/reactivity/src/watch.ts",
+        "status": "modified",
+        "additions": 3,
+        "deletions": 7,
+        "isBinary": false,
+        "sha": "094bf226ca8dfacda865bbea8de47dbe0ccb2d5a",
+        "hunks": [
+          {
+            "header": "@@ -10,20 +10,19 @@ import {",
+            "oldStart": 10,
+            "oldLines": 20,
+            "newStart": 10,
+            "newLines": 19,
+            "patch": "   isSet,\n   remove,\n } from '@vue/shared'\n-import { warn } from './warning'\n import type { ComputedRef } from './computed'\n import { ReactiveFlags } from './constants'\n import {\n   type DebuggerOptions,\n-  EffectFlags,\n   type EffectScheduler,\n   ReactiveEffect,\n   pauseTracking,\n   resetTracking,\n } from './effect'\n+import { getCurrentScope } from './effectScope'\n import { isReactive, isShallow } from './reactive'\n import { type Ref, isRef } from './ref'\n-import { getCurrentScope } from './effectScope'\n+import { warn } from './warning'\n \n // These errors were transferred from `packages/runtime-core/src/errorHandling.ts`\n // to @vue/reactivity to allow co-location with the moved base watch logic, hence"
+          },
+          {
+            "header": "@@ -231,10 +230,7 @@ export function watch(",
+            "oldStart": 231,
+            "oldLines": 10,
+            "newStart": 230,
+            "newLines": 7,
+            "patch": "     : INITIAL_WATCHER_VALUE\n \n   const job = (immediateFirstRun?: boolean) => {\n-    if (\n-      !(effect.flags & EffectFlags.ACTIVE) ||\n-      (!effect.dirty && !immediateFirstRun)\n-    ) {\n+    if (!effect.active || (!immediateFirstRun && !effect.dirty)) {\n       return\n     }\n     if (cb) {"
+          }
+        ]
+      },
+      {
+        "path": "packages/runtime-core/__tests__/apiSetupHelpers.spec.ts",
+        "status": "modified",
+        "additions": 9,
+        "deletions": 6,
+        "isBinary": false,
+        "sha": "5cc5a21caf04b0195d4fd99c6e87e4d044520c4f",
+        "hunks": [
+          {
+            "header": "@@ -1,3 +1,8 @@",
+            "oldStart": 1,
+            "oldLines": 3,
+            "newStart": 1,
+            "newLines": 8,
+            "patch": "+import {\n+  type ComputedRefImpl,\n+  type ReactiveEffectRunner,\n+  effect,\n+} from '@vue/reactivity'\n import {\n   type ComponentInternalInstance,\n   type SetupContext,"
+          },
+          {
+            "header": "@@ -25,8 +30,6 @@ import {",
+            "oldStart": 25,
+            "oldLines": 8,
+            "newStart": 30,
+            "newLines": 6,
+            "patch": "   withAsyncContext,\n   withDefaults,\n } from '../src/apiSetupHelpers'\n-import type { ComputedRefImpl } from '../../reactivity/src/computed'\n-import { EffectFlags, type ReactiveEffectRunner, effect } from '@vue/reactivity'\n \n describe('SFC <script setup> helpers', () => {\n   test('should warn runtime usage', () => {"
+          },
+          {
+            "header": "@@ -450,12 +453,12 @@ describe('SFC <script setup> helpers', () => {",
+            "oldStart": 450,
+            "oldLines": 12,
+            "newStart": 453,
+            "newLines": 12,
+            "patch": "       app.mount(root)\n \n       await ready\n-      expect(e!.effect.flags & EffectFlags.ACTIVE).toBeTruthy()\n-      expect(c!.flags & EffectFlags.TRACKING).toBeTruthy()\n+      expect(e!.effect.active).toBeTruthy()\n+      expect(c!.flags & 1 /* SubscriberFlags.Tracking */).toBe(0)\n \n       app.unmount()\n-      expect(e!.effect.flags & EffectFlags.ACTIVE).toBeFalsy()\n-      expect(c!.flags & EffectFlags.TRACKING).toBeFalsy()\n+      expect(e!.effect.active).toBeFalsy()\n+      expect(c!.flags & 1 /* SubscriberFlags.Tracking */).toBe(0)\n     })\n   })\n })"
+          }
+        ]
+      },
+      {
+        "path": "packages/runtime-core/__tests__/errorHandling.spec.ts",
+        "status": "modified",
+        "additions": 3,
+        "deletions": 0,
+        "isBinary": false,
+        "sha": "e31a7539d75aaa6987535c63abdb245a430d1e05",
+        "hunks": [
+          {
+            "header": "@@ -531,6 +531,9 @@ describe('error handling', () => {",
+            "oldStart": 531,
+            "oldLines": 6,
+            "newStart": 531,
+            "newLines": 9,
+            "patch": "       caughtError = caught\n     }\n     expect(fn).toHaveBeenCalledWith(err, 'setup function')\n+    expect(\n+      `Active effect was not restored correctly - this is likely a Vue internal bug.`,\n+    ).toHaveBeenWarned()\n     expect(\n       `Unhandled error during execution of setup function`,\n     ).toHaveBeenWarned()"
+          }
+        ]
+      },
+      {
+        "path": "packages/runtime-core/src/renderer.ts",
+        "status": "modified",
+        "additions": 2,
+        "deletions": 1,
+        "isBinary": false,
+        "sha": "55492a1bd5bcfc77c7ffac154f31d6528148b601",
+        "hunks": [
+          {
+            "header": "@@ -1558,7 +1558,8 @@ function baseCreateRenderer(",
+            "oldStart": 1558,
+            "oldLines": 7,
+            "newStart": 1558,
+            "newLines": 8,
+            "patch": "     instance.scope.off()\n \n     const update = (instance.update = effect.run.bind(effect))\n-    const job: SchedulerJob = (instance.job = effect.runIfDirty.bind(effect))\n+    const job: SchedulerJob = (instance.job = () =>\n+      effect.dirty && effect.run())\n     job.i = instance\n     job.id = instance.uid\n     effect.scheduler = () => queueJob(job)"
+          }
+        ]
+      },
+      {
+        "path": "vitest.config.ts",
+        "status": "modified",
+        "additions": 6,
+        "deletions": 1,
+        "isBinary": false,
+        "sha": "e2baf18158ed2cfd28c2308a36d006ad594537e7",
+        "hunks": [
+          {
+            "header": "@@ -3,7 +3,7 @@ import { entries } from './scripts/aliases.js'",
+            "oldStart": 3,
+            "oldLines": 7,
+            "newStart": 3,
+            "newLines": 7,
+            "patch": " \n export default defineConfig({\n   define: {\n-    __DEV__: true,\n+    __DEV__: process.env.MODE !== 'benchmark',\n     __TEST__: true,\n     __VERSION__: '\"test\"',\n     __BROWSER__: false,"
+          },
+          {
+            "header": "@@ -24,6 +24,11 @@ export default defineConfig({",
+            "oldStart": 24,
+            "oldLines": 6,
+            "newStart": 24,
+            "newLines": 11,
+            "patch": "   test: {\n     globals: true,\n     pool: 'threads',\n+    poolOptions: {\n+      forks: {\n+        execArgv: ['--expose-gc'],\n+      },\n+    },\n     setupFiles: 'scripts/setup-vitest.ts',\n     environmentMatchGlobs: [\n       ['packages/{vue,vue-compat,runtime-dom}/**', 'jsdom'],"
+          }
+        ]
+      }
+    ]
+  },
+  "grouped": {
+    "source": "rule-based",
+    "groups": [
+      {
+        "key": "tests",
+        "label": "tests",
+        "category": "tests",
+        "filePaths": [
+          "packages/reactivity/__tests__/computed.spec.ts",
+          "packages/reactivity/__tests__/effect.spec.ts",
+          "packages/reactivity/__tests__/gc.spec.ts",
+          "packages/runtime-core/__tests__/apiSetupHelpers.spec.ts",
+          "packages/runtime-core/__tests__/errorHandling.spec.ts"
+        ]
+      },
+      {
+        "key": "code",
+        "label": "code",
+        "category": "code",
+        "filePaths": [
+          "packages/reactivity/src/arrayInstrumentations.ts",
+          "packages/reactivity/src/computed.ts",
+          "packages/reactivity/src/debug.ts",
+          "packages/reactivity/src/dep.ts",
+          "packages/reactivity/src/effect.ts",
+          "packages/reactivity/src/effectScope.ts",
+          "packages/reactivity/src/ref.ts",
+          "packages/reactivity/src/system.ts",
+          "packages/reactivity/src/watch.ts",
+          "packages/runtime-core/src/renderer.ts"
+        ]
+      },
+      {
+        "key": "config",
+        "label": "config",
+        "category": "config",
+        "filePaths": [
+          "vitest.config.ts"
+        ]
+      }
+    ],
+    "generatedAt": "2026-09-16T03:08:23.003Z",
+    "schemaVersion": 1
+  }
+}

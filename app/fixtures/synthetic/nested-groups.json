@@ -1,0 +1,88 @@
+{
+  "diff": {
+    "meta": {
+      "provider": "github",
+      "id": "github:antfu/diffs#1",
+      "title": "Example pull request",
+      "description": "An example description for Storybook fixtures.",
+      "author": "antfu",
+      "baseRef": "main",
+      "headRef": "feature/example",
+      "baseSha": "base0000",
+      "headSha": "head0000",
+      "createdAt": "2026-09-16T00:00:00.000Z",
+      "updatedAt": "2026-09-16T00:00:00.000Z",
+      "url": "https://github.com/antfu/diffs/pull/1"
+    },
+    "files": [
+      {
+        "path": "docs/featureA/intro.md",
+        "status": "added",
+        "additions": 20,
+        "deletions": 0,
+        "isBinary": false,
+        "sha": "doc0001",
+        "hunks": [
+          {
+            "header": "@@ -0,0 +1,3 @@",
+            "oldStart": 0,
+            "oldLines": 0,
+            "newStart": 1,
+            "newLines": 3,
+            "patch": "+# Feature A\n+\n+Intro text."
+          }
+        ]
+      },
+      {
+        "path": "docs/featureB/intro.md",
+        "status": "added",
+        "additions": 15,
+        "deletions": 0,
+        "isBinary": false,
+        "sha": "doc0002",
+        "hunks": [
+          {
+            "header": "@@ -0,0 +1,3 @@",
+            "oldStart": 0,
+            "oldLines": 0,
+            "newStart": 1,
+            "newLines": 3,
+            "patch": "+# Feature B\n+\n+Intro text."
+          }
+        ]
+      }
+    ]
+  },
+  "grouped": {
+    "source": "llm",
+    "overallSummary": "Adds documentation for two new features.",
+    "groups": [
+      {
+        "key": "docs",
+        "label": "Documentation",
+        "summary": "New docs pages for features A and B.",
+        "filePaths": [],
+        "children": [
+          {
+            "key": "docs/featureA",
+            "label": "Feature A docs",
+            "summary": "Intro page for feature A.",
+            "filePaths": [
+              "docs/featureA/intro.md"
+            ]
+          },
+          {
+            "key": "docs/featureB",
+            "label": "Feature B docs",
+            "summary": "Intro page for feature B.",
+            "filePaths": [
+              "docs/featureB/intro.md"
+            ]
+          }
+        ]
+      }
+    ],
+    "generatedAt": "2026-09-16T00:00:00.000Z",
+    "schemaVersion": 1
+  }
+}

@@ -1,0 +1,653 @@
+{
+  "diff": {
+    "meta": {
+      "provider": "github",
+      "id": "github:antfu/eslint-config#861",
+      "title": "feat: add antislop option",
+      "description": "## Description\n\nAdds an opt-in, experimental `antislop` factory option to guard against low-value code patterns commonly introduced by AI agents, inspired by [this writeup on keeping AI-authored code clean](https://zenn.dev/singularity/articles/clean-code-ci-for-ai-era).\n\n- Enables all rules from [`eslint-plugin-slop`](https://github.com/antfu/eslint-plugin-slop) v0.1.1 (including the new `no-jargon` and `prefer-jsdoc`; the plugin ships no preset, so the set is maintained here).\n- Enables an in-house maintained subset of [`eslint-plugin-sonarjs`](https://github.com/SonarSource/SonarJS) focused on redundant and duplicated code (e.g. `no-identical-functions`, `no-duplicated-branches`, `no-commented-code`, `cognitive-complexity`), deliberately excluding security/AWS/test/regex rules that overlap with existing configs, and type-aware rules so it works without `tsconfigPath`.\n- Turns `ts/no-explicit-any` on (`error`) when TypeScript is enabled; the antislop config is composed after the TypeScript config so the override takes effect.\n- The option accepts an object to toggle each plugin: `sonarjs?: boolean` and `slop?: boolean | OptionsSlop` — passing an object enables `eslint-plugin-slop` and is forwarded to it via `settings.slop` (e.g. inspection mode).\n- Marked `@experimental`: the enabled rule set is maintained in-house and may change in any release without following semver.\n- Both plugins are optional peer dependencies, installed on demand via the usual `ensurePackages` prompt.\n- Supports `antislop: { overrides: {...} }` like other integrations.\n- README documents the option and recommends pairing it with [`jscpd`](https://github.com/kucherenko/jscpd) and [`knip`](https://knip.dev), since linters only see one file at a time.\n\nNote: 7 factory snapshots were already stale on `main` (from the earlier pnpm blank-lines feature) and got regenerated together with the new `antfu/antislop/rules` entries.\n\n---\nThis PR was created with the help of an agent.",
+      "author": "antfubot",
+      "baseRef": "main",
+      "headRef": "feat/anti-slop",
+      "baseSha": "8808d4ef652f2a87d0b387c6a5765c037cd4a3fd",
+      "headSha": "8bf3a9937b14cc4045c5b89aad8357663e5c7797",
+      "createdAt": "2026-09-02T04:53:02Z",
+      "updatedAt": "2026-09-02T05:48:34Z",
+      "url": "https://github.com/antfu/eslint-config/pull/861"
+    },
+    "files": [
+      {
+        "path": "README.md",
+        "status": "modified",
+        "additions": 44,
+        "deletions": 0,
+        "isBinary": false,
+        "sha": "272b02ea3cfd6f7f4185bdb7e8b960fede5684cd",
+        "hunks": [
+          {
+            "header": "@@ -814,6 +814,50 @@ Running `npx eslint` should prompt you to install the required dependencies, oth",
+            "oldStart": 814,
+            "oldLines": 6,
+            "newStart": 814,
+            "newLines": 50,
+            "patch": " npm i -D @angular-eslint/eslint-plugin @angular-eslint/eslint-plugin-template @angular-eslint/template-parser\n ```\n \n+#### Anti-Slop\n+\n+> [!WARNING]\n+> Experimental: the enabled rule set is maintained in-house and may change in any release without following semver.\n+\n+To guard against low-value code patterns commonly introduced by AI agents, you can explicitly turn on the anti-slop rules:\n+\n+```js\n+// eslint.config.js\n+import antfu from '@antfu/eslint-config'\n+\n+export default antfu({\n+  antislop: true,\n+})\n+```\n+\n+This enables [`eslint-plugin-slop`](https://github.com/antfu/eslint-plugin-slop) and a curated, in-house maintained subset of [`eslint-plugin-sonarjs`](https://github.com/SonarSource/SonarJS) rules focusing on redundant and duplicated code. It also disallows explicit `any` when TypeScript is enabled (inspired by [this writeup on keeping AI-authored code clean](https://zenn.dev/singularity/articles/clean-code-ci-for-ai-era)).\n+\n+You can toggle each plugin and pass options to `eslint-plugin-slop`:\n+\n+```js\n+// eslint.config.js\n+import antfu from '@antfu/eslint-config'\n+\n+export default antfu({\n+  antislop: {\n+    sonarjs: false,\n+    // an object enables `eslint-plugin-slop` and is forwarded to it\n+    // via `settings.slop`, for example to only inspect recently changed code\n+    slop: {\n+      inspection: { mode: 'recent-changes', tracebackCommits: 5 },\n+    },\n+  },\n+})\n+```\n+\n+Running `npx eslint` should prompt you to install the required dependencies, otherwise, you can install them manually:\n+\n+```bash\n+npm i -D eslint-plugin-slop eslint-plugin-sonarjs\n+```\n+\n+Since linters only see one file at a time, we recommend pairing this option with [`jscpd`](https://github.com/kucherenko/jscpd) to detect copy-paste duplication across files, and [`knip`](https://knip.dev) to find unused files, dependencies, and exports.\n+\n ### Optional Rules\n \n This config also provides some optional plugins/rules for extended usage."
+          }
+        ]
+      },
+      {
+        "path": "package.json",
+        "status": "modified",
+        "additions": 10,
+        "deletions": 0,
+        "isBinary": false,
+        "sha": "23e11fec2610d5e50540f0efc341ef4474294eae",
+        "hunks": [
+          {
+            "header": "@@ -58,7 +58,9 @@",
+            "oldStart": 58,
+            "oldLines": 7,
+            "newStart": 58,
+            "newLines": 9,
+            "patch": "     \"eslint-plugin-format\": \">=0.1.0\",\n     \"eslint-plugin-jsx-a11y\": \">=6.10.2\",\n     \"eslint-plugin-react-refresh\": \"^0.5.0\",\n+    \"eslint-plugin-slop\": \">=0.1.1\",\n     \"eslint-plugin-solid\": \"^0.17.0\",\n+    \"eslint-plugin-sonarjs\": \">=4.0.0\",\n     \"eslint-plugin-svelte\": \">=2.35.1\",\n     \"eslint-plugin-vuejs-accessibility\": \"^2.4.1\",\n     \"prettier-plugin-astro\": \"^0.14.0\","
+          },
+          {
+            "header": "@@ -105,9 +107,15 @@",
+            "oldStart": 105,
+            "oldLines": 9,
+            "newStart": 107,
+            "newLines": 15,
+            "patch": "     \"eslint-plugin-react-refresh\": {\n       \"optional\": true\n     },\n+    \"eslint-plugin-slop\": {\n+      \"optional\": true\n+    },\n     \"eslint-plugin-solid\": {\n       \"optional\": true\n     },\n+    \"eslint-plugin-sonarjs\": {\n+      \"optional\": true\n+    },\n     \"eslint-plugin-svelte\": {\n       \"optional\": true\n     },"
+          },
+          {
+            "header": "@@ -185,7 +193,9 @@",
+            "oldStart": 185,
+            "oldLines": 7,
+            "newStart": 193,
+            "newLines": 9,
+            "patch": "     \"eslint-plugin-format\": \"catalog:peer\",\n     \"eslint-plugin-jsx-a11y\": \"catalog:peer\",\n     \"eslint-plugin-react-refresh\": \"catalog:peer\",\n+    \"eslint-plugin-slop\": \"catalog:peer\",\n     \"eslint-plugin-solid\": \"catalog:peer\",\n+    \"eslint-plugin-sonarjs\": \"catalog:peer\",\n     \"eslint-plugin-svelte\": \"catalog:peer\",\n     \"eslint-plugin-vuejs-accessibility\": \"catalog:peer\",\n     \"eslint-typegen\": \"catalog:dev\","
+          }
+        ]
+      },
+      {
+        "path": "pnpm-lock.yaml",
+        "status": "modified",
+        "additions": 73,
+        "deletions": 0,
+        "isBinary": false,
+        "sha": "fe0e1800b31b11b7e1f5aba32be1e6b72062f229",
+        "hunks": [
+          {
+            "header": "@@ -116,9 +116,15 @@ catalogs:",
+            "oldStart": 116,
+            "oldLines": 9,
+            "newStart": 116,
+            "newLines": 15,
+            "patch": "     eslint-plugin-react-refresh:\n       specifier: ^0.5.5\n       version: 0.5.5\n+    eslint-plugin-slop:\n+      specifier: ^0.1.1\n+      version: 0.1.1\n     eslint-plugin-solid:\n       specifier: ^0.17.0\n       version: 0.17.0\n+    eslint-plugin-sonarjs:\n+      specifier: ^4.2.0\n+      version: 4.2.0\n     eslint-plugin-svelte:\n       specifier: ^3.23.0\n       version: 3.23.0"
+          },
+          {
+            "header": "@@ -429,9 +435,15 @@ importers:",
+            "oldStart": 429,
+            "oldLines": 9,
+            "newStart": 435,
+            "newLines": 15,
+            "patch": "       eslint-plugin-react-refresh:\n         specifier: catalog:peer\n         version: 0.5.5(eslint@10.9.1(jiti@2.7.0)(supports-color@7.2.0))\n+      eslint-plugin-slop:\n+        specifier: catalog:peer\n+        version: 0.1.1(eslint@10.9.1(jiti@2.7.0)(supports-color@7.2.0))\n       eslint-plugin-solid:\n         specifier: catalog:peer\n         version: 0.17.0(eslint@10.9.1(jiti@2.7.0)(supports-color@7.2.0))(supports-color@7.2.0)(typescript@6.0.3)\n+      eslint-plugin-sonarjs:\n+        specifier: catalog:peer\n+        version: 4.2.0(eslint@10.9.1(jiti@2.7.0)(supports-color@7.2.0))\n       eslint-plugin-svelte:\n         specifier: catalog:peer\n         version: 3.23.0(eslint@10.9.1(jiti@2.7.0)(supports-color@7.2.0))(svelte@5.57.0(@typescript-eslint/types@8.68.0))"
+          },
+          {
+            "header": "@@ -2222,6 +2234,10 @@ packages:",
+            "oldStart": 2222,
+            "oldLines": 6,
+            "newStart": 2234,
+            "newLines": 10,
+            "patch": "     engines: {node: ^6 || ^7 || ^8 || ^9 || ^10 || ^11 || ^12 || >=13.7}\n     hasBin: true\n \n+  builtin-modules@3.3.0:\n+    resolution: {integrity: sha512-zhaCDicdLuWN5UbN5IMnFqNMhNfo919sH85y2/ea+5Yg9TsTkeZxpL+JLbp6cgYFS4sRLp3YV4S6yDuqVWHYOw==}\n+    engines: {node: '>=6'}\n+\n   builtin-modules@5.2.0:\n     resolution: {integrity: sha512-02yxLeyxF4dNl6SlY6/5HfRSrSdZ/sCPoxy2kZNP5dZZX8LSAD9aE2gtJIUgWrsQTiMPl3mxESyrobSwvRGisQ==}\n     engines: {node: '>=18.20'}"
+          },
+          {
+            "header": "@@ -2231,6 +2247,10 @@ packages:",
+            "oldStart": 2231,
+            "oldLines": 6,
+            "newStart": 2247,
+            "newLines": 10,
+            "patch": "     engines: {node: ^22.18.0 || ^24.11.0 || >=26.0.0}\n     hasBin: true\n \n+  bytes@3.1.2:\n+    resolution: {integrity: sha512-/Nf7TyzTx6S3yRJObOAV7956r8cr2+Oj8AC5dt8wSP3BQAoeX58NoHyCU8P8zGkNXStjTSi6fzO6F0pBdcYbEg==}\n+    engines: {node: '>= 0.8'}\n+\n   cac@7.0.0:\n     resolution: {integrity: sha512-tixWYgm5ZoOD+3g6UTea91eow5z6AAHaho3g0V9CNSNb45gM8SmflpAc+GRd1InC4AqN/07Unrgp56Y94N9hJQ==}\n     engines: {node: '>=20.19.0'}"
+          },
+          {
+            "header": "@@ -2446,6 +2466,10 @@ packages:",
+            "oldStart": 2446,
+            "oldLines": 6,
+            "newStart": 2466,
+            "newLines": 10,
+            "patch": "     resolution: {integrity: sha512-EjePK1srD3P08o2j4f0ExnylqRs5B9tJjcp9t1krH2qRi8CCdsYfwe9JgSLurFBWwq4uOlipzfk5fHNvwFKr8Q==}\n     engines: {node: ^14.15.0 || ^16.10.0 || >=18.0.0}\n \n+  diff@9.0.0:\n+    resolution: {integrity: sha512-svtcdpS8CgJyqAjEQIXdb3OjhFVVYjzGAPO8WGCmRbrml64SPw/jJD4GoE98aR7r25A0XcgrK3F02yw9R/vhQw==}\n+    engines: {node: '>=0.3.1'}\n+\n   dts-resolver@3.0.0:\n     resolution: {integrity: sha512-1T1f+z+4tl9XD+m+0HBgWoL/nm0bOIffyWaUuUSBlFg/86IWvfx+wjNaO/ybU0AJzG9/Mi5hBUgGV6zCmWEN7Q==}\n     engines: {node: ^22.18.0 || >=24.0.0}"
+          },
+          {
+            "header": "@@ -2724,13 +2748,23 @@ packages:",
+            "oldStart": 2724,
+            "oldLines": 13,
+            "newStart": 2748,
+            "newLines": 23,
+            "patch": "     peerDependencies:\n       eslint: '>=9.38.0'\n \n+  eslint-plugin-slop@0.1.1:\n+    resolution: {integrity: sha512-Zcp3WvGF1uC1599Sg0ZZr9kFa/9nGYEDBbw+ZePXD/tuS0MhiiHXv2u5jTtOk1Ou9yxCoG5t3LqFDAV4T7Z9FA==}\n+    peerDependencies:\n+      eslint: ^10.0.0\n+\n   eslint-plugin-solid@0.17.0:\n     resolution: {integrity: sha512-0x38zjAZVm4vW5u5mS14WxO9BJsal3IxsR/8QOB2nBiXBdH1LlbbRs2YfqgtPWVpy3OIlnt6yGhoXuZmoHULwQ==}\n     engines: {node: '>=22.0.0'}\n     peerDependencies:\n       eslint: ^9.0.0 || ^10.0.0\n       typescript: '>=4.8.4'\n \n+  eslint-plugin-sonarjs@4.2.0:\n+    resolution: {integrity: sha512-bqADfuNtTL7VK6RU29eoiFTtaaBKIpVPuX3bOl+rBpWSBa0zIBVZlqZNZQjfP6s4iXkAJokv5IsD8OsACkwApg==}\n+    peerDependencies:\n+      eslint: ^8.0.0 || ^9.0.0 || ^10.0.0\n+\n   eslint-plugin-svelte@3.23.0:\n     resolution: {integrity: sha512-n9jRklDqy0+W834568a4ZIZTK7DHXxvvHHxxGP8nNq7N//pOZMubttskHOquyGgfTR4Z05q2NdGNlsTpIEA48w==}\n     engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}"
+          },
+          {
+            "header": "@@ -2985,6 +3019,9 @@ packages:",
+            "oldStart": 2985,
+            "oldLines": 6,
+            "newStart": 3019,
+            "newLines": 9,
+            "patch": "     resolution: {integrity: sha512-jObKIik1P2QjPHP5nz5BaOtUlfgS0fWo8IUByNXkM+o+02sJOi94em77GwJKQSJ3gfPHdgzLNrHc1uokV4P/ew==}\n     engines: {node: '>= 0.4'}\n \n+  functional-red-black-tree@1.0.1:\n+    resolution: {integrity: sha512-dsKNQNdj6xA3T+QlADDA7mOSlX0qiMINjn0cgr+eGHGsbSHzTabcIogz2+p/iqP1Xs6EP/sS2SbqH+brGTbq0g==}\n+\n   functions-have-names@1.2.3:\n     resolution: {integrity: sha512-xckBUXyTIqT97tq2x2AMb+g163b5JFysYk0x4qxNFwbfQkmNZoiRHb6sPzI9/QV33WeuvVYBUIiD4NzNIyqaRQ==}\n "
+          },
+          {
+            "header": "@@ -3323,6 +3360,10 @@ packages:",
+            "oldStart": 3323,
+            "oldLines": 6,
+            "newStart": 3360,
+            "newLines": 10,
+            "patch": "   jsonc-parser@3.3.1:\n     resolution: {integrity: sha512-HUgH65KyejrUFPvHFPbqOY0rsFip3Bo5wb4ngvdi1EpCYWUQDC5V+Y7mZws+DLkr4M//zQJoanu1SP+87Dv1oQ==}\n \n+  jsx-ast-utils-x@0.1.0:\n+    resolution: {integrity: sha512-eQQBjBnsVtGacsG9uJNB8qOr3yA8rga4wAaGG1qRcBzSIvfhERLrWxMAM1hp5fcS6Abo8M4+bUBTekYR0qTPQw==}\n+    engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}\n+\n   jsx-ast-utils@3.3.5:\n     resolution: {integrity: sha512-ZZow9HBI5O6EPgSJLUb8n2NKgmVWTwCvHGwFuJlMjvLFqlGG6pjirPhtdsseaLZjSibD8eegzmYpUZwoIlj2cQ==}\n     engines: {node: '>=4.0'}"
+          },
+          {
+            "header": "@@ -6042,6 +6083,8 @@ snapshots:",
+            "oldStart": 6042,
+            "oldLines": 6,
+            "newStart": 6083,
+            "newLines": 8,
+            "patch": "       node-releases: 2.0.54\n       update-browserslist-db: 1.3.2(browserslist@4.28.8)\n \n+  builtin-modules@3.3.0: {}\n+\n   builtin-modules@5.2.0: {}\n \n   bumpp@12.2.2:"
+          },
+          {
+            "header": "@@ -6056,6 +6099,8 @@ snapshots:",
+            "oldStart": 6056,
+            "oldLines": 6,
+            "newStart": 6099,
+            "newLines": 8,
+            "patch": "       verkit: 0.3.2\n       yaml: 2.9.0\n \n+  bytes@3.1.2: {}\n+\n   cac@7.0.0: {}\n \n   cached-factory@0.3.0: {}"
+          },
+          {
+            "header": "@@ -6233,6 +6278,8 @@ snapshots:",
+            "oldStart": 6233,
+            "oldLines": 6,
+            "newStart": 6278,
+            "newLines": 8,
+            "patch": " \n   diff-sequences@29.6.3: {}\n \n+  diff@9.0.0: {}\n+\n   dts-resolver@3.0.0: {}\n \n   dunder-proto@1.0.1:"
+          },
+          {
+            "header": "@@ -6691,6 +6738,11 @@ snapshots:",
+            "oldStart": 6691,
+            "oldLines": 6,
+            "newStart": 6738,
+            "newLines": 11,
+            "patch": "       regexp-ast-analysis: 0.7.1\n       scslre: 0.3.0\n \n+  eslint-plugin-slop@0.1.1(eslint@10.9.1(jiti@2.7.0)(supports-color@7.2.0)):\n+    dependencies:\n+      diff: 9.0.0\n+      eslint: 10.9.1(jiti@2.7.0)(supports-color@7.2.0)\n+\n   eslint-plugin-solid@0.17.0(eslint@10.9.1(jiti@2.7.0)(supports-color@7.2.0))(supports-color@7.2.0)(typescript@6.0.3):\n     dependencies:\n       '@typescript-eslint/utils': 8.68.0(eslint@10.9.1(jiti@2.7.0)(supports-color@7.2.0))(supports-color@7.2.0)(typescript@6.0.3)"
+          },
+          {
+            "header": "@@ -6704,6 +6756,23 @@ snapshots:",
+            "oldStart": 6704,
+            "oldLines": 6,
+            "newStart": 6756,
+            "newLines": 23,
+            "patch": "     transitivePeerDependencies:\n       - supports-color\n \n+  eslint-plugin-sonarjs@4.2.0(eslint@10.9.1(jiti@2.7.0)(supports-color@7.2.0)):\n+    dependencies:\n+      '@eslint-community/regexpp': 4.12.2\n+      builtin-modules: 3.3.0\n+      bytes: 3.1.2\n+      eslint: 10.9.1(jiti@2.7.0)(supports-color@7.2.0)\n+      functional-red-black-tree: 1.0.1\n+      globals: 17.11.0\n+      jsx-ast-utils-x: 0.1.0\n+      lodash.merge: 4.6.2\n+      minimatch: 10.2.5\n+      scslre: 0.3.0\n+      semver: 7.8.5\n+      ts-api-utils: 2.5.0(typescript@6.0.3)\n+      typescript: 6.0.3\n+      yaml: 2.9.0\n+\n   eslint-plugin-svelte@3.23.0(eslint@10.9.1(jiti@2.7.0)(supports-color@7.2.0))(svelte@5.57.0(@typescript-eslint/types@8.68.0)):\n     dependencies:\n       '@eslint-community/eslint-utils': 4.9.1(eslint@10.9.1(jiti@2.7.0)(supports-color@7.2.0))"
+          },
+          {
+            "header": "@@ -7037,6 +7106,8 @@ snapshots:",
+            "oldStart": 7037,
+            "oldLines": 6,
+            "newStart": 7106,
+            "newLines": 8,
+            "patch": "       is-callable: 1.2.7\n       is-document.all: 1.0.0\n \n+  functional-red-black-tree@1.0.1: {}\n+\n   functions-have-names@1.2.3: {}\n \n   fzf@0.5.2: {}"
+          },
+          {
+            "header": "@@ -7370,6 +7441,8 @@ snapshots:",
+            "oldStart": 7370,
+            "oldLines": 6,
+            "newStart": 7441,
+            "newLines": 8,
+            "patch": " \n   jsonc-parser@3.3.1: {}\n \n+  jsx-ast-utils-x@0.1.0: {}\n+\n   jsx-ast-utils@3.3.5:\n     dependencies:\n       array-includes: 3.1.9"
+          }
+        ]
+      },
+      {
+        "path": "pnpm-workspace.yaml",
+        "status": "modified",
+        "additions": 3,
+        "deletions": 0,
+        "isBinary": false,
+        "sha": "bff9d1289a6dbde5f9fd23f53849d9c65add361a",
+        "hunks": [
+          {
+            "header": "@@ -4,6 +4,7 @@ minimumReleaseAgeExcludePrune: true",
+            "oldStart": 4,
+            "oldLines": 6,
+            "newStart": 4,
+            "newLines": 7,
+            "patch": " minimumReleaseAgeExclude:\n   - eslint-plugin-pnpm@1.9.1\n   - pnpm-workspace-yaml@1.9.1\n+  - eslint-plugin-slop@0.1.1\n \n trustPolicy: no-downgrade\n trustPolicyExclude:"
+          },
+          {
+            "header": "@@ -75,7 +76,9 @@ catalogs:",
+            "oldStart": 75,
+            "oldLines": 7,
+            "newStart": 76,
+            "newLines": 9,
+            "patch": "     eslint-plugin-format: ^2.0.1\n     eslint-plugin-jsx-a11y: ^6.10.2\n     eslint-plugin-react-refresh: ^0.5.5\n+    eslint-plugin-slop: ^0.1.1\n     eslint-plugin-solid: ^0.17.0\n+    eslint-plugin-sonarjs: ^4.2.0\n     eslint-plugin-svelte: ^3.23.0\n     eslint-plugin-vuejs-accessibility: ^2.6.0\n     prettier-plugin-astro: ^0.14.1"
+          }
+        ]
+      },
+      {
+        "path": "src/config-presets.ts",
+        "status": "modified",
+        "additions": 2,
+        "deletions": 0,
+        "isBinary": false,
+        "sha": "d45f164b58984c141e53c81189a6a0c0ce45c62d",
+        "hunks": [
+          {
+            "header": "@@ -3,6 +3,7 @@ import type { OptionsConfig } from './types'",
+            "oldStart": 3,
+            "oldLines": 6,
+            "newStart": 3,
+            "newLines": 7,
+            "patch": " // @keep-sorted\n export const CONFIG_PRESET_FULL_ON: OptionsConfig = {\n   angular: true,\n+  antislop: true,\n   astro: true,\n   formatters: true,\n   gitignore: true,"
+          },
+          {
+            "header": "@@ -40,6 +41,7 @@ export const CONFIG_PRESET_FULL_ON: OptionsConfig = {",
+            "oldStart": 40,
+            "oldLines": 6,
+            "newStart": 41,
+            "newLines": 7,
+            "patch": " \n export const CONFIG_PRESET_FULL_OFF: OptionsConfig = {\n   angular: false,\n+  antislop: false,\n   astro: false,\n   formatters: false,\n   gitignore: false,"
+          }
+        ]
+      },
+      {
+        "path": "src/configs/antislop.ts",
+        "status": "added",
+        "additions": 87,
+        "deletions": 0,
+        "isBinary": false,
+        "sha": "ec6871ebc02b345d82a508b7de7c5d67edaad2e1",
+        "hunks": [
+          {
+            "header": "@@ -0,0 +1,87 @@",
+            "oldStart": 0,
+            "oldLines": 0,
+            "newStart": 1,
+            "newLines": 87,
+            "patch": "+import type { OptionsAntislop, OptionsHasTypeScript, TypedFlatConfigItem } from '../types'\n+\n+import { ensurePackages, interopDefault } from '../utils'\n+\n+export async function antislop(\n+  options: OptionsAntislop & OptionsHasTypeScript = {},\n+): Promise<TypedFlatConfigItem[]> {\n+  const {\n+    overrides = {},\n+    slop = true,\n+    sonarjs = true,\n+    typescript = false,\n+  } = options\n+\n+  await ensurePackages([\n+    ...slop ? ['eslint-plugin-slop'] : [],\n+    ...sonarjs ? ['eslint-plugin-sonarjs'] : [],\n+  ])\n+\n+  const [\n+    pluginSlop,\n+    pluginSonarjs,\n+  ] = await Promise.all([\n+    slop ? interopDefault(import('eslint-plugin-slop')) : undefined,\n+    sonarjs ? interopDefault(import('eslint-plugin-sonarjs')) : undefined,\n+  ])\n+\n+  return [\n+    {\n+      name: 'antfu/antislop/rules',\n+      plugins: {\n+        ...slop ? { slop: pluginSlop } : {},\n+        ...sonarjs ? { sonarjs: pluginSonarjs } : {},\n+      },\n+      ...typeof slop === 'object'\n+        ? { settings: { slop } }\n+        : {},\n+      rules: {\n+        ...slop\n+          ? {\n+              'slop/max-comment-length': 'error',\n+              'slop/no-chained-type-assertions': 'error',\n+              'slop/no-em-dash': 'error',\n+              'slop/no-jargon': 'error',\n+              'slop/no-trivial-functions': 'error',\n+              'slop/no-trivial-type-aliases': 'error',\n+              'slop/prefer-jsdoc': 'error',\n+            } as const\n+          : {},\n+\n+        // Curated subset of SonarJS focusing on redundant and duplicated code,\n+        // picked to complement the rest of the config without requiring type information\n+        ...sonarjs\n+          ? {\n+              'sonarjs/cognitive-complexity': 'error',\n+              'sonarjs/no-all-duplicated-branches': 'error',\n+              'sonarjs/no-collapsible-if': 'error',\n+              'sonarjs/no-commented-code': 'error',\n+              'sonarjs/no-dead-store': 'error',\n+              'sonarjs/no-duplicated-branches': 'error',\n+              'sonarjs/no-element-overwrite': 'error',\n+              'sonarjs/no-empty-collection': 'error',\n+              'sonarjs/no-gratuitous-expressions': 'error',\n+              'sonarjs/no-identical-conditions': 'error',\n+              'sonarjs/no-identical-expressions': 'error',\n+              'sonarjs/no-identical-functions': 'error',\n+              'sonarjs/no-invariant-returns': 'error',\n+              'sonarjs/no-inverted-boolean-check': 'error',\n+              'sonarjs/no-redundant-boolean': 'error',\n+              'sonarjs/no-redundant-jump': 'error',\n+              'sonarjs/no-unused-collection': 'error',\n+              'sonarjs/no-use-of-empty-return-value': 'error',\n+              'sonarjs/prefer-single-boolean-return': 'error',\n+            } as const\n+          : {},\n+\n+        // `any` silently erases type safety, the typescript config leaves it off by default\n+        // but agents reach for it whenever typings get inconvenient\n+        ...typescript\n+          ? { 'ts/no-explicit-any': 'error' as const }\n+          : {},\n+\n+        ...overrides,\n+      },\n+    },\n+  ]\n+}"
+          }
+        ]
+      },
+      {
+        "path": "src/configs/index.ts",
+        "status": "modified",
+        "additions": 1,
+        "deletions": 0,
+        "isBinary": false,
+        "sha": "ae0d47305a001585765c06055eebe1a9feb2d218",
+        "hunks": [
+          {
+            "header": "@@ -1,4 +1,5 @@",
+            "oldStart": 1,
+            "oldLines": 4,
+            "newStart": 1,
+            "newLines": 5,
+            "patch": " export * from './angular'\n+export * from './antislop'\n export * from './astro'\n export * from './command'\n export * from './comments'"
+          }
+        ]
+      },
+      {
+        "path": "src/factory.ts",
+        "status": "modified",
+        "additions": 13,
+        "deletions": 0,
+        "isBinary": false,
+        "sha": "9f97c75ea623d3aaf7c536a42b7e1bd80d23e189",
+        "hunks": [
+          {
+            "header": "@@ -7,6 +7,7 @@ import { findUpSync } from 'find-up-simple'",
+            "oldStart": 7,
+            "oldLines": 6,
+            "newStart": 7,
+            "newLines": 7,
+            "patch": " import { isPackageExists } from 'local-pkg'\n import {\n   angular,\n+  antislop,\n   astro,\n   command,\n   comments,"
+          },
+          {
+            "header": "@@ -88,6 +89,7 @@ export function antfu(",
+            "oldStart": 88,
+            "oldLines": 6,
+            "newStart": 89,
+            "newLines": 7,
+            "patch": " ): FlatConfigComposer<TypedFlatConfigItem, ConfigNames> {\n   const {\n     angular: enableAngular = false,\n+    antislop: enableAntislop = false,\n     astro: enableAstro = false,\n     autoRenamePlugins = true,\n     componentExts = [],"
+          },
+          {
+            "header": "@@ -231,6 +233,17 @@ export function antfu(",
+            "oldStart": 231,
+            "oldLines": 6,
+            "newStart": 233,
+            "newLines": 17,
+            "patch": "     )\n   }\n \n+  // Registered after the TypeScript config so its `ts/no-explicit-any` override takes effect\n+  if (enableAntislop) {\n+    configs.push(\n+      antislop({\n+        ...resolveSubOptions(options, 'antislop'),\n+        overrides: getOverrides(options, 'antislop'),\n+        typescript: !!enableTypeScript,\n+      }),\n+    )\n+  }\n+\n   if (stylisticOptions) {\n     configs.push(\n       stylistic({"
+          }
+        ]
+      },
+      {
+        "path": "src/types.ts",
+        "status": "modified",
+        "additions": 52,
+        "deletions": 0,
+        "isBinary": false,
+        "sha": "ff6269f50580945bcbde287a6c048867de382440",
+        "hunks": [
+          {
+            "header": "@@ -195,6 +195,37 @@ export interface OptionsE18e extends OptionsOverrides {",
+            "oldStart": 195,
+            "oldLines": 6,
+            "newStart": 195,
+            "newLines": 37,
+            "patch": "   performanceImprovements?: boolean\n }\n \n+export interface OptionsSlop {\n+  cwd?: string\n+  inspection?: 'full' | 'uncommitted' | 'recent-changes' | {\n+    mode: 'full' | 'uncommitted'\n+  } | {\n+    mode: 'recent-changes'\n+    tracebackCommits?: number\n+  }\n+}\n+\n+export interface OptionsAntislop extends OptionsOverrides {\n+  /**\n+   * Enable rules from `eslint-plugin-slop`.\n+   *\n+   * Passing an object enables the rules and forwards it to the plugin\n+   * via `settings.slop`, controlling the working directory and inspection mode.\n+   *\n+   * @see https://github.com/antfu/eslint-plugin-slop\n+   * @default true\n+   */\n+  slop?: boolean | OptionsSlop\n+\n+  /**\n+   * Enable the curated subset of rules from `eslint-plugin-sonarjs`.\n+   *\n+   * @see https://github.com/SonarSource/SonarJS\n+   * @default true\n+   */\n+  sonarjs?: boolean\n+}\n+\n export interface OptionsUnicorn extends OptionsOverrides {\n   /**\n    * Include all rules recommended by `eslint-plugin-unicorn`, instead of only ones picked by Anthony."
+          },
+          {
+            "header": "@@ -499,6 +530,27 @@ export interface OptionsConfig extends OptionsComponentExts, OptionsProjectType",
+            "oldStart": 499,
+            "oldLines": 6,
+            "newStart": 530,
+            "newLines": 27,
+            "patch": "    */\n   angular?: boolean | OptionsOverrides\n \n+  /**\n+   * Enable anti-slop rules, guarding against low-value code patterns\n+   * commonly introduced by AI agents.\n+   *\n+   * Enables [eslint-plugin-slop](https://github.com/antfu/eslint-plugin-slop) and\n+   * a curated subset of [eslint-plugin-sonarjs](https://github.com/SonarSource/SonarJS).\n+   *\n+   * We also recommend pairing this with [jscpd](https://github.com/kucherenko/jscpd)\n+   * and [knip](https://github.com/webpro-nl/knip) to catch copy-paste duplication\n+   * and unused files, dependencies, and exports.\n+   *\n+   * Requires installing:\n+   * - `eslint-plugin-slop`\n+   * - `eslint-plugin-sonarjs`\n+   *\n+   * @experimental The enabled rule set is maintained in-house and may change\n+   * in any release without following semver.\n+   * @default false\n+   */\n+  antislop?: boolean | OptionsAntislop\n+\n   /**\n    * Enable linting for **code snippets** in Markdown and the markdown content itself.\n    *"
+          }
+        ]
+      },
+      {
+        "path": "test/__snapshots__/api/@antfu/eslint-config/index.snapshot.d.ts",
+        "status": "modified",
+        "additions": 433,
+        "deletions": 2,
+        "isBinary": false,
+        "sha": "d02676e0df9aa9630b1ff01a735b62675209e2cf",
+        "hunks": [
+          {
+            "header": "@@ -2,6 +2,10 @@",
+            "oldStart": 2,
+            "oldLines": 6,
+            "newStart": 2,
+            "newLines": 10,
+            "patch": "  * Generated by tsnapi — public API snapshot of `@antfu/eslint-config`\n  */\n // #region Interfaces\n+export interface OptionsAntislop extends OptionsOverrides {\n+  slop?: boolean | OptionsSlop;\n+  sonarjs?: boolean;\n+}\n export interface OptionsComponentExts {\n   componentExts?: string[];\n }"
+          },
+          {
+            "header": "@@ -25,6 +29,7 @@ export interface OptionsConfig extends OptionsComponentExts, OptionsProjectType",
+            "oldStart": 25,
+            "oldLines": 6,
+            "newStart": 29,
+            "newLines": 7,
+            "patch": "   toml?: boolean | OptionsOverrides;\n   astro?: boolean | OptionsOverrides;\n   angular?: boolean | OptionsOverrides;\n+  antislop?: boolean | OptionsAntislop;\n   markdown?: boolean | OptionsMarkdown;\n   stylistic?: boolean | (StylisticConfig & OptionsOverrides);\n   regexp?: boolean | (OptionsRegExp & OptionsOverrides);"
+          },
+          {
+            "header": "@@ -90,7 +95,7 @@ export interface OptionsMarkdown extends OptionsOverrides {",
+            "oldStart": 90,
+            "oldLines": 7,
+            "newStart": 95,
+            "newLines": 7,
+            "patch": " export interface OptionsOverrides {\n   overrides?: TypedFlatConfigItem['rules'];\n }\n-export interface OptionsPnpm extends OptionsIsInEditor {\n+export interface OptionsPnpm extends OptionsIsInEditor, OptionsStylistic {\n   catalogs?: boolean;\n   json?: boolean;\n   yaml?: boolean;"
+          },
+          {
+            "header": "@@ -103,6 +108,15 @@ export interface OptionsReact extends OptionsOverrides {}",
+            "oldStart": 103,
+            "oldLines": 6,
+            "newStart": 108,
+            "newLines": 15,
+            "patch": " export interface OptionsRegExp {\n   level?: 'error' | 'warn';\n }\n+export interface OptionsSlop {\n+  cwd?: string;\n+  inspection?: 'full' | 'uncommitted' | 'recent-changes' | {\n+    mode: 'full' | 'uncommitted';\n+  } | {\n+    mode: 'recent-changes';\n+    tracebackCommits?: number;\n+  };\n+}\n export interface OptionsStylistic {\n   stylistic?: boolean | StylisticConfig;\n }"
+          },
+          {
+            "header": "@@ -864,6 +878,7 @@ export interface RuleOptions {",
+            "oldStart": 864,
+            "oldLines": 6,
+            "newStart": 878,
+            "newLines": 7,
+            "patch": "   'pnpm/json-enforce-catalog'?: Linter.RuleEntry<PnpmJsonEnforceCatalog>;\n   'pnpm/json-prefer-workspace-settings'?: Linter.RuleEntry<PnpmJsonPreferWorkspaceSettings>;\n   'pnpm/json-valid-catalog'?: Linter.RuleEntry<PnpmJsonValidCatalog>;\n+  'pnpm/yaml-blank-lines'?: Linter.RuleEntry<[]>;\n   'pnpm/yaml-enforce-settings'?: Linter.RuleEntry<PnpmYamlEnforceSettings>;\n   'pnpm/yaml-no-anonymous-catalog'?: Linter.RuleEntry<[]>;\n   'pnpm/yaml-no-duplicate-catalog-item'?: Linter.RuleEntry<PnpmYamlNoDuplicateCatalogItem>;"
+          },
+          {
+            "header": "@@ -1118,6 +1133,13 @@ export interface RuleOptions {",
+            "oldStart": 1118,
+            "oldLines": 6,
+            "newStart": 1133,
+            "newLines": 13,
+            "patch": "   'semi'?: Linter.RuleEntry<Semi>;\n   'semi-spacing'?: Linter.RuleEntry<SemiSpacing>;\n   'semi-style'?: Linter.RuleEntry<SemiStyle>;\n+  'slop/max-comment-length'?: Linter.RuleEntry<SlopMaxCommentLength>;\n+  'slop/no-chained-type-assertions'?: Linter.RuleEntry<SlopNoChainedTypeAssertions>;\n+  'slop/no-em-dash'?: Linter.RuleEntry<SlopNoEmDash>;\n+  'slop/no-jargon'?: Linter.RuleEntry<SlopNoJargon>;\n+  'slop/no-trivial-functions'?: Linter.RuleEntry<SlopNoTrivialFunctions>;\n+  'slop/no-trivial-type-aliases'?: Linter.RuleEntry<SlopNoTrivialTypeAliases>;\n+  'slop/prefer-jsdoc'?: Linter.RuleEntry<SlopPreferJsdoc>;\n   'solid/components-return-once'?: Linter.RuleEntry<[]>;\n   'solid/event-handlers'?: Linter.RuleEntry<SolidEventHandlers>;\n   'solid/imports'?: Linter.RuleEntry<[]>;"
+          },
+          {
+            "header": "@@ -1149,6 +1171,285 @@ export interface RuleOptions {",
+            "oldStart": 1149,
+            "oldLines": 6,
+            "newStart": 1171,
+            "newLines": 285,
+            "patch": "   'solid/self-closing-comp'?: Linter.RuleEntry<SolidSelfClosingComp>;\n   'solid/style-prop'?: Linter.RuleEntry<SolidStyleProp>;\n   'solid/valid-use-server'?: Linter.RuleEntry<SolidValidUseServer>;\n+  'sonarjs/anchor-precedence'?: Linter.RuleEntry<[]>;\n+  'sonarjs/argument-type'?: Linter.RuleEntry<[]>;\n+  'sonarjs/arguments-order'?: Linter.RuleEntry<[]>;\n+  'sonarjs/arguments-usage'?: Linter.RuleEntry<[]>;\n+  'sonarjs/array-callback-without-return'?: Linter.RuleEntry<[]>;\n+  'sonarjs/array-constructor'?: Linter.RuleEntry<[]>;\n+  'sonarjs/arrow-function-convention'?: Linter.RuleEntry<SonarjsArrowFunctionConvention>;\n+  'sonarjs/assertions-in-test-cases'?: Linter.RuleEntry<[]>;\n+  'sonarjs/assertions-in-tests'?: Linter.RuleEntry<[]>;\n+  'sonarjs/async-test-assertions'?: Linter.RuleEntry<[]>;\n+  'sonarjs/aws-apigateway-public-api'?: Linter.RuleEntry<[]>;\n+  'sonarjs/aws-ec2-rds-dms-public'?: Linter.RuleEntry<[]>;\n+  'sonarjs/aws-ec2-unencrypted-ebs-volume'?: Linter.RuleEntry<[]>;\n+  'sonarjs/aws-efs-unencrypted'?: Linter.RuleEntry<[]>;\n+  'sonarjs/aws-iam-all-privileges'?: Linter.RuleEntry<[]>;\n+  'sonarjs/aws-iam-all-resources-accessible'?: Linter.RuleEntry<[]>;\n+  'sonarjs/aws-iam-privilege-escalation'?: Linter.RuleEntry<[]>;\n+  'sonarjs/aws-iam-public-access'?: Linter.RuleEntry<[]>;\n+  'sonarjs/aws-opensearchservice-domain'?: Linter.RuleEntry<[]>;\n+  'sonarjs/aws-rds-unencrypted-databases'?: Linter.RuleEntry<[]>;\n+  'sonarjs/aws-restricted-ip-admin-access'?: Linter.RuleEntry<[]>;\n+  'sonarjs/aws-s3-bucket-granted-access'?: Linter.RuleEntry<[]>;\n+  'sonarjs/aws-s3-bucket-insecure-http'?: Linter.RuleEntry<[]>;\n+  'sonarjs/aws-s3-bucket-public-access'?: Linter.RuleEntry<[]>;\n+  'sonarjs/aws-s3-bucket-versioning'?: Linter.RuleEntry<[]>;\n+  'sonarjs/aws-sagemaker-unencrypted-notebook'?: Linter.RuleEntry<[]>;\n+  'sonarjs/aws-sns-unencrypted-topics'?: Linter.RuleEntry<[]>;\n+  'sonarjs/aws-sqs-unencrypted-queue'?: Linter.RuleEntry<[]>;\n+  'sonarjs/bitwise-operators'?: Linter.RuleEntry<[]>;\n+  'sonarjs/block-scoped-var'?: Linter.RuleEntry<[]>;\n+  'sonarjs/bool-param-default'?: Linter.RuleEntry<[]>;\n+  'sonarjs/call-argument-line'?: Linter.RuleEntry<[]>;\n+  'sonarjs/chai-determinate-assertion'?: Linter.RuleEntry<[]>;\n+  'sonarjs/class-name'?: Linter.RuleEntry<SonarjsClassName>;\n+  'sonarjs/class-prototype'?: Linter.RuleEntry<[]>;\n+  'sonarjs/code-eval'?: Linter.RuleEntry<[]>;\n+  'sonarjs/cognitive-complexity'?: Linter.RuleEntry<SonarjsCognitiveComplexity>;\n+  'sonarjs/comma-or-logical-or-case'?: Linter.RuleEntry<[]>;\n+  'sonarjs/comment-regex'?: Linter.RuleEntry<SonarjsCommentRegex>;\n+  'sonarjs/concise-regex'?: Linter.RuleEntry<[]>;\n+  'sonarjs/conditional-indentation'?: Linter.RuleEntry<[]>;\n+  'sonarjs/confidential-information-logging'?: Linter.RuleEntry<[]>;\n+  'sonarjs/constructor-for-side-effects'?: Linter.RuleEntry<[]>;\n+  'sonarjs/content-length'?: Linter.RuleEntry<SonarjsContentLength>;\n+  'sonarjs/content-security-policy'?: Linter.RuleEntry<[]>;\n+  'sonarjs/cookie-no-httponly'?: Linter.RuleEntry<[]>;\n+  'sonarjs/cors'?: Linter.RuleEntry<[]>;\n+  'sonarjs/csrf'?: Linter.RuleEntry<[]>;\n+  'sonarjs/cyclomatic-complexity'?: Linter.RuleEntry<SonarjsCyclomaticComplexity>;\n+  'sonarjs/declarations-in-global-scope'?: Linter.RuleEntry<[]>;\n+  'sonarjs/deprecation'?: Linter.RuleEntry<[]>;\n+  'sonarjs/destructuring-assignment-syntax'?: Linter.RuleEntry<[]>;\n+  'sonarjs/different-types-comparison'?: Linter.RuleEntry<[]>;\n+  'sonarjs/disabled-auto-escaping'?: Linter.RuleEntry<[]>;\n+  'sonarjs/disabled-resource-integrity'?: Linter.RuleEntry<[]>;\n+  'sonarjs/disabled-timeout'?: Linter.RuleEntry<[]>;\n+  'sonarjs/dompurify-unsafe-config'?: Linter.RuleEntry<[]>;\n+  'sonarjs/duplicates-in-character-class'?: Linter.RuleEntry<[]>;\n+  'sonarjs/dynamically-constructed-templates'?: Linter.RuleEntry<[]>;\n+  'sonarjs/elseif-without-else'?: Linter.RuleEntry<[]>;\n+  'sonarjs/empty-string-repetition'?: Linter.RuleEntry<[]>;\n+  'sonarjs/encryption-secure-mode'?: Linter.RuleEntry<[]>;\n+  'sonarjs/existing-groups'?: Linter.RuleEntry<[]>;\n+  'sonarjs/explicit-test-skip'?: Linter.RuleEntry<[]>;\n+  'sonarjs/expression-complexity'?: Linter.RuleEntry<SonarjsExpressionComplexity>;\n+  'sonarjs/file-header'?: Linter.RuleEntry<SonarjsFileHeader>;\n+  'sonarjs/file-name-differ-from-class'?: Linter.RuleEntry<[]>;\n+  'sonarjs/file-permissions'?: Linter.RuleEntry<[]>;\n+  'sonarjs/file-uploads'?: Linter.RuleEntry<[]>;\n+  'sonarjs/fixme-tag'?: Linter.RuleEntry<[]>;\n+  'sonarjs/for-in'?: Linter.RuleEntry<[]>;\n+  'sonarjs/for-loop-increment-sign'?: Linter.RuleEntry<[]>;\n+  'sonarjs/frame-ancestors'?: Linter.RuleEntry<[]>;\n+  'sonarjs/function-inside-loop'?: Linter.RuleEntry<[]>;\n+  'sonarjs/function-name'?: Linter.RuleEntry<SonarjsFunctionName>;\n+  'sonarjs/function-return-type'?: Linter.RuleEntry<[]>;\n+  'sonarjs/future-reserved-words'?: Linter.RuleEntry<[]>;\n+  'sonarjs/generator-without-yield'?: Linter.RuleEntry<[]>;\n+  'sonarjs/hardcoded-secret-signatures'?: Linter.RuleEntry<[]>;\n+  'sonarjs/hashing'?: Linter.RuleEntry<[]>;\n+  'sonarjs/hidden-files'?: Linter.RuleEntry<[]>;\n+  'sonarjs/hooks-before-test-cases'?: Linter.RuleEntry<[]>;\n+  'sonarjs/in-operator-type-error'?: Linter.RuleEntry<[]>;\n+  'sonarjs/inconsistent-function-call'?: Linter.RuleEntry<[]>;\n+  'sonarjs/index-of-compare-to-positive-number'?: Linter.RuleEntry<[]>;\n+  'sonarjs/insecure-cookie'?: Linter.RuleEntry<[]>;\n+  'sonarjs/insecure-jwt-token'?: Linter.RuleEntry<[]>;\n+  'sonarjs/inverted-assertion-arguments'?: Linter.RuleEntry<[]>;\n+  'sonarjs/jsx-no-leaked-render'?: Linter.RuleEntry<[]>;\n+  'sonarjs/label-position'?: Linter.RuleEntry<[]>;\n+  'sonarjs/link-with-target-blank'?: Linter.RuleEntry<[]>;\n+  'sonarjs/max-lines'?: Linter.RuleEntry<SonarjsMaxLines>;\n+  'sonarjs/max-lines-per-function'?: Linter.RuleEntry<SonarjsMaxLinesPerFunction>;\n+  'sonarjs/max-switch-cases'?: Linter.RuleEntry<SonarjsMaxSwitchCases>;\n+  'sonarjs/max-union-size'?: Linter.RuleEntry<SonarjsMaxUnionSize>;\n+  'sonarjs/memoize-cache-key'?: Linter.RuleEntry<[]>;\n+  'sonarjs/misplaced-loop-counter'?: Linter.RuleEntry<[]>;\n+  'sonarjs/nested-control-flow'?: Linter.RuleEntry<SonarjsNestedControlFlow>;\n+  'sonarjs/new-operator-misuse'?: Linter.RuleEntry<SonarjsNewOperatorMisuse>;\n+  'sonarjs/no-all-duplicated-branches'?: Linter.RuleEntry<[]>;\n+  'sonarjs/no-alphabetical-sort'?: Linter.RuleEntry<[]>;\n+  'sonarjs/no-angular-bypass-sanitization'?: Linter.RuleEntry<[]>;\n+  'sonarjs/no-array-delete'?: Linter.RuleEntry<[]>;\n+  'sonarjs/no-associative-arrays'?: Linter.RuleEntry<[]>;\n+  'sonarjs/no-async-constructor'?: Linter.RuleEntry<[]>;\n+  'sonarjs/no-built-in-override'?: Linter.RuleEntry<[]>;\n+  'sonarjs/no-case-label-in-switch'?: Linter.RuleEntry<[]>;\n+  'sonarjs/no-clear-text-protocols'?: Linter.RuleEntry<[]>;\n+  'sonarjs/no-code-after-done'?: Linter.RuleEntry<[]>;\n+  'sonarjs/no-collapsible-if'?: Linter.RuleEntry<[]>;\n+  'sonarjs/no-collection-size-mischeck'?: Linter.RuleEntry<[]>;\n+  'sonarjs/no-commented-code'?: Linter.RuleEntry<[]>;\n+  'sonarjs/no-control-regex'?: Linter.RuleEntry<[]>;\n+  'sonarjs/no-dead-store'?: Linter.RuleEntry<[]>;\n+  'sonarjs/no-debug-commands-in-ui-tests'?: Linter.RuleEntry<[]>;\n+  'sonarjs/no-default-utility-imports'?: Linter.RuleEntry<[]>;\n+  'sonarjs/no-delete-var'?: Linter.RuleEntry<[]>;\n+  'sonarjs/no-duplicate-in-composite'?: Linter.RuleEntry<[]>;\n+  'sonarjs/no-duplicate-string'?: Linter.RuleEntry<SonarjsNoDuplicateString>;\n+  'sonarjs/no-duplicate-test-title'?: Linter.RuleEntry<[]>;\n+  'sonarjs/no-duplicated-branches'?: Linter.RuleEntry<[]>;\n+  'sonarjs/no-element-overwrite'?: Linter.RuleEntry<[]>;\n+  'sonarjs/no-empty-after-reluctant'?: Linter.RuleEntry<[]>;\n+  'sonarjs/no-empty-alternatives'?: Linter.RuleEntry<[]>;\n+  'sonarjs/no-empty-character-class'?: Linter.RuleEntry<[]>;\n+  'sonarjs/no-empty-collection'?: Linter.RuleEntry<[]>;\n+  'sonarjs/no-empty-group'?: Linter.RuleEntry<[]>;\n+  'sonarjs/no-empty-test-file'?: Linter.RuleEntry<[]>;\n+  'sonarjs/no-empty-test-title'?: Linter.RuleEntry<[]>;\n+  'sonarjs/no-equals-in-for-termination'?: Linter.RuleEntry<[]>;\n+  'sonarjs/no-exclusive-tests'?: Linter.RuleEntry<[]>;\n+  'sonarjs/no-extra-arguments'?: Linter.RuleEntry<[]>;\n+  'sonarjs/no-fallthrough'?: Linter.RuleEntry<[]>;\n+  'sonarjs/no-fixed-wait-in-tests'?: Linter.RuleEntry<[]>;\n+  'sonarjs/no-floating-point-equality'?: Linter.RuleEntry<[]>;\n+  'sonarjs/no-for-in-iterable'?: Linter.RuleEntry<[]>;\n+  'sonarjs/no-forced-browser-interaction'?: Linter.RuleEntry<[]>;\n+  'sonarjs/no-function-declaration-in-block'?: Linter.RuleEntry<[]>;\n+  'sonarjs/no-global-this'?: Linter.RuleEntry<[]>;\n+  'sonarjs/no-globals-shadowing'?: Linter.RuleEntry<[]>;\n+  'sonarjs/no-gratuitous-expressions'?: Linter.RuleEntry<[]>;\n+  'sonarjs/no-hardcoded-ip'?: Linter.RuleEntry<[]>;\n+  'sonarjs/no-hardcoded-passwords'?: Linter.RuleEntry<SonarjsNoHardcodedPasswords>;\n+  'sonarjs/no-hardcoded-secrets'?: Linter.RuleEntry<SonarjsNoHardcodedSecrets>;\n+  'sonarjs/no-hook-setter-in-body'?: Linter.RuleEntry<[]>;\n+  'sonarjs/no-identical-conditions'?: Linter.RuleEntry<[]>;\n+  'sonarjs/no-identical-expressions'?: Linter.RuleEntry<[]>;\n+  'sonarjs/no-identical-functions'?: Linter.RuleEntry<SonarjsNoIdenticalFunctions>;\n+  'sonarjs/no-ignored-exceptions'?: Linter.RuleEntry<[]>;\n+  'sonarjs/no-ignored-return'?: Linter.RuleEntry<[]>;\n+  'sonarjs/no-implicit-dependencies'?: Linter.RuleEntry<SonarjsNoImplicitDependencies>;\n+  'sonarjs/no-implicit-global'?: Linter.RuleEntry<[]>;\n+  'sonarjs/no-in-misuse'?: Linter.RuleEntry<[]>;\n+  'sonarjs/no-incompatible-assertion-types'?: Linter.RuleEntry<[]>;\n+  'sonarjs/no-incomplete-assertions'?: Linter.RuleEntry<[]>;\n+  'sonarjs/no-inconsistent-returns'?: Linter.RuleEntry<[]>;\n+  'sonarjs/no-incorrect-string-concat'?: Linter.RuleEntry<[]>;\n+  'sonarjs/no-internal-api-use'?: Linter.RuleEntry<[]>;\n+  'sonarjs/no-interpolation-in-inline-snapshots'?: Linter.RuleEntry<[]>;\n+  'sonarjs/no-intrusive-permissions'?: Linter.RuleEntry<SonarjsNoIntrusivePermissions>;\n+  'sonarjs/no-invalid-regexp'?: Linter.RuleEntry<[]>;\n+  'sonarjs/no-invariant-returns'?: Linter.RuleEntry<[]>;\n+  'sonarjs/no-inverted-boolean-check'?: Linter.RuleEntry<[]>;\n+  'sonarjs/no-ip-forward'?: Linter.RuleEntry<[]>;\n+  'sonarjs/no-labels'?: Linter.RuleEntry<[]>;\n+  'sonarjs/no-literal-call'?: Linter.RuleEntry<[]>;\n+  'sonarjs/no-mime-sniff'?: Linter.RuleEntry<[]>;\n+  'sonarjs/no-misleading-array-reverse'?: Linter.RuleEntry<[]>;\n+  'sonarjs/no-misleading-character-class'?: Linter.RuleEntry<[]>;\n+  'sonarjs/no-mixed-completion-style'?: Linter.RuleEntry<[]>;\n+  'sonarjs/no-mixed-content'?: Linter.RuleEntry<[]>;\n+  'sonarjs/no-nested-assignment'?: Linter.RuleEntry<[]>;\n+  'sonarjs/no-nested-conditional'?: Linter.RuleEntry<[]>;\n+  'sonarjs/no-nested-functions'?: Linter.RuleEntry<SonarjsNoNestedFunctions>;\n+  'sonarjs/no-nested-incdec'?: Linter.RuleEntry<[]>;\n+  'sonarjs/no-nested-switch'?: Linter.RuleEntry<[]>;\n+  'sonarjs/no-nested-template-literals'?: Linter.RuleEntry<[]>;\n+  'sonarjs/no-os-command-from-path'?: Linter.RuleEntry<[]>;\n+  'sonarjs/no-parameter-reassignment'?: Linter.RuleEntry<[]>;\n+  'sonarjs/no-primitive-wrappers'?: Linter.RuleEntry<[]>;\n+  'sonarjs/no-redundant-assignments'?: Linter.RuleEntry<[]>;\n+  'sonarjs/no-redundant-boolean'?: Linter.RuleEntry<[]>;\n+  'sonarjs/no-redundant-jump'?: Linter.RuleEntry<[]>;\n+  'sonarjs/no-redundant-optional'?: Linter.RuleEntry<[]>;\n+  'sonarjs/no-redundant-parentheses'?: Linter.RuleEntry<[]>;\n+  'sonarjs/no-reference-error'?: Linter.RuleEntry<[]>;\n+  'sonarjs/no-referrer-policy'?: Linter.RuleEntry<[]>;\n+  'sonarjs/no-regex-spaces'?: Linter.RuleEntry<[]>;\n+  'sonarjs/no-require-or-define'?: Linter.RuleEntry<[]>;\n+  'sonarjs/no-return-type-any'?: Linter.RuleEntry<[]>;\n+  'sonarjs/no-same-argument-assert'?: Linter.RuleEntry<[]>;\n+  'sonarjs/no-same-line-conditional'?: Linter.RuleEntry<[]>;\n+  'sonarjs/no-selector-parameter'?: Linter.RuleEntry<[]>;\n+  'sonarjs/no-session-cookies-on-static-assets'?: Linter.RuleEntry<[]>;\n+  'sonarjs/no-skipped-tests'?: Linter.RuleEntry<[]>;\n+  'sonarjs/no-small-switch'?: Linter.RuleEntry<[]>;\n+  'sonarjs/no-sonar-comments'?: Linter.RuleEntry<[]>;\n+  'sonarjs/no-tab'?: Linter.RuleEntry<[]>;\n+  'sonarjs/no-table-as-layout'?: Linter.RuleEntry<[]>;\n+  'sonarjs/no-trivial-assertions'?: Linter.RuleEntry<[]>;\n+  'sonarjs/no-try-promise'?: Linter.RuleEntry<[]>;\n+  'sonarjs/no-undefined-argument'?: Linter.RuleEntry<[]>;\n+  'sonarjs/no-undefined-assignment'?: Linter.RuleEntry<[]>;\n+  'sonarjs/no-unenclosed-multiline-block'?: Linter.RuleEntry<[]>;\n+  'sonarjs/no-uniq-key'?: Linter.RuleEntry<[]>;\n+  'sonarjs/no-unsafe-unzip'?: Linter.RuleEntry<[]>;\n+  'sonarjs/no-unthrown-error'?: Linter.RuleEntry<[]>;\n+  'sonarjs/no-unused-collection'?: Linter.RuleEntry<[]>;\n+  'sonarjs/no-unused-function-argument'?: Linter.RuleEntry<[]>;\n+  'sonarjs/no-unused-vars'?: Linter.RuleEntry<[]>;\n+  'sonarjs/no-use-of-empty-return-value'?: Linter.RuleEntry<[]>;\n+  'sonarjs/no-useless-catch'?: Linter.RuleEntry<[]>;\n+  'sonarjs/no-useless-increment'?: Linter.RuleEntry<[]>;\n+  'sonarjs/no-useless-intersection'?: Linter.RuleEntry<[]>;\n+  'sonarjs/no-useless-react-setstate'?: Linter.RuleEntry<[]>;\n+  'sonarjs/no-variable-usage-before-declaration'?: Linter.RuleEntry<[]>;\n+  'sonarjs/no-weak-cipher'?: Linter.RuleEntry<[]>;\n+  'sonarjs/no-weak-keys'?: Linter.RuleEntry<[]>;\n+  'sonarjs/no-wildcard-import'?: Linter.RuleEntry<[]>;\n+  'sonarjs/non-existent-operator'?: Linter.RuleEntry<[]>;\n+  'sonarjs/non-number-in-arithmetic-expression'?: Linter.RuleEntry<[]>;\n+  'sonarjs/null-dereference'?: Linter.RuleEntry<[]>;\n+  'sonarjs/object-alt-content'?: Linter.RuleEntry<[]>;\n+  'sonarjs/operation-returning-nan'?: Linter.RuleEntry<[]>;\n+  'sonarjs/os-command'?: Linter.RuleEntry<[]>;\n+  'sonarjs/parameterized-tests'?: Linter.RuleEntry<[]>;\n+  'sonarjs/post-message'?: Linter.RuleEntry<[]>;\n+  'sonarjs/prefer-default-last'?: Linter.RuleEntry<[]>;\n+  'sonarjs/prefer-immediate-return'?: Linter.RuleEntry<[]>;\n+  'sonarjs/prefer-native-lodash-alternative'?: Linter.RuleEntry<[]>;\n+  'sonarjs/prefer-object-literal'?: Linter.RuleEntry<[]>;\n+  'sonarjs/prefer-promise-shorthand'?: Linter.RuleEntry<[]>;\n+  'sonarjs/prefer-read-only-props'?: Linter.RuleEntry<[]>;\n+  'sonarjs/prefer-regexp-exec'?: Linter.RuleEntry<[]>;\n+  'sonarjs/prefer-single-boolean-return'?: Linter.RuleEntry<[]>;\n+  'sonarjs/prefer-specific-assertions'?: Linter.RuleEntry<[]>;\n+  'sonarjs/prefer-type-guard'?: Linter.RuleEntry<[]>;\n+  'sonarjs/prefer-while'?: Linter.RuleEntry<[]>;\n+  'sonarjs/production-debug'?: Linter.RuleEntry<[]>;\n+  'sonarjs/pseudo-random'?: Linter.RuleEntry<[]>;\n+  'sonarjs/public-static-readonly'?: Linter.RuleEntry<[]>;\n+  'sonarjs/publicly-writable-directories'?: Linter.RuleEntry<[]>;\n+  'sonarjs/reduce-initial-value'?: Linter.RuleEntry<[]>;\n+  'sonarjs/redundant-type-aliases'?: Linter.RuleEntry<[]>;\n+  'sonarjs/regex-complexity'?: Linter.RuleEntry<SonarjsRegexComplexity>;\n+  'sonarjs/review-blockchain-mnemonic'?: Linter.RuleEntry<[]>;\n+  'sonarjs/session-regeneration'?: Linter.RuleEntry<[]>;\n+  'sonarjs/shorthand-property-grouping'?: Linter.RuleEntry<[]>;\n+  'sonarjs/single-char-in-character-classes'?: Linter.RuleEntry<[]>;\n+  'sonarjs/single-character-alternation'?: Linter.RuleEntry<[]>;\n+  'sonarjs/slow-regex'?: Linter.RuleEntry<[]>;\n+  'sonarjs/sql-queries'?: Linter.RuleEntry<[]>;\n+  'sonarjs/stable-tests'?: Linter.RuleEntry<[]>;\n+  'sonarjs/stateful-regex'?: Linter.RuleEntry<[]>;\n+  'sonarjs/strict-transport-security'?: Linter.RuleEntry<[]>;\n+  'sonarjs/strings-comparison'?: Linter.RuleEntry<[]>;\n+  'sonarjs/super-linear-regex'?: Linter.RuleEntry<[]>;\n+  'sonarjs/synchronous-suite-callback'?: Linter.RuleEntry<[]>;\n+  'sonarjs/table-header'?: Linter.RuleEntry<[]>;\n+  'sonarjs/table-header-reference'?: Linter.RuleEntry<[]>;\n+  'sonarjs/test-check-exception'?: Linter.RuleEntry<[]>;\n+  'sonarjs/todo-tag'?: Linter.RuleEntry<[]>;\n+  'sonarjs/too-many-break-or-continue-in-loop'?: Linter.RuleEntry<[]>;\n+  'sonarjs/unicode-aware-regex'?: Linter.RuleEntry<[]>;\n+  'sonarjs/unused-import'?: Linter.RuleEntry<[]>;\n+  'sonarjs/unused-named-groups'?: Linter.RuleEntry<[]>;\n+  'sonarjs/unverified-certificate'?: Linter.RuleEntry<[]>;\n+  'sonarjs/unverified-hostname'?: Linter.RuleEntry<[]>;\n+  'sonarjs/updated-const-var'?: Linter.RuleEntry<[]>;\n+  'sonarjs/updated-loop-counter'?: Linter.RuleEntry<[]>;\n+  'sonarjs/use-type-alias'?: Linter.RuleEntry<[]>;\n+  'sonarjs/useless-string-operation'?: Linter.RuleEntry<[]>;\n+  'sonarjs/values-not-convertible-to-numbers'?: Linter.RuleEntry<[]>;\n+  'sonarjs/variable-name'?: Linter.RuleEntry<SonarjsVariableName>;\n+  'sonarjs/void-use'?: Linter.RuleEntry<[]>;\n+  'sonarjs/weak-ssl'?: Linter.RuleEntry<[]>;\n+  'sonarjs/web-sql-database'?: Linter.RuleEntry<[]>;\n+  'sonarjs/x-powered-by'?: Linter.RuleEntry<[]>;\n+  'sonarjs/xml-parser-xxe'?: Linter.RuleEntry<[]>;\n   'sort-imports'?: Linter.RuleEntry<SortImports>;\n   'sort-keys'?: Linter.RuleEntry<SortKeys>;\n   'sort-vars'?: Linter.RuleEntry<SortVars>;"
+          },
+          {
+            "header": "@@ -2261,7 +2562,7 @@ export interface StylisticOptions extends StylisticConfig, OptionsOverrides {",
+            "oldStart": 2261,
+            "oldLines": 7,
+            "newStart": 2562,
+            "newLines": 7,
+            "patch": " \n // #region Types\n export type Awaitable<T> = T | Promise<T>;\n-export type ConfigNames = 'antfu/gitignore' | 'antfu/ignores' | 'antfu/javascript/setup' | 'antfu/javascript/rules' | 'antfu/eslint-comments/rules' | 'antfu/command/rules' | 'antfu/perfectionist/setup' | 'antfu/node/setup' | 'antfu/node/rules' | 'antfu/jsdoc/setup' | 'antfu/jsdoc/rules' | 'antfu/imports/rules' | 'antfu/e18e/rules' | 'antfu/unicorn/setup' | 'antfu/unicorn/rules' | 'antfu/jsx/setup' | 'antfu/typescript/setup' | 'antfu/typescript/parser' | 'antfu/typescript/type-aware-parser' | 'antfu/typescript/rules' | 'antfu/typescript/rules-type-aware' | 'antfu/typescript/erasable-syntax-only' | 'antfu/stylistic/rules' | 'antfu/regexp/rules' | 'antfu/test/setup' | 'antfu/test/rules' | 'antfu/vue/setup' | 'antfu/vue/rules' | 'antfu/react/setup' | 'antfu/react/rules' | 'antfu/react/typescript' | 'antfu/react/type-aware-rules' | 'antfu/nextjs/setup' | 'antfu/nextjs/rules' | 'antfu/solid/setup' | 'antfu/solid/rules' | 'antfu/svelte/setup' | 'antfu/svelte/rules' | 'antfu/unocss' | 'antfu/astro/setup' | 'antfu/astro/rules' | 'antfu/angular/setup' | 'antfu/angular/rules/ts' | 'antfu/angular/rules/template' | 'antfu/jsonc/setup' | 'antfu/jsonc/rules' | 'antfu/sort/package-json' | 'antfu/sort/tsconfig-json' | 'antfu/pnpm/package-json' | 'antfu/pnpm/pnpm-workspace-yaml' | 'antfu/pnpm/pnpm-workspace-yaml-sort' | 'antfu/yaml/setup' | 'antfu/yaml/rules' | 'antfu/toml/setup' | 'antfu/toml/rules' | 'antfu/markdown/setup' | 'antfu/markdown/processor' | 'antfu/markdown/parser' | 'antfu/markdown/rules' | 'antfu/markdown/disables/code' | 'antfu/formatter/setup' | 'antfu/formatter/css' | 'antfu/formatter/scss' | 'antfu/formatter/less' | 'antfu/formatter/html' | 'antfu/formatter/xml' | 'antfu/formatter/svg' | 'antfu/formatter/markdown' | 'antfu/formatter/astro' | 'antfu/formatter/astro/disables' | 'antfu/formatter/graphql' | 'antfu/disables/scripts' | 'antfu/disables/cli' | 'antfu/disables/bin' | 'antfu/disables/dts' | 'antfu/disables/cjs' | 'antfu/disables/config-files';\n+export type ConfigNames = 'antfu/gitignore' | 'antfu/ignores' | 'antfu/javascript/setup' | 'antfu/javascript/rules' | 'antfu/eslint-comments/rules' | 'antfu/command/rules' | 'antfu/perfectionist/setup' | 'antfu/node/setup' | 'antfu/node/rules' | 'antfu/jsdoc/setup' | 'antfu/jsdoc/rules' | 'antfu/imports/rules' | 'antfu/e18e/rules' | 'antfu/unicorn/setup' | 'antfu/unicorn/rules' | 'antfu/jsx/setup' | 'antfu/typescript/setup' | 'antfu/typescript/parser' | 'antfu/typescript/type-aware-parser' | 'antfu/typescript/rules' | 'antfu/typescript/rules-type-aware' | 'antfu/typescript/erasable-syntax-only' | 'antfu/antislop/rules' | 'antfu/stylistic/rules' | 'antfu/regexp/rules' | 'antfu/test/setup' | 'antfu/test/rules' | 'antfu/vue/setup' | 'antfu/vue/rules' | 'antfu/react/setup' | 'antfu/react/rules' | 'antfu/react/typescript' | 'antfu/react/type-aware-rules' | 'antfu/nextjs/setup' | 'antfu/nextjs/rules' | 'antfu/solid/setup' | 'antfu/solid/rules' | 'antfu/svelte/setup' | 'antfu/svelte/rules' | 'antfu/unocss' | 'antfu/astro/setup' | 'antfu/astro/rules' | 'antfu/angular/setup' | 'antfu/angular/rules/ts' | 'antfu/angular/rules/template' | 'antfu/jsonc/setup' | 'antfu/jsonc/rules' | 'antfu/sort/package-json' | 'antfu/sort/tsconfig-json' | 'antfu/pnpm/package-json' | 'antfu/pnpm/pnpm-workspace-yaml' | 'antfu/pnpm/pnpm-workspace-yaml-stylistic' | 'antfu/pnpm/pnpm-workspace-yaml-sort' | 'antfu/yaml/setup' | 'antfu/yaml/rules' | 'antfu/toml/setup' | 'antfu/toml/rules' | 'antfu/markdown/setup' | 'antfu/markdown/processor' | 'antfu/markdown/parser' | 'antfu/markdown/rules' | 'antfu/markdown/disables/code' | 'antfu/formatter/setup' | 'antfu/formatter/css' | 'antfu/formatter/scss' | 'antfu/formatter/less' | 'antfu/formatter/html' | 'antfu/formatter/xml' | 'antfu/formatter/svg' | 'antfu/formatter/markdown' | 'antfu/formatter/astro' | 'antfu/formatter/astro/disables' | 'antfu/formatter/graphql' | 'antfu/disables/scripts' | 'antfu/disables/cli' | 'antfu/disables/bin' | 'antfu/disables/dts' | 'antfu/disables/cjs' | 'antfu/disables/config-files';\n export type OptionsTypescript = (OptionsTypeScriptWithTypes & OptionsOverrides & OptionsTypeScriptErasableOnly) | (OptionsTypeScriptParserOptions & OptionsOverrides & OptionsTypeScriptErasableOnly);\n export type ResolvedOptions<T> = T extends boolean ? never : NonNullable<T>;\n export type Rules = Record<string, Linter.RuleEntry<any> | undefined> & RuleOptions;"
+          },
+          {
+            "header": "@@ -2274,6 +2575,7 @@ export type TypedFlatConfigItem = Omit<ConfigWithExtends, 'plugins' | 'rules'> &",
+            "oldStart": 2274,
+            "oldLines": 6,
+            "newStart": 2575,
+            "newLines": 7,
+            "patch": " // #region Functions\n export declare function angular(_?: OptionsOverrides): Promise<TypedFlatConfigItem[]>;\n export declare function antfu(_?: OptionsConfig & Omit<TypedFlatConfigItem, 'files' | 'ignores'>, ..._: Awaitable<TypedFlatConfigItem | TypedFlatConfigItem[] | FlatConfigComposer<any, any> | Linter.Config[]>[]): FlatConfigComposer<TypedFlatConfigItem, ConfigNames>;\n+export declare function antislop(_?: OptionsAntislop & OptionsHasTypeScript): Promise<TypedFlatConfigItem[]>;\n export declare function astro(_?: OptionsOverrides & OptionsStylistic & OptionsFiles): Promise<TypedFlatConfigItem[]>;\n export declare function combine(..._: Awaitable<TypedFlatConfigItem | TypedFlatConfigItem[]>[]): Promise<TypedFlatConfigItem[]>;\n export declare function command(): Promise<TypedFlatConfigItem[]>;"
+          },
+          {
+            "header": "@@ -8124,6 +8426,62 @@ type SemiSpacing = [] | [{",
+            "oldStart": 8124,
+            "oldLines": 6,
+            "newStart": 8426,
+            "newLines": 62,
+            "patch": "   after?: boolean;\n }];\n type SemiStyle = [] | [(\"last\" | \"first\")];\n+type SlopMaxCommentLength = [] | [{\n+  cwd?: string;\n+  inspection?: ((\"full\" | \"uncommitted\" | \"recent-changes\") | {\n+    mode: (\"full\" | \"uncommitted\" | \"recent-changes\");\n+    tracebackCommits?: number;\n+  });\n+  ignoreJSDoc?: boolean;\n+  maximumWords?: number;\n+}];\n+type SlopNoChainedTypeAssertions = [] | [{\n+  cwd?: string;\n+  inspection?: ((\"full\" | \"uncommitted\" | \"recent-changes\") | {\n+    mode: (\"full\" | \"uncommitted\" | \"recent-changes\");\n+    tracebackCommits?: number;\n+  });\n+}];\n+type SlopNoEmDash = [] | [{\n+  cwd?: string;\n+  inspection?: ((\"full\" | \"uncommitted\" | \"recent-changes\") | {\n+    mode: (\"full\" | \"uncommitted\" | \"recent-changes\");\n+    tracebackCommits?: number;\n+  });\n+}];\n+type SlopNoJargon = [] | [{\n+  cwd?: string;\n+  inspection?: ((\"full\" | \"uncommitted\" | \"recent-changes\") | {\n+    mode: (\"full\" | \"uncommitted\" | \"recent-changes\");\n+    tracebackCommits?: number;\n+  });\n+  allow?: string[];\n+  extraWords?: string[];\n+  ignoreJSDoc?: boolean;\n+  words?: string[];\n+}];\n+type SlopNoTrivialFunctions = [] | [{\n+  cwd?: string;\n+  inspection?: ((\"full\" | \"uncommitted\" | \"recent-changes\") | {\n+    mode: (\"full\" | \"uncommitted\" | \"recent-changes\");\n+    tracebackCommits?: number;\n+  });\n+  minimumReferences?: number;\n+}];\n+type SlopNoTrivialTypeAliases = [] | [{\n+  cwd?: string;\n+  inspection?: ((\"full\" | \"uncommitted\" | \"recent-changes\") | {\n+    mode: (\"full\" | \"uncommitted\" | \"recent-changes\");\n+    tracebackCommits?: number;\n+  });\n+}];\n+type SlopPreferJsdoc = [] | [{\n+  cwd?: string;\n+  inspection?: ((\"full\" | \"uncommitted\" | \"recent-changes\") | {\n+    mode: (\"full\" | \"uncommitted\" | \"recent-changes\");\n+    tracebackCommits?: number;\n+  });\n+}];\n type SolidEventHandlers = [] | [{\n   ignoreCase?: boolean;\n   warnOnSpread?: boolean;"
+          },
+          {
+            "header": "@@ -8159,6 +8517,79 @@ type SolidStyleProp = [] | [{",
+            "oldStart": 8159,
+            "oldLines": 6,
+            "newStart": 8517,
+            "newLines": 79,
+            "patch": " type SolidValidUseServer = [] | [{\n   clientWrappers?: string[];\n }];\n+type SonarjsArrowFunctionConvention = [] | [{\n+  requireParameterParentheses?: boolean;\n+  requireBodyBraces?: boolean;\n+}];\n+type SonarjsClassName = [] | [{\n+  format?: string;\n+}];\n+type SonarjsCognitiveComplexity = [] | [(number | \"silence-issues\")] | [(number | \"silence-issues\"), \"silence-issues\"];\n+type SonarjsCommentRegex = [] | [{\n+  regularExpression?: string;\n+  message?: string;\n+  flags?: string;\n+}];\n+type SonarjsContentLength = [] | [{\n+  fileUploadSizeLimit?: number;\n+  standardSizeLimit?: number;\n+}];\n+type SonarjsCyclomaticComplexity = [] | [{\n+  threshold?: number;\n+}];\n+type SonarjsExpressionComplexity = [] | [{\n+  max?: number;\n+}];\n+type SonarjsFileHeader = [] | [{\n+  headerFormat?: string;\n+  isRegularExpression?: boolean;\n+}];\n+type SonarjsFunctionName = [] | [{\n+  format?: string;\n+}];\n+type SonarjsMaxLines = [] | [{\n+  maximum?: number;\n+}];\n+type SonarjsMaxLinesPerFunction = [] | [{\n+  maximum?: number;\n+}];\n+type SonarjsMaxSwitchCases = [] | [number];\n+type SonarjsMaxUnionSize = [] | [{\n+  threshold?: number;\n+}];\n+type SonarjsNestedControlFlow = [] | [{\n+  maximumNestingLevel?: number;\n+}];\n+type SonarjsNewOperatorMisuse = [] | [{\n+  considerJSDoc?: boolean;\n+}];\n+type SonarjsNoDuplicateString = [] | [{\n+  threshold?: number;\n+  ignoreStrings?: string;\n+}];\n+type SonarjsNoHardcodedPasswords = [] | [{\n+  passwordWords?: string[];\n+}];\n+type SonarjsNoHardcodedSecrets = [] | [{\n+  secretWords?: string;\n+  randomnessSensibility?: number;\n+}];\n+type SonarjsNoIdenticalFunctions = [] | [number];\n+type SonarjsNoImplicitDependencies = [] | [{\n+  whitelist?: string[];\n+}];\n+type SonarjsNoIntrusivePermissions = [] | [{\n+  permissions?: string[];\n+}];\n+type SonarjsNoNestedFunctions = [] | [{\n+  threshold?: number;\n+}];\n+type SonarjsRegexComplexity = [] | [{\n+  threshold?: number;\n+}];\n+type SonarjsVariableName = [] | [{\n+  format?: string;\n+}];\n type SortImports = [] | [{\n   ignoreCase?: boolean;\n   memberSyntaxSortOrder?: [(\"none\" | \"all\" | \"multiple\" | \"single\"), (\"none\" | \"all\" | \"multiple\" | \"single\"), (\"none\" | \"all\" | \"multiple\" | \"single\"), (\"none\" | \"all\" | \"multiple\" | \"single\")];"
+          }
+        ]
+      },
+      {
+        "path": "test/__snapshots__/api/@antfu/eslint-config/index.snapshot.js",
+        "status": "modified",
+        "additions": 1,
+        "deletions": 0,
+        "isBinary": false,
+        "sha": "78b1d72d07e47ae838f3625c39af3753edba63f6",
+        "hunks": [
+          {
+            "header": "@@ -4,6 +4,7 @@",
+            "oldStart": 4,
+            "oldLines": 6,
+            "newStart": 4,
+            "newLines": 7,
+            "patch": " // #region Functions\n export async function angular(_) {}\n export function antfu(_, ..._) {}\n+export async function antislop(_) {}\n export async function astro(_) {}\n export async function combine(..._) {}\n export async function command() {}"
+          }
+        ]
+      },
+      {
+        "path": "test/__snapshots__/factory/default.snap.js",
+        "status": "modified",
+        "additions": 15,
+        "deletions": 0,
+        "isBinary": false,
+        "sha": "5e5e5a6f4f8f48fb21eadf87a525381d0a32c193",
+        "hunks": [
+          {
+            "header": "@@ -893,6 +893,21 @@",
+            "oldStart": 893,
+            "oldLines": 6,
+            "newStart": 893,
+            "newLines": 21,
+            "patch": "       \"pnpm/yaml-no-unused-catalog-item\",\n     ],\n   },\n+  {\n+    \"files\": [\n+      \"pnpm-workspace.yaml\",\n+    ],\n+    \"languageOptions\": {\n+      \"parser\": \"yaml-eslint-parser\",\n+    },\n+    \"name\": \"antfu/pnpm/pnpm-workspace-yaml-stylistic\",\n+    \"plugins\": [\n+      \"pnpm\",\n+    ],\n+    \"rules\": [\n+      \"pnpm/yaml-blank-lines\",\n+    ],\n+  },\n   {\n     \"files\": [\n       \"pnpm-workspace.yaml\","
+          }
+        ]
+      },
+      {
+        "path": "test/__snapshots__/factory/full-on.snap.js",
+        "status": "modified",
+        "additions": 54,
+        "deletions": 0,
+        "isBinary": false,
+        "sha": "c984759b3ce1b750e0940526a481d67c16a0ebd3",
+        "hunks": [
+          {
+            "header": "@@ -515,6 +515,45 @@",
+            "oldStart": 515,
+            "oldLines": 6,
+            "newStart": 515,
+            "newLines": 45,
+            "patch": "       \"erasable-syntax-only/parameter-properties\",\n     ],\n   },\n+  {\n+    \"ignores\": [\n+      \"**/*.md\",\n+    ],\n+    \"name\": \"antfu/antislop/rules\",\n+    \"plugins\": [\n+      \"slop\",\n+      \"sonarjs\",\n+    ],\n+    \"rules\": [\n+      \"slop/max-comment-length\",\n+      \"slop/no-chained-type-assertions\",\n+      \"slop/no-em-dash\",\n+      \"slop/no-jargon\",\n+      \"slop/no-trivial-functions\",\n+      \"slop/no-trivial-type-aliases\",\n+      \"slop/prefer-jsdoc\",\n+      \"sonarjs/cognitive-complexity\",\n+      \"sonarjs/no-all-duplicated-branches\",\n+      \"sonarjs/no-collapsible-if\",\n+      \"sonarjs/no-commented-code\",\n+      \"sonarjs/no-dead-store\",\n+      \"sonarjs/no-duplicated-branches\",\n+      \"sonarjs/no-element-overwrite\",\n+      \"sonarjs/no-empty-collection\",\n+      \"sonarjs/no-gratuitous-expressions\",\n+      \"sonarjs/no-identical-conditions\",\n+      \"sonarjs/no-identical-expressions\",\n+      \"sonarjs/no-identical-functions\",\n+      \"sonarjs/no-invariant-returns\",\n+      \"sonarjs/no-inverted-boolean-check\",\n+      \"sonarjs/no-redundant-boolean\",\n+      \"sonarjs/no-redundant-jump\",\n+      \"sonarjs/no-unused-collection\",\n+      \"sonarjs/no-use-of-empty-return-value\",\n+      \"sonarjs/prefer-single-boolean-return\",\n+      \"ts/no-explicit-any\",\n+    ],\n+  },\n   {\n     \"ignores\": [\n       \"**/*.md\","
+          },
+          {
+            "header": "@@ -1409,6 +1448,21 @@",
+            "oldStart": 1409,
+            "oldLines": 6,
+            "newStart": 1448,
+            "newLines": 21,
+            "patch": "       \"pnpm/yaml-no-unused-catalog-item\",\n     ],\n   },\n+  {\n+    \"files\": [\n+      \"pnpm-workspace.yaml\",\n+    ],\n+    \"languageOptions\": {\n+      \"parser\": \"yaml-eslint-parser\",\n+    },\n+    \"name\": \"antfu/pnpm/pnpm-workspace-yaml-stylistic\",\n+    \"plugins\": [\n+      \"pnpm\",\n+    ],\n+    \"rules\": [\n+      \"pnpm/yaml-blank-lines\",\n+    ],\n+  },\n   {\n     \"files\": [\n       \"pnpm-workspace.yaml\","
+          }
+        ]
+      },
+      {
+        "path": "test/__snapshots__/factory/in-editor.snap.js",
+        "status": "modified",
+        "additions": 15,
+        "deletions": 0,
+        "isBinary": false,
+        "sha": "5e5e5a6f4f8f48fb21eadf87a525381d0a32c193",
+        "hunks": [
+          {
+            "header": "@@ -893,6 +893,21 @@",
+            "oldStart": 893,
+            "oldLines": 6,
+            "newStart": 893,
+            "newLines": 21,
+            "patch": "       \"pnpm/yaml-no-unused-catalog-item\",\n     ],\n   },\n+  {\n+    \"files\": [\n+      \"pnpm-workspace.yaml\",\n+    ],\n+    \"languageOptions\": {\n+      \"parser\": \"yaml-eslint-parser\",\n+    },\n+    \"name\": \"antfu/pnpm/pnpm-workspace-yaml-stylistic\",\n+    \"plugins\": [\n+      \"pnpm\",\n+    ],\n+    \"rules\": [\n+      \"pnpm/yaml-blank-lines\",\n+    ],\n+  },\n   {\n     \"files\": [\n       \"pnpm-workspace.yaml\","
+          }
+        ]
+      },
+      {
+        "path": "test/__snapshots__/factory/javascript-vue.snap.js",
+        "status": "modified",
+        "additions": 15,
+        "deletions": 0,
+        "isBinary": false,
+        "sha": "54f8b15fb814c181212d54a3d97d36584c509c37",
+        "hunks": [
+          {
+            "header": "@@ -796,6 +796,21 @@",
+            "oldStart": 796,
+            "oldLines": 6,
+            "newStart": 796,
+            "newLines": 21,
+            "patch": "       \"pnpm/yaml-no-unused-catalog-item\",\n     ],\n   },\n+  {\n+    \"files\": [\n+      \"pnpm-workspace.yaml\",\n+    ],\n+    \"languageOptions\": {\n+      \"parser\": \"yaml-eslint-parser\",\n+    },\n+    \"name\": \"antfu/pnpm/pnpm-workspace-yaml-stylistic\",\n+    \"plugins\": [\n+      \"pnpm\",\n+    ],\n+    \"rules\": [\n+      \"pnpm/yaml-blank-lines\",\n+    ],\n+  },\n   {\n     \"files\": [\n       \"pnpm-workspace.yaml\","
+          }
+        ]
+      },
+      {
+        "path": "test/__snapshots__/factory/less-opinionated.snap.js",
+        "status": "modified",
+        "additions": 15,
+        "deletions": 0,
+        "isBinary": false,
+        "sha": "a5c628f378896852fe5542895e3f6ef37367b4d7",
+        "hunks": [
+          {
+            "header": "@@ -891,6 +891,21 @@",
+            "oldStart": 891,
+            "oldLines": 6,
+            "newStart": 891,
+            "newLines": 21,
+            "patch": "       \"pnpm/yaml-no-unused-catalog-item\",\n     ],\n   },\n+  {\n+    \"files\": [\n+      \"pnpm-workspace.yaml\",\n+    ],\n+    \"languageOptions\": {\n+      \"parser\": \"yaml-eslint-parser\",\n+    },\n+    \"name\": \"antfu/pnpm/pnpm-workspace-yaml-stylistic\",\n+    \"plugins\": [\n+      \"pnpm\",\n+    ],\n+    \"rules\": [\n+      \"pnpm/yaml-blank-lines\",\n+    ],\n+  },\n   {\n     \"files\": [\n       \"pnpm-workspace.yaml\","
+          }
+        ]
+      },
+      {
+        "path": "test/__snapshots__/factory/lib.snap.js",
+        "status": "modified",
+        "additions": 15,
+        "deletions": 0,
+        "isBinary": false,
+        "sha": "a891a05f70e98bca4a6f69a5251e8b48a7a8e978",
+        "hunks": [
+          {
+            "header": "@@ -894,6 +894,21 @@",
+            "oldStart": 894,
+            "oldLines": 6,
+            "newStart": 894,
+            "newLines": 21,
+            "patch": "       \"pnpm/yaml-no-unused-catalog-item\",\n     ],\n   },\n+  {\n+    \"files\": [\n+      \"pnpm-workspace.yaml\",\n+    ],\n+    \"languageOptions\": {\n+      \"parser\": \"yaml-eslint-parser\",\n+    },\n+    \"name\": \"antfu/pnpm/pnpm-workspace-yaml-stylistic\",\n+    \"plugins\": [\n+      \"pnpm\",\n+    ],\n+    \"rules\": [\n+      \"pnpm/yaml-blank-lines\",\n+    ],\n+  },\n   {\n     \"files\": [\n       \"pnpm-workspace.yaml\","
+          }
+        ]
+      },
+      {
+        "path": "test/__snapshots__/factory/pnpm-without-jsonc.snap.js",
+        "status": "modified",
+        "additions": 15,
+        "deletions": 0,
+        "isBinary": false,
+        "sha": "5bdf92b5e7d5849b5f5bb6d34d5d9fc070c86b0d",
+        "hunks": [
+          {
+            "header": "@@ -804,6 +804,21 @@",
+            "oldStart": 804,
+            "oldLines": 6,
+            "newStart": 804,
+            "newLines": 21,
+            "patch": "       \"pnpm/yaml-no-unused-catalog-item\",\n     ],\n   },\n+  {\n+    \"files\": [\n+      \"pnpm-workspace.yaml\",\n+    ],\n+    \"languageOptions\": {\n+      \"parser\": \"yaml-eslint-parser\",\n+    },\n+    \"name\": \"antfu/pnpm/pnpm-workspace-yaml-stylistic\",\n+    \"plugins\": [\n+      \"pnpm\",\n+    ],\n+    \"rules\": [\n+      \"pnpm/yaml-blank-lines\",\n+    ],\n+  },\n   {\n     \"files\": [\n       \"pnpm-workspace.yaml\","
+          }
+        ]
+      }
+    ]
+  },
+  "grouped": {
+    "source": "rule-based",
+    "groups": [
+      {
+        "key": "docs",
+        "label": "docs",
+        "category": "docs",
+        "filePaths": [
+          "README.md"
+        ]
+      },
+      {
+        "key": "deps",
+        "label": "deps",
+        "category": "deps",
+        "filePaths": [
+          "package.json",
+          "pnpm-lock.yaml",
+          "pnpm-workspace.yaml"
+        ]
+      },
+      {
+        "key": "code",
+        "label": "code",
+        "category": "code",
+        "filePaths": [
+          "src/config-presets.ts",
+          "src/configs/antislop.ts",
+          "src/configs/index.ts",
+          "src/factory.ts",
+          "src/types.ts"
+        ]
+      },
+      {
+        "key": "tests",
+        "label": "tests",
+        "category": "tests",
+        "filePaths": [
+          "test/__snapshots__/api/@antfu/eslint-config/index.snapshot.d.ts",
+          "test/__snapshots__/api/@antfu/eslint-config/index.snapshot.js",
+          "test/__snapshots__/factory/default.snap.js",
+          "test/__snapshots__/factory/full-on.snap.js",
+          "test/__snapshots__/factory/in-editor.snap.js",
+          "test/__snapshots__/factory/javascript-vue.snap.js",
+          "test/__snapshots__/factory/less-opinionated.snap.js",
+          "test/__snapshots__/factory/lib.snap.js",
+          "test/__snapshots__/factory/pnpm-without-jsonc.snap.js"
+        ]
+      }
+    ],
+    "generatedAt": "2026-09-16T03:08:22.623Z",
+    "schemaVersion": 1
+  }
+}

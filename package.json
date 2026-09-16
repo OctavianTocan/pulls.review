@@ -43,6 +43,7 @@
     "@types/picomatch": "catalog:",
     "@unocss/eslint-config": "catalog:build",
     "@unocss/nuxt": "catalog:build",
+    "@vitejs/plugin-vue": "catalog:",
     "@vue/test-utils": "catalog:",
     "eslint": "catalog:dev",
     "eslint-plugin-format": "catalog:dev",
