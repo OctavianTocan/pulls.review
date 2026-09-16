@@ -6,10 +6,10 @@
     <title>Diffs embed playground</title>
     <style>
       /*
-     * Everything here is deliberately plain, hand-written CSS - this page stands in
-     * for github.com's own page, which the real embed never gets to style. Nothing
-     * here reaches the <diffs-embed-panel> shadow root either way.
-     */
+       * Everything here is deliberately plain, hand-written CSS - this page stands in
+       * for github.com's own page, which the real embed never gets to style. Nothing
+       * here reaches the <diffs-embed-panel> shadow root either way.
+       */
       body {
         margin: 0;
         font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
@@ -42,12 +42,10 @@
         cursor: pointer;
         font-size: 13px;
       }
-      #panel-host {
-        height: calc(100vh - 53px);
-      }
-      diffs-embed-panel {
-        display: block;
-        height: 100%;
+      #current-path {
+        font-family: ui-monospace, monospace;
+        font-size: 12px;
+        opacity: 0.7;
       }
     </style>
   </head>
@@ -56,47 +54,64 @@
       <label>owner <input id="owner" value="antfu" /></label>
       <label>repo <input id="repo" value="eslint-config" /></label>
       <label>PR # <input id="number" value="861" /></label>
-      <button id="load" type="button">Load</button>
+      <button id="load" type="button">Navigate</button>
       <button id="toggle-dark" type="button">Toggle host dark mode</button>
+      <span id="current-path"></span>
     </div>
-    <div id="panel-host"></div>
 
     <!--
-    Stands in for the userscript's `@require`: point this at wherever `diffs-embed.js`
-    is actually being served. `pnpm run build:embed` (or just `build:embed:css` +
-    `vite build --config vite.embed.config.ts`) writes it to public/embed/, which
-    `pnpm dev`'s main Vite server also serves verbatim at this same path - so running
-    `pnpm run playground:embedded` after a build just works.
-  -->
+      Stands in for the userscript's `@require`: point this at wherever `diffs-embed.js`
+      is actually being served. `pnpm run build:embed` writes it to public/embed/,
+      which `pnpm dev`'s main Vite server also serves verbatim at this same path - so
+      running `pnpm run playground:embedded` after a build just works.
+    -->
     <script src="/embed/diffs-embed.js"></script>
     <script>
-      const panelHost = document.getElementById('panel-host')
+      const ownerInput = document.getElementById('owner')
+      const repoInput = document.getElementById('repo')
+      const numberInput = document.getElementById('number')
+      const currentPathEl = document.getElementById('current-path')
+
+      // The component reads `location.pathname`/`document.documentElement.dataset.colorMode`
+      // itself (see app/embed/EmbedApp.ce.vue) - exactly like the real userscript, this page
+      // never passes it any attributes.
       let panelEl
 
-      // Mirrors what the userscript reads from GitHub's own page to seed the embed's
-      // dark-mode ref - toggle it here to exercise that without needing github.com.
+      function mountPanel() {
+        panelEl?.remove()
+        panelEl = document.createElement('diffs-embed-panel')
+        document.body.appendChild(panelEl)
+      }
+
       function setHostColorMode(mode) {
         document.documentElement.dataset.colorMode = mode
         document.body.classList.toggle('dark-host', mode === 'dark')
       }
-      setHostColorMode('light')
 
-      function loadPanel() {
-        panelEl?.remove()
-        panelEl = document.createElement('diffs-embed-panel')
-        panelEl.setAttribute('owner', document.getElementById('owner').value.trim())
-        panelEl.setAttribute('repo', document.getElementById('repo').value.trim())
-        panelEl.setAttribute('number', document.getElementById('number').value.trim())
-        panelHost.appendChild(panelEl)
+      function navigateTo(owner, repo, number) {
+        const path = `/${owner}/${repo}/pull/${number}`
+        history.pushState(null, '', path)
+        currentPathEl.textContent = path
+        // Turbo's own navigation event, which the component listens for to re-sync -
+        // `pushState` alone doesn't fire anything observable.
+        document.dispatchEvent(new Event('turbo:load'))
       }
 
-      document.getElementById('load').addEventListener('click', loadPanel)
-      document.getElementById('toggle-dark').addEventListener('click', () => {
-        setHostColorMode(document.documentElement.dataset.colorMode === 'dark' ? 'light' : 'dark')
-        loadPanel()
+      document.getElementById('load').addEventListener('click', () => {
+        navigateTo(ownerInput.value.trim(), repoInput.value.trim(), numberInput.value.trim())
       })
 
-      loadPanel()
+      // Dark mode is seeded once, at mount, from the host attribute - matching real
+      // usage (GitHub's theme doesn't change mid-session), toggling it here needs a
+      // fresh element, not just re-syncing the existing one.
+      document.getElementById('toggle-dark').addEventListener('click', () => {
+        setHostColorMode(document.documentElement.dataset.colorMode === 'dark' ? 'light' : 'dark')
+        mountPanel()
+      })
+
+      setHostColorMode('light')
+      navigateTo(ownerInput.value, repoInput.value, numberInput.value)
+      mountPanel()
     </script>
   </body>
 </html>

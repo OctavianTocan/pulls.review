@@ -9,10 +9,13 @@ Embeds a Diffs review drawer directly into `github.com` pull request pages.
 3. Visit any `github.com/{owner}/{repo}/pull/{number}` page - a "Diffs" tab appears on the right edge; click it to open the drawer.
 4. Drag the drawer's left edge to resize it - the width is remembered (`localStorage`, per-browser) for next time.
 
-The drawer renders a Vue custom element (`<diffs-embed-panel>`, `@require`d from
+The userscript itself only mounts one element (`<diffs-embed-panel>`, `@require`d from
 `https://diffs.antfu.dev/embed/diffs-embed.js`) directly inside the GitHub page - not
-an `<iframe>`. GitHub's own CSP blocks cross-origin frames outright, with no
-per-script workaround; plain injected JS/CSS isn't restricted the same way.
+an `<iframe>` (GitHub's own CSP blocks cross-origin frames outright, with no
+per-script workaround; plain injected JS/CSS isn't restricted the same way). The toggle
+tab, the resizable drawer, detecting which PR is open, and re-syncing on GitHub's
+Turbo SPA navigation all live inside that custom element (`app/embed/EmbedApp.ce.vue`
+in the main repo) instead of the userscript.
 
 Known limitations (heavily work in progress):
 

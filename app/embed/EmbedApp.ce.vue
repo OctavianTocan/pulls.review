@@ -1,85 +1,118 @@
 <script setup lang="ts">
-import ActionButton from '@antfu/design/components/Action/ActionButton.vue'
-import FeedbackEmptyState from '@antfu/design/components/Feedback/FeedbackEmptyState.vue'
-import FeedbackLoading from '@antfu/design/components/Feedback/FeedbackLoading.vue'
-import { computed, onMounted, ref, useTemplateRef, watch } from 'vue'
-import DiffsPage from '../components/diff/DiffsPage.vue'
-import { usePullRequest } from '../composables/usePullRequest'
-import { useReviewedFiles } from '../composables/useReviewedFiles'
-import { useSettings } from '../composables/useSettings'
+import { computed, onBeforeUnmount, onMounted, ref, useTemplateRef } from 'vue'
 import { useEmbedDark } from './dark'
+import EmbedPrView from './EmbedPrView.vue'
 
-// Mirrors `pages/gh/[owner]/[repo]/[number].vue`'s wiring, from plain props
-// (custom-element attributes) instead of route params - there's no router here.
-const props = defineProps<{
+const WIDTH_STORAGE_KEY = 'diffs-embed:drawer-width'
+const DEFAULT_WIDTH = 480
+const MIN_WIDTH = 320
+
+interface Pr {
   owner: string
   repo: string
   number: string
-}>()
+}
+
+function parsePr(pathname: string): Pr | undefined {
+  const match = pathname.match(/^\/([^/]+)\/([^/]+)\/pull\/(\d+)/)
+  if (!match)
+    return undefined
+  return { owner: match[1]!, repo: match[2]!, number: match[3]! }
+}
+
+function clampWidth(width: number): number {
+  const max = Math.round(window.innerWidth * 0.92)
+  return Math.min(Math.max(width, MIN_WIDTH), max)
+}
+
+function loadWidth(): number {
+  const stored = Number(localStorage.getItem(WIDTH_STORAGE_KEY))
+  if (!Number.isFinite(stored) || stored <= 0)
+    return DEFAULT_WIDTH
+  return clampWidth(stored)
+}
 
 const rootRef = useTemplateRef<HTMLDivElement>('root')
 useEmbedDark(rootRef)
 
-const { githubToken } = useSettings()
+const pr = ref(parsePr(location.pathname))
+const prKey = computed(() => pr.value && `${pr.value.owner}/${pr.value.repo}#${pr.value.number}`)
+const open = ref(false)
+const width = ref(loadWidth())
 
-const layout = ref<'split' | 'unified'>('unified')
-
-const params = computed(() => ({
-  kind: 'github-pr' as const,
-  owner: props.owner,
-  repo: props.repo,
-  number: props.number,
-}))
-
-const { diff, grouped, isLoading, error, isStale, load, refresh } = usePullRequest(params.value, { token: githubToken.value })
-const { reviewed, load: loadReviewed, toggle } = useReviewedFiles()
-
-async function loadAll() {
-  await load()
-  if (diff.value)
-    await loadReviewed(diff.value.files.map(file => file.sha))
+// GitHub is a Turbo (Hotwire) SPA - navigating between PRs (or to/from one) doesn't
+// reload the page (and so doesn't remount this custom element), so re-derive the
+// current PR on every Turbo navigation too. `:key="prKey"` below gives `EmbedPrView` a
+// fresh instance (and fresh data fetch) per PR, same as a routed page's fresh mount.
+function syncPr() {
+  pr.value = parsePr(location.pathname)
+  if (!pr.value)
+    open.value = false
 }
 
-onMounted(loadAll)
-watch(() => diff.value?.meta.id, (id, previousId) => {
-  if (id && id !== previousId)
-    loadReviewed(diff.value!.files.map(file => file.sha))
+function toggleOpen() {
+  open.value = !open.value
+}
+
+let dragStartX = 0
+let dragStartWidth = 0
+function onResizeMove(event: PointerEvent) {
+  width.value = clampWidth(dragStartWidth + (dragStartX - event.clientX))
+}
+function onResizeUp(event: PointerEvent) {
+  const handle = event.currentTarget as HTMLElement
+  handle.removeEventListener('pointermove', onResizeMove)
+  handle.removeEventListener('pointerup', onResizeUp)
+  localStorage.setItem(WIDTH_STORAGE_KEY, String(width.value))
+}
+function onResizeDown(event: PointerEvent) {
+  event.preventDefault()
+  dragStartX = event.clientX
+  dragStartWidth = width.value
+  const handle = event.currentTarget as HTMLElement
+  handle.setPointerCapture(event.pointerId)
+  handle.addEventListener('pointermove', onResizeMove)
+  handle.addEventListener('pointerup', onResizeUp)
+}
+
+onMounted(() => {
+  document.addEventListener('turbo:load', syncPr)
+  window.addEventListener('popstate', syncPr)
+})
+onBeforeUnmount(() => {
+  document.removeEventListener('turbo:load', syncPr)
+  window.removeEventListener('popstate', syncPr)
 })
 </script>
 
 <template>
-  <div ref="root" class="color-base bg-base min-h-full">
-    <DiffsPage
-      :diff="diff"
-      :grouped="grouped"
-      :layout="layout"
-      :reviewed="reviewed"
-      :is-loading="isLoading"
-      :error="error"
-      :is-stale="isStale"
-      @update:layout="layout = $event"
-      @update:reviewed="(sha, isReviewed) => toggle(sha, isReviewed)"
-      @retry="loadAll"
-      @refresh="refresh"
+  <div ref="root">
+    <button
+      v-if="pr"
+      type="button"
+      class="z-[2147483000] text-xs color-base font-semibold px-2.5 py-2 border border-base rounded-l-lg bg-base shadow-lg transition-[right] right-0 top-1/2 fixed -translate-y-1/2"
+      :style="{ right: open ? `${width}px` : '0' }"
+      @click="toggleOpen"
     >
-      <template #loading>
-        <FeedbackLoading text="Loading pull request…" />
-      </template>
-      <template #error="{ error: err, retry }">
-        <FeedbackEmptyState
-          icon="i-ph:warning"
-          title="Couldn't load this pull request"
-        >
-          <template #hint>
-            {{ err.message }}
-          </template>
-          <template #actions>
-            <ActionButton variant="primary" @click="retry">
-              Retry
-            </ActionButton>
-          </template>
-        </FeedbackEmptyState>
-      </template>
-    </DiffsPage>
+      Diffs
+    </button>
+
+    <div
+      v-if="pr"
+      class="z-[2147483001] color-base bg-base flex flex-col h-full shadow-2xl transition-transform right-0 top-0 fixed"
+      :style="{ width: `${width}px`, maxWidth: '92vw', transform: open ? 'translateX(0)' : 'translateX(100%)' }"
+    >
+      <div
+        class="z-1 h-full w-2 cursor-ew-resize left-0 top-0 absolute -translate-x-1/2"
+        @pointerdown="onResizeDown"
+      />
+      <header class="text-sm font-semibold px-3 py-2 border-b border-base flex shrink-0 gap-2 items-center justify-between">
+        <span>Diffs</span>
+        <button type="button" aria-label="Close" class="op-fade hover:op-100" @click="toggleOpen">
+          ✕
+        </button>
+      </header>
+      <EmbedPrView v-if="pr" :key="prKey" :owner="pr.owner" :repo="pr.repo" :number="pr.number" class="flex-1 min-h-0 overflow-auto" />
+    </div>
   </div>
 </template>

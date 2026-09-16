@@ -8,7 +8,13 @@ pnpm run build:embed      # writes public/embed/diffs-embed.js
 pnpm run playground:embedded   # vite dev, opened at /playgrounds/embedded/
 ```
 
-The page has owner/repo/PR# inputs (defaulting to a real small PR) and a button that
-flips `document.documentElement.dataset.colorMode` - the same attribute the userscript
-reads from GitHub's own page to seed the embed's dark mode - so both the light/dark
-shadow-root styling and a fresh PR load can be exercised without touching github.com.
+The custom element takes no attributes - it reads `location.pathname` and
+`document.documentElement.dataset.colorMode` itself, the same as it does on a real
+GitHub page (see `app/embed/EmbedApp.ce.vue`). So this page mounts it exactly like the
+userscript does, and:
+
+- The owner/repo/PR# inputs + "Navigate" button push a matching `/owner/repo/pull/n`
+  path via `history.pushState` and fire a `turbo:load` event - what the component
+  actually listens for to detect a PR change on GitHub's own Turbo SPA navigation.
+- "Toggle host dark mode" flips `dataset.colorMode` and remounts (dark mode is seeded
+  once, at mount, matching real usage - GitHub's theme doesn't change mid-session).
