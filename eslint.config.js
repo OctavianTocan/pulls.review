@@ -8,6 +8,10 @@ export default antfu(
     formatters: true,
     pnpm: true,
     antislop: true,
+    ignores: [
+      // Vendored verbatim from @pierre/diffs's dist/style.js - see pierre-diffs-shadow.ts.
+      'app/components/diff/pierre-diffs-core.css',
+    ],
   },
 )
   .append(nuxt())

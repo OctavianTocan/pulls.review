@@ -1,2 +1,2 @@
-export const appName = 'Vitesse for Nuxt 4'
-export const appDescription = 'Vitesse for Nuxt 4'
+export const appName = 'Diffs'
+export const appDescription = 'A better way to review a GitHub pull request’s diff: grouped, summarized, and fast.'

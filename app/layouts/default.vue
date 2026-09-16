@@ -1,9 +1,12 @@
+<script setup lang="ts">
+import AppHeader from '../components/AppHeader.vue'
+</script>
+
 <template>
-  <main class="px-10 py-20 text-center">
-    <slot />
-    <Footer />
-    <div class="text-sm mx-auto mt-5 text-center opacity-25">
-      [Default Layout]
-    </div>
-  </main>
+  <div class="flex flex-col min-h-screen">
+    <AppHeader />
+    <main class="mx-auto px-4 py-6 flex-1 max-w-6xl w-full">
+      <slot />
+    </main>
+  </div>
 </template>

@@ -1,6 +1,9 @@
 minimumReleaseAge: 0
 minimumReleaseAgeExcludePrune: true
+
 trustPolicy: no-downgrade
+trustPolicyExclude:
+  - '@pierre/theme@2.0.0'
 
 update:
   ignoreDeps:
@@ -26,6 +29,26 @@ overrides:
 allowBuilds:
   esbuild: true
   unrs-resolver: true
+  vue-demi: true
+
+catalog:
+  '@antfu/design': ^0.5.0
+  '@iconify-json/ph': ^1.2.2
+  '@pierre/diffs': ^1.4.2
+  '@storybook/vue3-vite': ^10.6.0
+  '@tanstack/vue-virtual': ^3.13.39
+  '@types/picomatch': ^4.0.3
+  '@vue/test-utils': ^2.5.0
+  colorjs.io: ^0.7.1
+  happy-dom: ^20.14.5
+  idb-keyval: ^6.3.0
+  picomatch: ^4.0.7
+  reka-ui: ^2.10.4
+  storybook: ^10.6.0
+  unstorage: ^1.17.5
+  valibot: ^1.5.0
+  vitest: ^5.0.1
+  vue-afloat: ^0.1.1
 
 catalogs:
   build:
@@ -33,10 +56,8 @@ catalogs:
     '@nuxt/eslint': ^1.17.0
     '@nuxt/kit': ^4.5.2
     '@nuxtjs/color-mode': ^4.0.1
-    '@pinia/nuxt': ^1.0.2
     '@unocss/eslint-config': ^66.10.0
     '@unocss/nuxt': ^66.10.0
-    '@vueuse/nuxt': ^14.4.0
     chokidar: ^5.0.0
     nuxt: ^4.5.2
     semver: ^7.8.5
@@ -54,7 +75,6 @@ catalogs:
     vue-tsc: ^3.3.11
   frontend:
     '@vueuse/core': ^14.4.0
-    pinia: ^4.0.3
     vue: ^3.5.42
   icons:
     '@iconify-json/carbon': ^1.2.26

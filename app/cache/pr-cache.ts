@@ -1,0 +1,92 @@
+import type { GroupedResult } from '../types/analyze'
+import type { PrCacheEntry } from '../types/cache'
+import type { CacheStorage } from './storage'
+import * as v from 'valibot'
+import { PrCacheEntrySchema } from '../types/cache'
+import { pruneOrphanedReviewed } from './review-cache'
+
+const PR_KEY_PREFIX = 'pr:'
+export const DEFAULT_MAX_BUDGET_BYTES = 50 * 1024 * 1024
+export const DEFAULT_MAX_ENTRY_COUNT = 50
+
+export interface CacheBudget {
+  maxBytes?: number
+  maxEntries?: number
+}
+
+function prKey(key: string): string {
+  return `${PR_KEY_PREFIX}${key}`
+}
+
+/** Rough approximation of an entry's on-disk footprint, used for LRU budget accounting. */
+export function computeEntrySizeBytes(diff: PrCacheEntry['diff'], analyzedBy: PrCacheEntry['analyzedBy']): number {
+  return new TextEncoder().encode(JSON.stringify({ diff, analyzedBy })).length
+}
+
+export async function getEntry(storage: CacheStorage, key: string): Promise<PrCacheEntry | undefined> {
+  const raw = await storage.getItem(prKey(key))
+  if (raw == null)
+    return undefined
+  const result = v.safeParse(PrCacheEntrySchema, raw)
+  // A corrupt or previous-shape entry (e.g. after a schemaVersion bump) is treated
+  // as a cache miss instead of crashing the view layer.
+  return result.success ? result.output : undefined
+}
+
+export async function putEntry(storage: CacheStorage, entry: PrCacheEntry, budget?: CacheBudget): Promise<void> {
+  await storage.setItem(prKey(entry.key), entry)
+  await enforceBudget(storage, budget)
+}
+
+export async function touchEntry(storage: CacheStorage, key: string): Promise<void> {
+  const entry = await getEntry(storage, key)
+  if (!entry)
+    return
+  await storage.setItem(prKey(key), { ...entry, lastViewedAt: Date.now() })
+}
+
+export async function setAnalyzedResult(storage: CacheStorage, key: string, source: GroupedResult['source'], result: GroupedResult): Promise<void> {
+  const entry = await getEntry(storage, key)
+  if (!entry)
+    return
+  await storage.setItem(prKey(key), { ...entry, analyzedBy: { ...entry.analyzedBy, [source]: result } })
+}
+
+async function getAllEntries(storage: CacheStorage): Promise<PrCacheEntry[]> {
+  const keys = await storage.getKeys(PR_KEY_PREFIX)
+  const raw = await storage.getItems(keys)
+  const entries: PrCacheEntry[] = []
+  for (const { value } of raw) {
+    const result = v.safeParse(PrCacheEntrySchema, value)
+    if (result.success)
+      entries.push(result.output)
+  }
+  return entries
+}
+
+export async function enforceBudget(storage: CacheStorage, budget?: CacheBudget): Promise<void> {
+  const maxBytes = budget?.maxBytes ?? DEFAULT_MAX_BUDGET_BYTES
+  const maxEntries = budget?.maxEntries ?? DEFAULT_MAX_ENTRY_COUNT
+
+  const entries = await getAllEntries(storage)
+  const sorted = [...entries].sort((a, b) => b.lastViewedAt - a.lastViewedAt)
+
+  let totalBytes = 0
+  const kept: PrCacheEntry[] = []
+  const evicted: PrCacheEntry[] = []
+  for (const [index, entry] of sorted.entries()) {
+    totalBytes += entry.sizeBytes
+    if (index < maxEntries && totalBytes <= maxBytes)
+      kept.push(entry)
+    else
+      evicted.push(entry)
+  }
+
+  if (evicted.length === 0)
+    return
+
+  await Promise.all(evicted.map(entry => storage.removeItem(prKey(entry.key))))
+
+  const remainingShas = new Set(kept.flatMap(entry => entry.diff.files.map(file => file.sha)))
+  await pruneOrphanedReviewed(storage, remainingShas)
+}

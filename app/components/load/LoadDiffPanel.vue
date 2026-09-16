@@ -1,0 +1,59 @@
+<script setup lang="ts">
+import ActionButton from '@antfu/design/components/Action/ActionButton.vue'
+import FormField from '@antfu/design/components/Form/FormField.vue'
+import { ref } from 'vue'
+
+const emit = defineEmits<{
+  submit: [text: string, title?: string]
+}>()
+
+const text = ref('')
+const isDragging = ref(false)
+
+function submit() {
+  if (!text.value.trim())
+    return
+  emit('submit', text.value)
+}
+
+async function handleFile(file: File) {
+  text.value = await file.text()
+}
+
+function onDrop(event: DragEvent) {
+  isDragging.value = false
+  const file = event.dataTransfer?.files[0]
+  if (file)
+    handleFile(file)
+}
+
+function onFileInput(event: Event) {
+  const file = (event.target as HTMLInputElement).files?.[0]
+  if (file)
+    handleFile(file)
+}
+</script>
+
+<template>
+  <div class="flex flex-col gap-3">
+    <FormField label="Paste a unified diff / .patch">
+      <textarea
+        v-model="text"
+        rows="10"
+        placeholder="diff --git a/foo b/foo…"
+        class="text-sm font-mono p-2 outline-none border border-base rounded bg-raised w-full resize-y focus-visible:ring-2 focus-visible:ring-primary-500/40"
+        :class="{ 'border-primary-500 ring-2 ring-primary-500/40': isDragging }"
+        @dragover.prevent="isDragging = true"
+        @dragleave.prevent="isDragging = false"
+        @drop.prevent="onDrop"
+      />
+    </FormField>
+    <label class="text-sm color-muted cursor-pointer">
+      Or choose a .diff/.patch file
+      <input type="file" accept=".diff,.patch,text/plain" class="hidden" @change="onFileInput">
+    </label>
+    <ActionButton variant="primary" :disabled="!text.trim()" @click="submit">
+      Load diff
+    </ActionButton>
+  </div>
+</template>

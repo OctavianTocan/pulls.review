@@ -2,12 +2,18 @@ import { appDescription } from './app/constants/index'
 
 export default defineNuxtConfig({
   modules: [
-    '@vueuse/nuxt',
     '@unocss/nuxt',
-    '@pinia/nuxt',
     '@nuxtjs/color-mode',
     '@nuxt/eslint',
   ],
+
+  ssr: false,
+
+  components: false,
+
+  imports: {
+    autoImport: false,
+  },
 
   devtools: {
     enabled: true,
@@ -30,6 +36,8 @@ export default defineNuxtConfig({
       ],
     },
   },
+
+  css: ['@antfu/design/styles.css'],
 
   colorMode: {
     classSuffix: '',
@@ -54,11 +62,6 @@ export default defineNuxtConfig({
       options: {
         target: 'esnext',
       },
-    },
-    prerender: {
-      crawlLinks: false,
-      routes: ['/'],
-      ignore: ['/hi'],
     },
   },
 
