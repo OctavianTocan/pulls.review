@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import type { FileDiffOptions } from '@pierre/diffs'
 import type { FileChange } from '../../types/diff'
 import ActionIconButton from '@antfu/design/components/Action/ActionIconButton.vue'
 import DisplayFilePath from '@antfu/design/components/Display/DisplayFilePath.vue'
@@ -54,6 +55,13 @@ const fileDiff = computed(() => {
   return processFile(buildUnifiedDiffText(props.file))
 })
 
+const pierreOptions = computed((): FileDiffOptions<undefined, undefined> => ({
+  diffStyle: props.layout,
+  themeType: isDark.value ? 'dark' : 'light',
+  disableErrorHandling: false,
+  disableFileHeader: true,
+}))
+
 function mount() {
   // Recreated on every render rather than reused + `setOptions()`: switching `diffStyle`
   // (unified/split) on an existing instance left stale, un-columned DOM behind. `cleanUp()`
@@ -70,12 +78,7 @@ function mount() {
   // checkbox) above the diff body, so pierre's own file-header row would be redundant.
   // `themeType`: defaults to `'system'` (OS-level `prefers-color-scheme`) otherwise,
   // ignoring our own dark-mode toggle entirely - pin it to the app's actual state.
-  instance = new PierreFileDiff({
-    diffStyle: props.layout,
-    themeType: isDark.value ? 'dark' : 'light',
-    disableErrorHandling: false,
-    disableFileHeader: true,
-  }, undefined, true)
+  instance = new PierreFileDiff(pierreOptions.value, undefined, true)
 
   instance.render({
     fileDiff: fileDiff.value,
@@ -86,24 +89,22 @@ function mount() {
 onMounted(mount)
 onBeforeUnmount(() => instance?.cleanUp())
 
-watch(() => [collapsed.value], () => mount(), { deep: false, flush: 'post' })
-
-watch(isDark, (dark) => {
-  instance?.setThemeType(dark ? 'dark' : 'light')
-})
+watch(
+  collapsed,
+  () => mount(),
+  { flush: 'post' },
+)
 
 watch(
-  () => props.layout,
-  (layout) => {
-    instance?.setOptions({
-      diffStyle: layout,
-    })
+  pierreOptions,
+  (options) => {
+    instance?.setOptions(options)
     instance?.rerender()
   },
 )
 
 watch(
-  () => [fileDiff.value, containerRef.value] as const,
+  [fileDiff, containerRef] as const,
   ([fileDiff, containerRef]) => {
     if (!fileDiff || !containerRef) {
       return

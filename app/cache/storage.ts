@@ -18,7 +18,11 @@ export function createCacheStorage(driver: Driver): CacheStorage {
 export async function getDefaultCacheStorage(): Promise<CacheStorage> {
   if (!instance) {
     const { default: indexedDbDriver } = await import('unstorage/drivers/indexedb')
-    instance = createCacheStorage(indexedDbDriver({ base: 'diffs-cache' }))
+    // `dbName`/`storeName` (a real object store), not `base` (a plain string
+    // prefix) - the driver's `getKeys()` returns raw idb-keyval keys still
+    // carrying that prefix, which then fails `storage.getKeys('pr:')`'s own
+    // base-match filter, silently returning nothing (see storage.test.ts).
+    instance = createCacheStorage(indexedDbDriver({ dbName: 'diffs-cache', storeName: 'cache' }))
   }
   return instance
 }

@@ -51,6 +51,7 @@
     "eslint-plugin-format": "catalog:dev",
     "eslint-plugin-slop": "catalog:dev",
     "eslint-plugin-sonarjs": "catalog:dev",
+    "fake-indexeddb": "catalog:testing",
     "happy-dom": "catalog:testing",
     "jiti": "catalog:dev",
     "lightningcss": "catalog:build",

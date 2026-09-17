@@ -74,7 +74,9 @@ useEventListener(() => props.document ?? document, 'scroll', (event) => {
           :options="layoutOptions"
           @update:model-value="emit('update:layout', $event as 'split' | 'unified')"
         />
-        <NavControls v-if="!isEmbedded" class="shrink-0" :document="document" />
+        <div v-if="!isEmbedded" class="shrink-0">
+          <NavControls :document="document" />
+        </div>
       </div>
 
       <div class="text-sm op-fade flex flex-wrap gap-x-3 gap-y-1 items-center">

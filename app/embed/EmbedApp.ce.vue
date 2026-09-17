@@ -117,9 +117,11 @@ onBeforeUnmount(() => {
         class="z-1 h-full w-2 cursor-ew-resize left-0 top-0 absolute -translate-x-1/2"
         @pointerdown="onResizeDown"
       />
-      <header class="text-sm font-semibold px-3 py-2 border-b border-base flex shrink-0 gap-2 items-center justify-between">
-        <span>Diffs</span>
-        <a v-if="pr" target="_blank" :href="`https://github.com/${pr.owner}/${pr.repo}/pull/${pr.number}`" rel="noopener noreferrer" aria-label="Open in Diffs" class="op-fade hover:op-100">
+      <header class="text-sm font-semibold px-3 py-2 border-b border-base flex shrink-0 gap-2 items-center">
+        <div class="flex-auto">
+          diffs.antfu.dev
+        </div>
+        <a v-if="pr" target="_blank" :href="`https://diffs.antfu.dev/gh/${pr.owner}/${pr.repo}/${pr.number}`" rel="noopener noreferrer" aria-label="Open in Diffs" class="op-fade hover:op-100">
           <div class="i-ph-arrow-square-out-duotone" />
         </a>
         <button type="button" aria-label="Close" class="op-fade hover:op-100" @click="toggleOpen">

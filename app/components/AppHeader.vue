@@ -10,6 +10,6 @@ import NavControls from './NavControls.vue'
 
     <div class="flex-1" />
 
-    <NavControls load-diff />
+    <NavControls />
   </header>
 </template>
