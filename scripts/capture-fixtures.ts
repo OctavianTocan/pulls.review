@@ -7,12 +7,22 @@ import { ruleBasedAdapter } from '../app/analyze/adapters/rule-based'
 import { GithubProvider } from '../app/providers/github'
 
 const targets = [
-  { name: 'small', owner: 'antfu', repo: 'eslint-config', number: '861' },
-  { name: 'large', owner: 'vuejs', repo: 'core', number: '12349' },
+  'https://github.com/devframes/devframe/pull/387',
+  'https://github.com/vuejs/core/pull/12349',
+  'https://github.com/antfu/eslint-config/pull/861',
 ]
 
+function parseTarget(url: string) {
+  const match = url.match(/github\.com\/([^/]+)\/([^/]+)\/pull\/(\d+)/)
+  if (!match)
+    throw new Error(`Invalid GitHub PR URL: ${url}`)
+  const [, owner, repo, number] = match
+  return { owner, repo, number, name: `${owner}-${repo}-${number}` }
+}
+
 async function main() {
-  for (const target of targets) {
+  for (const url of targets) {
+    const target = parseTarget(url)
     console.log(`Fetching ${target.owner}/${target.repo}#${target.number}...`)
     const diff = await GithubProvider.fetchDiff(
       { kind: 'github-pr', owner: target.owner, repo: target.repo, number: target.number },

@@ -98,6 +98,7 @@ function navigateToFile(sha: string) {
           </div>
         </header>
         <template v-if="!collapsed">
+          <!-- TODO: support Markdown rendering using Comark -->
           <p v-if="group.summary" class="text-sm pb-2 border-b border-base op-fade">
             {{ group.summary }}
           </p>
