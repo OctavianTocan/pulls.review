@@ -7,9 +7,9 @@ import { DiffGroupSchema, WalkthroughStepSchema } from '../../../types/analyze'
  * `schemaVersion`, `generatedAt`).
  */
 export const AnalysisSchema = v.object({
-  overallSummary: v.string(),
+  overallSummary: v.pipe(v.string(), v.description('A short paragraph summarizing the whole PR for a reviewer who hasn\'t read it yet. Rendered as Markdown.')),
   groups: v.array(DiffGroupSchema),
-  walkthrough: v.optional(v.array(WalkthroughStepSchema)),
+  walkthrough: v.optional(v.pipe(v.array(WalkthroughStepSchema), v.description('Optional ordered steps guiding a reviewer through the change, for a PR substantial enough to benefit from one. Omit for small/simple PRs.'))),
 })
 export type Analysis = v.InferOutput<typeof AnalysisSchema>
 
@@ -19,7 +19,7 @@ export type Analysis = v.InferOutput<typeof AnalysisSchema>
  * instead of a diff-wide `overallSummary`/`walkthrough`.
  */
 export const ChunkAnalysisSchema = v.object({
-  summary: v.string(),
+  summary: v.pipe(v.string(), v.description('A short paragraph summarizing just the files in this part of the diff.')),
   groups: v.array(DiffGroupSchema),
 })
 export type ChunkAnalysis = v.InferOutput<typeof ChunkAnalysisSchema>
@@ -30,7 +30,7 @@ export type ChunkAnalysis = v.InferOutput<typeof ChunkAnalysisSchema>
  * passes couldn't, without re-sending any patch text.
  */
 export const SynthesisSchema = v.object({
-  overallSummary: v.string(),
-  walkthrough: v.optional(v.array(WalkthroughStepSchema)),
+  overallSummary: v.pipe(v.string(), v.description('A short paragraph summarizing the whole PR for a reviewer, based only on the section summaries given. Rendered as Markdown.')),
+  walkthrough: v.optional(v.pipe(v.array(WalkthroughStepSchema), v.description('Optional ordered steps guiding a reviewer through the change, for a PR substantial enough to benefit from one. Omit for small/simple PRs.'))),
 })
 export type Synthesis = v.InferOutput<typeof SynthesisSchema>
