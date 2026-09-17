@@ -8,7 +8,7 @@ import DiffsPage from '../../../../components/diff/DiffsPage.vue'
 import { usePullRequest } from '../../../../composables/usePullRequest'
 import { useReviewedFiles } from '../../../../composables/useReviewedFiles'
 import { layout } from '../../../../state/layout'
-import { githubToken } from '../../../../state/settings'
+import { settings } from '../../../../state/settings'
 
 const route = useRoute()
 
@@ -19,7 +19,7 @@ const params = computed(() => ({
   number: route.params.number as string,
 }))
 
-const { diff, grouped, isLoading, error, isStale, load, refresh } = usePullRequest(params.value, { token: githubToken.value })
+const { diff, grouped, isLoading, error, isStale, load, refresh } = usePullRequest(params.value, { token: settings.value.githubToken })
 const { reviewed, load: loadReviewed, toggle } = useReviewedFiles()
 
 async function loadAll() {

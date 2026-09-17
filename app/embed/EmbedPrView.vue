@@ -7,7 +7,7 @@ import DiffsPage from '../components/diff/DiffsPage.vue'
 import { usePullRequest } from '../composables/usePullRequest'
 import { useReviewedFiles } from '../composables/useReviewedFiles'
 import { layout } from '../state/layout'
-import { githubToken } from '../state/settings'
+import { settings } from '../state/settings'
 
 // Mirrors `pages/gh/[owner]/[repo]/[number].vue`'s wiring, from plain props instead of
 // route params - there's no router here. `EmbedApp.ce.vue` gives this a `:key` per PR,
@@ -27,7 +27,7 @@ const params = computed(() => ({
   number: props.number,
 }))
 
-const { diff, grouped, isLoading, error, isStale, load, refresh } = usePullRequest(params.value, { token: githubToken.value })
+const { diff, grouped, isLoading, error, isStale, load, refresh } = usePullRequest(params.value, { token: settings.value.githubToken })
 const { reviewed, load: loadReviewed, toggle } = useReviewedFiles()
 
 async function loadAll() {

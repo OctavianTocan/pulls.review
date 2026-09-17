@@ -182,6 +182,10 @@ catalogs:
     unocss:
       specifier: ^66.10.4
       version: 66.10.4
+  default:
+    '@shikijs/engine-javascript':
+      specifier: ^4.4.3
+      version: 4.4.3
   dev:
     '@antfu/eslint-config':
       specifier: ^9.5.1
@@ -214,6 +218,15 @@ catalogs:
       specifier: ^3.3.11
       version: 3.3.11
   frontend:
+    '@ai-sdk/anthropic':
+      specifier: ^4.0.56
+      version: 4.0.56
+    '@ai-sdk/gateway':
+      specifier: ^4.0.85
+      version: 4.0.85
+    '@ai-sdk/openai-compatible':
+      specifier: ^3.0.51
+      version: 3.0.51
     '@antfu/design':
       specifier: ^0.5.1
       version: 0.5.1
@@ -226,9 +239,15 @@ catalogs:
     '@tanstack/vue-virtual':
       specifier: ^3.13.39
       version: 3.13.39
+    '@valibot/to-json-schema':
+      specifier: ^1.8.0
+      version: 1.8.0
     '@vueuse/core':
       specifier: ^14.4.0
       version: 14.4.0
+    ai:
+      specifier: ^7.0.105
+      version: 7.0.105
     colorjs.io:
       specifier: ^0.7.1
       version: 0.7.1
@@ -303,6 +322,15 @@ importers:
 
   .:
     dependencies:
+      '@ai-sdk/anthropic':
+        specifier: catalog:frontend
+        version: 4.0.56(zod@4.6.5)
+      '@ai-sdk/gateway':
+        specifier: catalog:frontend
+        version: 4.0.85(zod@4.6.5)
+      '@ai-sdk/openai-compatible':
+        specifier: catalog:frontend
+        version: 3.0.51(zod@4.6.5)
       '@antfu/design':
         specifier: catalog:frontend
         version: 0.5.1(@antfu/utils@9.3.0)(@iconify-json/catppuccin@1.2.17)(@tanstack/vue-virtual@3.13.39(vue@3.5.42(typescript@6.0.3)))(@unocss/core@66.10.4)(colorjs.io@0.7.1)(reka-ui@2.10.4(vue@3.5.42(typescript@6.0.3)))(unocss@66.10.4(@devframes/agentic@0.10.1)(@unocss/webpack@66.10.4(esbuild@0.28.2)(rolldown@1.2.8)(rollup@4.62.5)(vite@8.3.0))(cac@7.0.0)(esbuild@0.28.2)(rolldown@1.2.8)(rollup@4.62.5)(srvx@0.12.7)(vite@8.3.0))(vue-afloat@0.1.1(vue@3.5.42(typescript@6.0.3)))(vue@3.5.42(typescript@6.0.3))
@@ -315,9 +343,15 @@ importers:
       '@tanstack/vue-virtual':
         specifier: catalog:frontend
         version: 3.13.39(vue@3.5.42(typescript@6.0.3))
+      '@valibot/to-json-schema':
+        specifier: catalog:frontend
+        version: 1.8.0(valibot@1.5.0(typescript@6.0.3))
       '@vueuse/core':
         specifier: catalog:frontend
         version: 14.4.0(vue@3.5.42(typescript@6.0.3))
+      ai:
+        specifier: catalog:frontend
+        version: 7.0.105(zod@4.6.5)
       colorjs.io:
         specifier: catalog:frontend
         version: 0.7.1
@@ -362,7 +396,7 @@ importers:
         specifier: catalog:icons
         version: 1.2.5
       '@shikijs/engine-javascript':
-        specifier: ^4.4.3
+        specifier: 'catalog:'
         version: 4.4.3
       '@storybook/vue3-vite':
         specifier: catalog:storybook
@@ -435,6 +469,34 @@ packages:
 
   '@adobe/css-tools@4.5.0':
     resolution: {integrity: sha512-6OzddxPio9UiWTCemp4N8cYLV2ZN1ncRnV1cVGtve7dhPOtRkleRyx32GQCYSwDYgaHU3USMm84tNsvKzRCa1Q==}
+
+  '@ai-sdk/anthropic@4.0.56':
+    resolution: {integrity: sha512-rpz9LepVvjCs0YXWN/I5DLNAK/SbaA8g2sMTS1iyWQyH7Vsjqeonc3A7WbZiM6bfhNtrGO6irhvkDjL/xWpE1w==}
+    engines: {node: '>=22'}
+    peerDependencies:
+      zod: ^3.25.76 || ^4.1.8
+
+  '@ai-sdk/gateway@4.0.85':
+    resolution: {integrity: sha512-c8ztST/CslupqO3p7izsAuG3TlKg9mhE6mGJ42iUADsSMJIV5IOKd9AsLG33QCAY7SWs6NDO2giM/rq7bUTNlQ==}
+    engines: {node: '>=22'}
+    peerDependencies:
+      zod: ^3.25.76 || ^4.1.8
+
+  '@ai-sdk/openai-compatible@3.0.51':
+    resolution: {integrity: sha512-zgVSj3dsvH8hNgorFA1Be/uk2+4W0cYTeSrOfqkc95g4SeomsuGepJQoi3Uefdfs8WyWxMjypJgUIAum0f8dCQ==}
+    engines: {node: '>=22'}
+    peerDependencies:
+      zod: ^3.25.76 || ^4.1.8
+
+  '@ai-sdk/provider-utils@5.0.43':
+    resolution: {integrity: sha512-gw/bcNseOGSs59TMtV4H1KwqXXe24NHgx+uBYr98pa4Fg6Uvp8hPPxjuckVnfFFyIxHCDew8so0ujpvcSuyMZA==}
+    engines: {node: '>=22'}
+    peerDependencies:
+      zod: ^3.25.76 || ^4.1.8
+
+  '@ai-sdk/provider@4.0.17':
+    resolution: {integrity: sha512-VYMBxIQdcHqbIf1j+YZlI9Ati6LZ4wJe0GGd4z4a5H/KxTggjeOiyaVYTnfF7LHZK5jMQ+rofmzz4QPqf++NUw==}
+    engines: {node: '>=22'}
 
   '@antfu/design@0.5.1':
     resolution: {integrity: sha512-cG1W3CRvLLIpOrRMtMbOy4gTJ8YTkdJWbmfmH1DOSWhmGfID3+WAgM0Fbm1CACazj/7/OxoEPdv/6PGUTjLElA==}
@@ -1047,6 +1109,8 @@ packages:
 
   '@json-render/core@0.20.0':
     resolution: {integrity: sha512-cXAXn7h3QaylefQgh85AEGPuVq4C8SJ3k9JqigWLJhaBSozF1Fmsrm43DP16RmkqNiVgj5pBRdmB48lEO5qlow==}
+    peerDependencies:
+      zod: ^4.0.0
 
   '@keyv/bigmap@1.3.1':
     resolution: {integrity: sha512-WbzE9sdmQtKy8vrNPa9BRnwZh5UF4s1KTmSK0KUVLo3eff5BlQNNWDnFOouNpKfPKDnms9xynJjsMYjMaT/aFQ==}
@@ -1899,6 +1963,9 @@ packages:
   '@sonarsource/analyzer-commons-configurations@2.31.0-5284':
     resolution: {integrity: sha512-ruk3blMs9BE9RNSp9LPpWZAIjxJmq4Cp00E3cELIHz7Kym3WxdWGRlKOMYLRQ5tJg/de7jN5AtEElY3bGIfTcw==}
 
+  '@standard-schema/spec@1.1.0':
+    resolution: {integrity: sha512-l2aFy5jALhniG5HgqrD6jXLi/rUWrKvqN/qJx6yoJsgKhblVd+iqqU4RCXavm/jPityDo5TCvKMnpjKnOriy0w==}
+
   '@storybook/builder-vite@10.6.0':
     resolution: {integrity: sha512-7zt8tYB6dnSO8fbjUz91MHexGDpf9HrLlA3FAmlVb+2ZL3eWUs499L3I6BDUymcWu7oW5WCBJlB8ERj8ZLLzig==}
     peerDependencies:
@@ -2180,6 +2247,15 @@ packages:
     peerDependencies:
       webpack: ^5
 
+  '@valibot/to-json-schema@1.8.0':
+    resolution: {integrity: sha512-a0M+uwCuQZEPAo65NYkFSJ14O5c213KoSZmPdoCfuFvUhfULi4T2Z6Tpjv6lTVMW9RoLm74RpRAjNEa43KcN+g==}
+    peerDependencies:
+      valibot: ^1.5.0
+
+  '@vercel/oidc@3.2.0':
+    resolution: {integrity: sha512-UycprH3T6n3jH0k44NHMa7pnFHGu/N05MjojYr+Mc6I7obkoLIJujSWwin1pCvdy/eOxrI/l3uDLQsmcrOb4ug==}
+    engines: {node: '>= 20'}
+
   '@vitejs/devtools-kit@0.7.4':
     resolution: {integrity: sha512-WvEOgZ4XiAz19EjZzmHyh0OYsKrgeBev2tjfLT9kbQM7oLxvtHSNlLmYNEY2nNEcrrcE7seupuJI4zcWotFsug==}
     peerDependencies:
@@ -2326,6 +2402,9 @@ packages:
   '@webcontainer/env@1.1.1':
     resolution: {integrity: sha512-6aN99yL695Hi9SuIk1oC88l9o0gmxL1nGWWQ/kNy81HigJ0FoaoTXpytCj6ItzgyCEwA9kF1wixsTuv5cjsgng==}
 
+  '@workflow/serde@4.1.0':
+    resolution: {integrity: sha512-pav4F2BoirECWR7Nf1TKt+2eETcBj7jj4cBefQ8VXQCA6NPkaKeLfj/zMgi+3zYV5ZIBT4GuUiphsj0/b9hPQQ==}
+
   abbrev@5.0.0:
     resolution: {integrity: sha512-/XrFJgzQQQHpti1raDJC6m4ws6aNktmjBlhk8Fdlk7LwCEuDoieEJJY9OFHjfiFJFFRM2tK+Ky/IsfbbmlMu1w==}
     engines: {node: ^22.22.2 || ^24.15.0 || >=26.0.0}
@@ -2344,6 +2423,12 @@ packages:
     resolution: {integrity: sha512-lGq+9yr1/GuAWaVYIHRjvvySG5/4VfKIvC8EWxStPdcDh/Ka7FG3twP6v4d5BkravUilhIAsG4Qj83t02LWUPQ==}
     engines: {node: '>=0.4.0'}
     hasBin: true
+
+  ai@7.0.105:
+    resolution: {integrity: sha512-gkV3W+tTtWwQ41KNV/KjV8wabBrk+bnbnZ3f0AWp/T9LLyljose8uhFViKleVy7tIdEiR2PiS4BpbNdcExf7rQ==}
+    engines: {node: '>=22'}
+    peerDependencies:
+      zod: ^3.25.76 || ^4.1.8
 
   ajv@6.15.0:
     resolution: {integrity: sha512-fgFx7Hfoq60ytK2c7DhnF8jIvzYgOMxfugjLOSMHjLIPgenqa7S7oaagATUq99mV6IYvN2tRmC0wnTYX6iPbMw==}
@@ -3301,6 +3386,9 @@ packages:
   json-schema-traverse@0.4.1:
     resolution: {integrity: sha512-xbbCH5dCYU5T8LcEhhuh7HJ88HXuW3qsI3Y0zOZFKfZEHcpWiHU/Jxzk629Brsab/mMiHQti9wMP+845RPe3Vg==}
 
+  json-schema@0.4.0:
+    resolution: {integrity: sha512-es94M3nTIfsEPisRafak+HDLfHXnKBhV3vU5eqPcS3flIWqcxJWgXHXiey3YrpaNsanY5ei1VoYEbOzijuq9BA==}
+
   json-stable-stringify-without-jsonify@1.0.1:
     resolution: {integrity: sha512-Bdboy+l7tA3OGW6FjyFHWkP5LuByj1Tk33Ljyq0axyzdk9//JSi2u3fP1QSmd1KNwq6VOKYGlAu87CisVir6Pw==}
 
@@ -4192,6 +4280,10 @@ packages:
   undici-types@8.9.0:
     resolution: {integrity: sha512-KTDyRTYX8sWmKXAikPHHSyc63CRPETMctyjKFupcC6OBLXT3xsN0e9aF7m+mIXutFWpUXuedtowG7iLOzp0kQg==}
 
+  undici@7.29.1:
+    resolution: {integrity: sha512-RYONW2MeafgYlkVOKYKkA/Ag7BmXqgIWCa8t1m0JcxrQg9pI9lEqRhAOruOBCbAohOa/gkCF+iPi9hrgvTzu6Q==}
+    engines: {node: '>=20.18.1'}
+
   unist-util-is@6.0.1:
     resolution: {integrity: sha512-LsiILbtBETkDz8I9p1dQ0uyRUWuaQzd/cuEeS1hoRSyW5E5XGmTzlwY1OrNzzakGowI9Dr/I8HVaw4hTtnxy8g==}
 
@@ -4589,6 +4681,38 @@ snapshots:
 
   '@adobe/css-tools@4.5.0': {}
 
+  '@ai-sdk/anthropic@4.0.56(zod@4.6.5)':
+    dependencies:
+      '@ai-sdk/provider': 4.0.17
+      '@ai-sdk/provider-utils': 5.0.43(zod@4.6.5)
+      zod: 4.6.5
+
+  '@ai-sdk/gateway@4.0.85(zod@4.6.5)':
+    dependencies:
+      '@ai-sdk/provider': 4.0.17
+      '@ai-sdk/provider-utils': 5.0.43(zod@4.6.5)
+      '@vercel/oidc': 3.2.0
+      zod: 4.6.5
+
+  '@ai-sdk/openai-compatible@3.0.51(zod@4.6.5)':
+    dependencies:
+      '@ai-sdk/provider': 4.0.17
+      '@ai-sdk/provider-utils': 5.0.43(zod@4.6.5)
+      zod: 4.6.5
+
+  '@ai-sdk/provider-utils@5.0.43(zod@4.6.5)':
+    dependencies:
+      '@ai-sdk/provider': 4.0.17
+      '@standard-schema/spec': 1.1.0
+      '@workflow/serde': 4.1.0
+      eventsource-parser: 3.1.1
+      undici: 7.29.1
+      zod: 4.6.5
+
+  '@ai-sdk/provider@4.0.17':
+    dependencies:
+      json-schema: 0.4.0
+
   '@antfu/design@0.5.1(@antfu/utils@9.3.0)(@iconify-json/catppuccin@1.2.17)(@tanstack/vue-virtual@3.13.39(vue@3.5.42(typescript@6.0.3)))(@unocss/core@66.10.4)(colorjs.io@0.7.1)(reka-ui@2.10.4(vue@3.5.42(typescript@6.0.3)))(unocss@66.10.4(@devframes/agentic@0.10.1)(@unocss/webpack@66.10.4(esbuild@0.28.2)(rolldown@1.2.8)(rollup@4.62.5)(vite@8.3.0))(cac@7.0.0)(esbuild@0.28.2)(rolldown@1.2.8)(rollup@4.62.5)(srvx@0.12.7)(vite@8.3.0))(vue-afloat@0.1.1(vue@3.5.42(typescript@6.0.3)))(vue@3.5.42(typescript@6.0.3))':
     dependencies:
       '@vueuse/core': 14.4.0(vue@3.5.42(typescript@6.0.3))
@@ -4758,7 +4882,7 @@ snapshots:
 
   '@devframes/json-render@0.10.1(@devframes/hub@0.10.0(@devframes/agentic@0.10.1)(crossws@0.4.12(srvx@0.12.7))(devframe@0.10.1))(devframe@0.10.1)':
     dependencies:
-      '@json-render/core': 0.20.0
+      '@json-render/core': 0.20.0(zod@4.6.5)
       devframe: 0.10.1(@devframes/agentic@0.10.1)(cac@7.0.0)(srvx@0.12.7)
       zod: 4.6.5
     optionalDependencies:
@@ -5128,7 +5252,7 @@ snapshots:
       '@jridgewell/resolve-uri': 3.1.2
       '@jridgewell/sourcemap-codec': 1.6.0
 
-  '@json-render/core@0.20.0':
+  '@json-render/core@0.20.0(zod@4.6.5)':
     dependencies:
       zod: 4.6.5
     optional: true
@@ -5640,6 +5764,8 @@ snapshots:
 
   '@sonarsource/analyzer-commons-configurations@2.31.0-5284': {}
 
+  '@standard-schema/spec@1.1.0': {}
+
   '@storybook/builder-vite@10.6.0(storybook@10.6.0(prettier@3.9.6))(vite@8.3.0)':
     dependencies:
       storybook: 10.6.0(prettier@3.9.6)
@@ -6104,6 +6230,12 @@ snapshots:
       - vite
     optional: true
 
+  '@valibot/to-json-schema@1.8.0(valibot@1.5.0(typescript@6.0.3))':
+    dependencies:
+      valibot: 1.5.0(typescript@6.0.3)
+
+  '@vercel/oidc@3.2.0': {}
+
   '@vitejs/devtools-kit@0.7.4(@devframes/agentic@0.10.1)(cac@7.0.0)(crossws@0.4.12(srvx@0.12.7))(srvx@0.12.7)(vite@8.3.0)':
     dependencies:
       '@devframes/hub': 0.10.0(@devframes/agentic@0.10.1)(crossws@0.4.12(srvx@0.12.7))(devframe@0.10.1)
@@ -6304,6 +6436,8 @@ snapshots:
 
   '@webcontainer/env@1.1.1': {}
 
+  '@workflow/serde@4.1.0': {}
+
   abbrev@5.0.0: {}
 
   acorn-jsx@5.3.2(acorn@8.18.0):
@@ -6313,6 +6447,13 @@ snapshots:
   acorn@7.4.1: {}
 
   acorn@8.18.0: {}
+
+  ai@7.0.105(zod@4.6.5):
+    dependencies:
+      '@ai-sdk/gateway': 4.0.85(zod@4.6.5)
+      '@ai-sdk/provider': 4.0.17
+      '@ai-sdk/provider-utils': 5.0.43(zod@4.6.5)
+      zod: 4.6.5
 
   ajv@6.15.0:
     dependencies:
@@ -6987,8 +7128,7 @@ snapshots:
 
   esutils@2.0.3: {}
 
-  eventsource-parser@3.1.1:
-    optional: true
+  eventsource-parser@3.1.1: {}
 
   eventsource@3.0.7:
     dependencies:
@@ -7286,6 +7426,8 @@ snapshots:
   jsesc@3.1.0: {}
 
   json-schema-traverse@0.4.1: {}
+
+  json-schema@0.4.0: {}
 
   json-stable-stringify-without-jsonify@1.0.1: {}
 
@@ -8498,6 +8640,8 @@ snapshots:
 
   undici-types@8.9.0: {}
 
+  undici@7.29.1: {}
+
   unist-util-is@6.0.1:
     dependencies:
       '@types/unist': 3.0.3
@@ -8785,7 +8929,6 @@ snapshots:
   zigpty@0.2.1:
     optional: true
 
-  zod@4.6.5:
-    optional: true
+  zod@4.6.5: {}
 
   zwitch@2.0.4: {}

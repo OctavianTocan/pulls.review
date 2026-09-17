@@ -10,9 +10,7 @@ import LoadDiffModal from '../components/load/LoadDiffModal.vue'
 import { UPLOAD_SESSION_STORAGE_KEY } from '../composables/uploadSession'
 import { useRecentPullRequests } from '../composables/useRecentPullRequests'
 
-// A real, small pull request - lets people see the app in action without having
-// to go find one of their own first.
-const DEMO_PR = { owner: 'antfu', repo: 'vite-plugin-vue-tracer', number: '13' }
+const DEMO_PR = { owner: 'slidevjs', repo: 'slidev', number: '2746' }
 
 const router = useRouter()
 const url = ref('')

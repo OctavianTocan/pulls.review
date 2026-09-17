@@ -42,6 +42,10 @@ export function createUnoConfig(options: CreateUnoConfigOptions = {}) {
         'z-modal-content': 'z-[70]',
         'z-drawer-backdrop': 'z-[80]',
         'z-drawer-content': 'z-[90]',
+        // AppModal's own layer: it can render inside the embed's shadow root, a
+        // sibling of the embed drawer (`z-[2147483000/1]`) - needs to win over that.
+        'z-app-modal-backdrop': 'z-[2147483002]',
+        'z-app-modal-content': 'z-[2147483003]',
       },
     ],
     presets: [

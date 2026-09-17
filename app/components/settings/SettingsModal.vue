@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { githubToken } from '../../state/settings'
+import { settings } from '../../state/settings'
 import AppModal from '../AppModal.vue'
 import SettingsPanel from './SettingsPanel.vue'
 
@@ -20,6 +20,11 @@ const emit = defineEmits<{
     :document="document"
     @update:open="emit('update:open', $event ?? false)"
   >
-    <SettingsPanel v-model="githubToken" />
+    <SettingsPanel
+      :model-value="settings.githubToken"
+      :llm-settings="settings.llm"
+      @update:model-value="settings = { ...settings, githubToken: $event }"
+      @update:llm-settings="settings = { ...settings, llm: $event }"
+    />
   </AppModal>
 </template>
