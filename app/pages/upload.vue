@@ -20,7 +20,7 @@ const pending = (() => {
   return JSON.parse(raw) as { text: string, title?: string }
 })()
 
-const { diff, grouped, isLoading, error, load } = usePullRequest(
+const { diff, grouped, isLoading, error, analyzeMode, isAnalyzing, llmAvailable, hasAiResult, load, setAnalyzeMode, reanalyzeWithAi } = usePullRequest(
   pending ? { kind: 'patch-text', text: pending.text, title: pending.title } : { kind: 'patch-text', text: '' },
 )
 const { reviewed, load: loadReviewed, toggle } = useReviewedFiles()
@@ -48,8 +48,14 @@ onMounted(loadAll)
       :reviewed="reviewed"
       :is-loading="isLoading"
       :error="error"
+      :analyze-mode="analyzeMode"
+      :is-analyzing="isAnalyzing"
+      :llm-available="llmAvailable"
+      :has-ai-result="hasAiResult"
       @update:layout="layout = $event"
       @update:reviewed="(sha, isReviewed) => toggle(sha, isReviewed)"
+      @update:analyze-mode="setAnalyzeMode"
+      @reanalyze-ai="reanalyzeWithAi"
       @retry="loadAll"
     >
       <template #loading>

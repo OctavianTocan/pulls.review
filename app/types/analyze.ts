@@ -1,7 +1,7 @@
 import type { PullRequestDiff } from './diff'
 import * as v from 'valibot'
 
-export const GroupSourceSchema = v.picklist(['rule-based', 'llm', 'web-llm'])
+export const GroupSourceSchema = v.picklist(['none', 'rule-based', 'llm', 'web-llm'])
 export type GroupSource = v.InferOutput<typeof GroupSourceSchema>
 
 export const DiffCategorySchema = v.picklist(['code', 'tests', 'docs', 'deps', 'config', 'generated', 'other'])
@@ -44,7 +44,7 @@ export const GroupedResultSchema = v.object({
 export type GroupedResult = v.InferOutput<typeof GroupedResultSchema>
 
 export interface AnalyzeAdapter {
-  readonly id: GroupSource // 'rule-based' | 'llm' | 'web-llm'
-  readonly available: boolean // rule-based: always true; llm: true once a key is configured; web-llm: true once a local model is loaded
+  readonly id: GroupSource // 'none' | 'rule-based' | 'llm' | 'web-llm'
+  readonly available: boolean // none/rule-based: always true; llm: true once a key is configured; web-llm: true once a local model is loaded
   analyze: (diff: PullRequestDiff) => Promise<GroupedResult>
 }

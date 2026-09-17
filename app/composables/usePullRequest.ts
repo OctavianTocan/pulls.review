@@ -1,10 +1,12 @@
 import type { Ref } from 'vue'
-import type { GroupedResult } from '../types/analyze'
+import type { GroupedResult, GroupSource } from '../types/analyze'
 import type { PullRequestDiff } from '../types/diff'
 import type { FetchDiffParams } from '../types/provider'
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
+import { resolveAdapter } from '../analyze'
+import { llmAdapter } from '../analyze/adapters/llm'
 import { ruleBasedAdapter } from '../analyze/adapters/rule-based'
-import { computeEntrySizeBytes, getEntry, putEntry, touchEntry } from '../cache/pr-cache'
+import { computeEntrySizeBytes, getEntry, putEntry, setAnalyzedResult, touchEntry } from '../cache/pr-cache'
 import { getDefaultCacheStorage } from '../cache/storage'
 import { fetchPullRequest } from '../providers/github/api'
 import { useProvider } from './useProvider'
@@ -15,31 +17,84 @@ export interface UsePullRequestReturn {
   isLoading: Ref<boolean>
   error: Ref<Error | undefined>
   isStale: Ref<boolean>
+  analyzeMode: Ref<GroupSource>
+  isAnalyzing: Ref<boolean>
+  /** Whether the `llm` adapter has a usable key/gateway token configured. */
+  llmAvailable: Ref<boolean>
+  /** Whether `llm` has already produced a result for the current diff. */
+  hasAiResult: Ref<boolean>
   load: () => Promise<void>
   refresh: () => Promise<void>
+  /** Switches the active grouping. `none`/`rule-based` analyze immediately (free, instant); `llm` only switches the view - call `reanalyzeWithAi` to actually run it. */
+  setAnalyzeMode: (mode: GroupSource) => Promise<void>
+  reanalyzeWithAi: () => Promise<void>
 }
 
 export function usePullRequest(params: FetchDiffParams, opts: { token?: string } = {}): UsePullRequestReturn {
   const diff = ref<PullRequestDiff>()
-  const grouped = ref<GroupedResult>()
+  const analyzedBy = ref<Partial<Record<GroupSource, GroupedResult>>>({})
   const isLoading = ref(false)
   const error = ref<Error>()
   const isStale = ref(false)
+  const analyzeMode = ref<GroupSource>('rule-based')
+  const isAnalyzing = ref(false)
+  const cacheKey = ref<string>()
+
+  // Falls back to the always-instant rule-based grouping while the selected mode
+  // (currently only `llm` can be in this state) hasn't been analyzed yet for this
+  // diff, so the header/view never lose their data just from switching modes.
+  const grouped = computed(() => analyzedBy.value[analyzeMode.value] ?? analyzedBy.value['rule-based'])
+  const llmAvailable = computed(() => llmAdapter.available)
+  const hasAiResult = computed(() => analyzedBy.value.llm !== undefined)
+
+  async function runAnalysis(mode: GroupSource) {
+    if (!diff.value)
+      return
+    isAnalyzing.value = true
+    try {
+      const result = await resolveAdapter(mode).analyze(diff.value)
+      analyzedBy.value = { ...analyzedBy.value, [mode]: result }
+      if (cacheKey.value) {
+        const storage = await getDefaultCacheStorage()
+        await setAnalyzedResult(storage, cacheKey.value, mode, result)
+      }
+    }
+    finally {
+      isAnalyzing.value = false
+    }
+  }
+
+  async function setAnalyzeMode(mode: GroupSource) {
+    analyzeMode.value = mode
+    // `llm` is never auto-run - a paid/slow call must always be an explicit click
+    // (the "(Re-)Analyze with AI" button), never a side effect of flipping a switch.
+    if (mode !== 'llm' && analyzedBy.value[mode] === undefined)
+      await runAnalysis(mode)
+  }
+
+  async function reanalyzeWithAi() {
+    await runAnalysis('llm')
+  }
 
   async function analyzeAndStore(key: string, freshDiff: PullRequestDiff) {
     const storage = await getDefaultCacheStorage()
     const result = await ruleBasedAdapter.analyze(freshDiff)
     diff.value = freshDiff
-    grouped.value = result
-    const analyzedBy = { 'rule-based': result }
+    cacheKey.value = key
+    const freshAnalyzedBy = { 'rule-based': result }
+    analyzedBy.value = freshAnalyzedBy
     await putEntry(storage, {
       key,
       diff: freshDiff,
       headSha: freshDiff.meta.head?.sha ?? '',
-      analyzedBy,
+      analyzedBy: freshAnalyzedBy,
       lastViewedAt: Date.now(),
-      sizeBytes: computeEntrySizeBytes(freshDiff, analyzedBy),
+      sizeBytes: computeEntrySizeBytes(freshDiff, freshAnalyzedBy),
     })
+    // A user-initiated refresh, not a silent one - safe to re-run the currently
+    // selected mode (even `llm`) against the fresh diff right away.
+    if (analyzeMode.value !== 'rule-based')
+      await runAnalysis(analyzeMode.value)
   }
 
   async function fetchFresh() {
@@ -73,7 +128,8 @@ export function usePullRequest(params: FetchDiffParams, opts: { token?: string }
         const cached = await getEntry(storage, key)
         if (cached) {
           diff.value = cached.diff
-          grouped.value = cached.analyzedBy['rule-based']
+          cacheKey.value = key
+          analyzedBy.value = cached.analyzedBy
           await touchEntry(storage, key)
           void checkStaleness(key, cached.headSha)
         }
@@ -91,7 +147,8 @@ export function usePullRequest(params: FetchDiffParams, opts: { token?: string }
         const cached = await getEntry(storage, key)
         if (cached) {
           diff.value = cached.diff
-          grouped.value = cached.analyzedBy['rule-based']
+          cacheKey.value = key
+          analyzedBy.value = cached.analyzedBy
           await touchEntry(storage, key)
         }
         else {
@@ -122,5 +179,19 @@ export function usePullRequest(params: FetchDiffParams, opts: { token?: string }
     }
   }
 
-  return { diff, grouped, isLoading, error, isStale, load, refresh }
+  return {
+    diff,
+    grouped,
+    isLoading,
+    error,
+    isStale,
+    analyzeMode,
+    isAnalyzing,
+    llmAvailable,
+    hasAiResult,
+    load,
+    refresh,
+    setAnalyzeMode,
+    reanalyzeWithAi,
+  }
 }

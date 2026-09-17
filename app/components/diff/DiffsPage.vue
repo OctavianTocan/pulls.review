@@ -1,9 +1,10 @@
 <script setup lang="ts">
-import type { GroupedResult } from '../../types/analyze'
+import type { GroupedResult, GroupSource } from '../../types/analyze'
 import type { PullRequestDiff } from '../../types/diff'
 import ActionButton from '@antfu/design/components/Action/ActionButton.vue'
 import FeedbackEmptyState from '@antfu/design/components/Feedback/FeedbackEmptyState.vue'
 import FeedbackLoading from '@antfu/design/components/Feedback/FeedbackLoading.vue'
+import { useEventListener } from '@vueuse/core'
 import { computed, ref } from 'vue'
 import DiffGroup from './DiffGroup.vue'
 import DiffsHeader from './DiffsHeader.vue'
@@ -21,11 +22,17 @@ const props = defineProps<{
   // Only meaningful once `diff`/`grouped` are loaded - a source with no live
   // origin (paste) just never sets this.
   isStale?: boolean
+  analyzeMode: GroupSource
+  isAnalyzing?: boolean
+  llmAvailable: boolean
+  hasAiResult: boolean
 }>()
 
 const emit = defineEmits<{
   'update:reviewed': [sha: string, reviewed: boolean]
   'update:layout': [layout: 'split' | 'unified']
+  'update:analyzeMode': [mode: GroupSource]
+  'reanalyzeAi': []
   'retry': []
   'refresh': []
 }>()
@@ -47,6 +54,20 @@ function toggleGroup(key: string) {
     next.add(key)
   collapsedGroups.value = next
 }
+
+// `scroll` doesn't bubble, but a capture-phase listener still sees it on the way down
+// regardless - attaching on `props.document` (the embed's shadow root, where the actual
+// scrolling element is a descendant `overflow-auto` div) or the real `document` (the
+// main site, where the page itself scrolls) both work the same way.
+const scrollY = ref(0)
+useEventListener(() => props.document ?? document, 'scroll', (event) => {
+  scrollY.value = event.target instanceof Element ? event.target.scrollTop : window.scrollY
+}, { capture: true })
+
+const groupsVisable = computed((): string[] => {
+  // TODO: return the visable group's keys
+  return []
+})
 </script>
 
 <template>
@@ -84,8 +105,16 @@ function toggleGroup(key: string) {
         :additions="totalAdditions"
         :deletions="totalDeletions"
         :is-embedded="isEmbedded"
-        :groups="resolvedGroups.map(group => ({ key: group.key, label: group.label }))"
+        :groups-visable="groupsVisable"
+        :groups="resolvedGroups"
+        :scroll-y="scrollY"
+        :analyze-mode="analyzeMode"
+        :is-analyzing="isAnalyzing"
+        :llm-available="llmAvailable"
+        :has-ai-result="hasAiResult"
         @update:layout="emit('update:layout', $event)"
+        @update:analyze-mode="emit('update:analyzeMode', $event)"
+        @reanalyze-ai="emit('reanalyzeAi')"
         @refresh="emit('refresh')"
       />
 

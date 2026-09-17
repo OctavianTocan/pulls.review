@@ -1,10 +1,13 @@
 <script setup lang="ts">
+import type { GroupSource } from '../../types/analyze'
 import type { DiffsPayload } from '../../types/diff'
+import type { ResolvedGroupWithChildren } from './group-utils'
+import ActionButton from '@antfu/design/components/Action/ActionButton.vue'
 import ActionIconButton from '@antfu/design/components/Action/ActionIconButton.vue'
 import ActionToggleGroup from '@antfu/design/components/Action/ActionToggleGroup.vue'
 import DisplayDonut from '@antfu/design/components/Display/DisplayDonut.vue'
-import { useEventListener } from '@vueuse/core'
-import { computed, ref } from 'vue'
+import { computed } from 'vue'
+import { settingsModalOpen } from '../../state/settingsModal'
 import { parseGithubDiffId } from '../../types/diff'
 import GithubAvatar from '../GithubAvatar.vue'
 import NavControls from '../NavControls.vue'
@@ -20,11 +23,19 @@ const props = defineProps<{
   additions: number
   deletions: number
   isEmbedded?: boolean
-  groups: { key: string, label: string }[]
+  groups: ResolvedGroupWithChildren[]
+  groupsVisable: string[]
+  scrollY: number
+  analyzeMode: GroupSource
+  isAnalyzing?: boolean
+  llmAvailable: boolean
+  hasAiResult: boolean
 }>()
 
 const emit = defineEmits<{
   'update:layout': [layout: 'split' | 'unified']
+  'update:analyzeMode': [mode: GroupSource]
+  'reanalyzeAi': []
   'refresh': []
 }>()
 
@@ -35,30 +46,23 @@ const layoutOptions = [
   { value: 'split', label: 'Split', icon: 'i-ph:columns-duotone' },
 ]
 
+const analyzeOptions = [
+  { value: 'none', label: 'None' },
+  { value: 'rule-based', label: 'Rules' },
+  { value: 'llm', label: 'AI' },
+]
+
 const githubRef = computed(() => props.meta.provider === 'github' ? parseGithubDiffId(props.meta.id) : undefined)
 
 function scrollToGroup(key: string) {
   (props.document ?? document).getElementById(`group-${key}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
 }
-
-// `scroll` doesn't bubble, but a capture-phase listener still sees it on the way down
-// regardless - attaching on `props.document` (the embed's shadow root, where the actual
-// scrolling element is a descendant `overflow-auto` div) or the real `document` (the
-// main site, where the page itself scrolls) both work the same way.
-const y = ref(0)
-useEventListener(() => props.document ?? document, 'scroll', (event) => {
-  y.value = event.target instanceof Element ? event.target.scrollTop : window.scrollY
-}, { capture: true })
-
-// Default collapsed: the description is usually long prose and secondary to the
-// file tree/diffs, which should be visible without scrolling past it first.
-// const descriptionOpen = ref(false)
 </script>
 
 <template>
   <header
-    class="p4 border-b bg-base flex flex-col gap-2 transition-all left-0 right-0 top-0 sticky z-nav"
-    :class=" y > 20 ? 'border-base shadow-md' : 'border-transparent' "
+    class="px4 py2 border-b bg-base flex flex-col gap-2 transition-all left-0 right-0 top-0 sticky z-nav"
+    :class="scrollY > 20 ? 'border-base shadow-md' : 'border-transparent' "
   >
     <div class="mxa max-w-500 w-full">
       <div class="flex flex-wrap gap-2 items-start">
@@ -68,6 +72,14 @@ useEventListener(() => props.document ?? document, 'scroll', (event) => {
           <a v-if="githubRef" :href="meta.url" target="_blank" rel="noopener" class="text-base font-normal op-fade hover:underline">#{{ githubRef.number }}</a>
         </h1>
         <ActionIconButton v-if="meta.provider === 'github'" icon="i-ph:arrows-clockwise-duotone" label="Refresh" tooltip="Refresh" class="shrink-0" @click="emit('refresh')" />
+        <div class="text-sm flex shrink-0 gap-1.5 items-center">
+          <span class="op-fade">Analyze by</span>
+          <ActionToggleGroup
+            :model-value="analyzeMode"
+            :options="analyzeOptions"
+            @update:model-value="emit('update:analyzeMode', $event as GroupSource)"
+          />
+        </div>
         <ActionToggleGroup
           class="shrink-0"
           :model-value="layout"
@@ -109,17 +121,31 @@ useEventListener(() => props.document ?? document, 'scroll', (event) => {
     </template> -->
 
       <div class="text-sm pt-2 flex gap-2 items-center">
-        <div v-if="groups.length > 1" class="text-xs pt-2 flex flex-wrap gap-1.5 items-center">
+        <div
+          v-if="groups.length > 1"
+          class="text-sm flex flex-wrap gap-1.5 items-center relative"
+        >
           <button
             v-for="group in groups"
             :key="group.key"
             type="button"
-            class="px-2 py-0.5 border border-base rounded-full op-fade hover:bg-active hover:op-100"
+            class="px-2 py-0.5 border border-base rounded op-fade hover:bg-active hover:op-100"
+            :class="groupsVisable.includes(group.key) ? 'font-bold op-100 text-primary' : ''"
             @click="scrollToGroup(group.key)"
           >
             {{ group.label }}
+            <span class="font-mono op-mute">{{ group.files.length }}</span>
           </button>
         </div>
+
+        <template v-if="analyzeMode === 'llm'">
+          <ActionButton v-if="!llmAvailable" size="sm" @click="settingsModalOpen = true">
+            Setup API Keys
+          </ActionButton>
+          <ActionButton v-else size="sm" :disabled="isAnalyzing" @click="emit('reanalyzeAi')">
+            {{ isAnalyzing ? 'Analyzing…' : hasAiResult ? 'Re-analyze with AI' : 'Analyze with AI' }}
+          </ActionButton>
+        </template>
 
         <div class="flex-auto" />
 

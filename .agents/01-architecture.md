@@ -57,11 +57,13 @@ analysis strategy later never touches the view layer:
 - **`AnalyzeAdapter`** (`app/analyze/`) turns a `PullRequestDiff` into a
   `GroupedResult` (grouped files + optional summaries/walkthrough). Each
   adapter lives in its own folder (`app/analyze/adapters/{id}/index.ts`):
+  - `none` — implemented. A single flat group containing every file, for
+    users who just want the plain file list with no classification.
   - `rule-based` — implemented. Deterministic glob-pattern classification,
     flat (1-level) groups, no LLM, no network call.
-  - `llm` — TODO, stub only. Will use the Vercel AI SDK, preferring the AI
-    Gateway with vendor-specific keys (OpenAI-compatible + Anthropic) as
-    fallback.
+  - `llm` — implemented. Uses the Vercel AI SDK, preferring the AI Gateway
+    with vendor-specific keys (OpenAI-compatible + Anthropic) as fallback;
+    falls back to `rule-based` on any network/schema failure.
   - `web-llm` — TODO, stub only. Fully in-browser model inference, no network
     call at analyze time.
   - LLM-sourced groups MAY nest one level (root group -> children, e.g.
@@ -124,7 +126,7 @@ is flat key-value, so there's no native "object store" split):
 These are deferred, not rejected — the abstractions above exist so they can
 land later without a rewrite:
 
-- `llm` / `web-llm` analyze adapters (stubs only).
+- `web-llm` analyze adapter (stub only).
 - Reading/posting GitHub PR review comments, formal review submission,
   merging — gated behind `Provider.capabilities.supportsComments`.
 - `local` CLI provider.

@@ -1,5 +1,7 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref, useTemplateRef, watch } from 'vue'
+import SettingsModal from '../components/settings/SettingsModal.vue'
+import { settingsModalOpen } from '../state/settingsModal'
 import { useEmbedDark } from './dark'
 import EmbedPrView from './EmbedPrView.vue'
 import { injectGithubPageStyles, PANEL_OPEN_CLASS, setupFilesTabToggle } from './githubIntegration'
@@ -152,5 +154,7 @@ onBeforeUnmount(() => {
         :key="prKey" :owner="pr.owner" :repo="pr.repo" :number="pr.number" :document="document" class="flex-1 min-h-0 overflow-auto"
       />
     </div>
+
+    <SettingsModal v-model:open="settingsModalOpen" :document="document" />
   </div>
 </template>

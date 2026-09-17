@@ -6,7 +6,7 @@ import DiffsHeader from './DiffsHeader.vue'
 const meta: Meta<typeof DiffsHeader> = {
   title: 'Diff/DiffsHeader',
   component: DiffsHeader,
-  args: { groups: [] },
+  args: { groups: [], analyzeMode: 'rule-based', llmAvailable: true, hasAiResult: false },
 }
 export default meta
 
@@ -18,4 +18,12 @@ export const Default: Story = {
 
 export const NoDescription: Story = {
   args: { meta: zeroFiles.diff.meta as any },
+}
+
+export const AiNotConfigured: Story = {
+  args: { meta: empty.diff.meta as any, analyzeMode: 'llm', llmAvailable: false },
+}
+
+export const AiReady: Story = {
+  args: { meta: empty.diff.meta as any, analyzeMode: 'llm', llmAvailable: true, hasAiResult: true },
 }

@@ -27,7 +27,7 @@ const params = computed(() => ({
   number: props.number,
 }))
 
-const { diff, grouped, isLoading, error, isStale, load, refresh } = usePullRequest(params.value, { token: settings.value.githubToken })
+const { diff, grouped, isLoading, error, isStale, analyzeMode, isAnalyzing, llmAvailable, hasAiResult, load, refresh, setAnalyzeMode, reanalyzeWithAi } = usePullRequest(params.value, { token: settings.value.githubToken })
 const { reviewed, load: loadReviewed, toggle } = useReviewedFiles()
 
 async function loadAll() {
@@ -54,8 +54,14 @@ watch(() => diff.value?.meta.id, (id, previousId) => {
     :error="error"
     :is-stale="isStale"
     :is-embedded="true"
+    :analyze-mode="analyzeMode"
+    :is-analyzing="isAnalyzing"
+    :llm-available="llmAvailable"
+    :has-ai-result="hasAiResult"
     @update:layout="layout = $event"
     @update:reviewed="(sha, isReviewed) => toggle(sha, isReviewed)"
+    @update:analyze-mode="setAnalyzeMode"
+    @reanalyze-ai="reanalyzeWithAi"
     @retry="loadAll"
     @refresh="refresh"
   >
