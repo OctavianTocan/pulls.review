@@ -9,6 +9,15 @@ import DiffGroup from './DiffGroup.vue'
 import DiffsHeader from './DiffsHeader.vue'
 import { resolveGroups } from './group-utils'
 
+// TODO: the parent would pass a reactive structural state object as
+// interface Storage {
+//   layout: 'split' | 'unified'
+//   reviewed: Set<string>
+// }
+// that the host would manage the persistence of. We might add more in the future
+// refactor all other components to use this reactive structural state.
+
+// TODO: rename hostContainer to `document` everywhere
 const props = defineProps<{
   hostContainer?: Document | ShadowRoot
   diff?: PullRequestDiff

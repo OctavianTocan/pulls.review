@@ -39,7 +39,7 @@ function namespaceShadowCssVars(css: string): string {
   return css.replaceAll('--un-', '--un-diffs-embed-')
 }
 
-async function main() {
+export async function buildEmbedCSS() {
   const root = fileURLToPath(new URL('..', import.meta.url))
   const embedDir = join(root, 'app/embed')
   const require = createRequire(import.meta.url)
@@ -97,5 +97,3 @@ async function main() {
 
   process.stdout.write(`✓ embed CSS built (${files.length + designFiles.length} sources scanned, ${(css.length / 1024).toFixed(1)} kB)\n`)
 }
-
-main()

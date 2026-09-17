@@ -113,8 +113,8 @@ function navigateToFile(sha: string) {
       <div class="flex flex-col gap-3 min-w-0">
         <template v-if="!collapsed">
           <FileDiff
-            v-for="file in group.files"
-            :key="file.sha"
+            v-for="file of group.files"
+            :key="`${file.sha}:${layout}`"
             :ref="el => setFileDiffRef(file.sha, el as InstanceType<typeof FileDiff> | null)"
             :file="file"
             :layout="layout"

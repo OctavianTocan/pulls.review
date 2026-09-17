@@ -1,13 +1,13 @@
 {
   "type": "module",
+  "version": "0.1.0",
   "private": true,
   "packageManager": "pnpm@12.4.2",
   "scripts": {
-    "build": "pnpm run build:embed && vite build",
-    "build:embed": "pnpm run build:embed:css && vite build --config vite.embed.config.ts",
-    "build:embed:css": "jiti scripts/build-embed-css.ts",
+    "build": "vite build && pnpm run build:embed",
+    "build:embed": "vite build --config vite.config.embed.ts",
     "dev": "vite",
-    "playground:embedded": "pnpm run build:embed && vite --open /playgrounds/embedded/",
+    "play:embed": "pnpm run build:embed && vite --open /playgrounds/embed/",
     "preview": "vite preview",
     "start:generate": "npx serve dist",
     "lint": "eslint .",

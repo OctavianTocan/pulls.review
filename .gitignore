@@ -6,4 +6,5 @@ dist
 .idea/
 public/assets/fonts
 public/embed
+public/diffs-github.user.js
 app/embed/.generated

@@ -3,8 +3,8 @@ import type { DiffsPayload } from '../../types/diff'
 import ActionIconButton from '@antfu/design/components/Action/ActionIconButton.vue'
 import ActionToggleGroup from '@antfu/design/components/Action/ActionToggleGroup.vue'
 import DisplayDonut from '@antfu/design/components/Display/DisplayDonut.vue'
-import { useWindowScroll } from '@vueuse/core'
-import { computed } from 'vue'
+import { useEventListener } from '@vueuse/core'
+import { computed, ref } from 'vue'
 import { parseGithubDiffId } from '../../types/diff'
 import GithubAvatar from '../GithubAvatar.vue'
 import NavControls from '../NavControls.vue'
@@ -42,7 +42,14 @@ function scrollToGroup(key: string) {
   (props.hostContainer || document).getElementById(`group-${key}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
 }
 
-const { y } = useWindowScroll()
+// `scroll` doesn't bubble, but a capture-phase listener still sees it on the way down
+// regardless - attaching on `hostContainer` (the embed's shadow root, where the actual
+// scrolling element is a descendant `overflow-auto` div) or `document` (the main
+// site, where the page itself scrolls) both work the same way.
+const y = ref(0)
+useEventListener(() => props.hostContainer ?? document, 'scroll', (event) => {
+  y.value = event.target instanceof Element ? event.target.scrollTop : window.scrollY
+}, { capture: true })
 
 // Default collapsed: the description is usually long prose and secondary to the
 // file tree/diffs, which should be visible without scrolling past it first.

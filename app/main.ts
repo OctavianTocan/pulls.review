@@ -2,7 +2,6 @@ import { createApp } from 'vue'
 import App from './App.vue'
 import { router } from './router'
 import '@antfu/design/styles.css'
-import 'vue-afloat/style.css'
 import './assets/css/main.css'
 import 'virtual:uno.css'
 

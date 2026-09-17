@@ -1,6 +1,10 @@
 import { fileURLToPath } from 'node:url'
 import vue from '@vitejs/plugin-vue'
+import { createJiti } from 'jiti'
 import { defineConfig } from 'vite'
+import { alias } from './vite.config.shared'
+
+const jiti = createJiti(import.meta.url)
 
 /**
  * Separate build target from `vite.config.ts`: a single self-contained IIFE bundle
@@ -11,16 +15,21 @@ import { defineConfig } from 'vite'
 export default defineConfig({
   plugins: [
     vue(),
+    {
+      name: 'embed-plugin',
+      async buildStart() {
+        await (jiti.import('./scripts/build-embed-css') as Promise<typeof import('./scripts/build-embed-css')>)
+          .then(m => m.buildEmbedCSS())
+      },
+      async buildEnd() {
+        await (jiti.import('./scripts/build-userscript') as Promise<typeof import('./scripts/build-userscript')>)
+          .then(m => m.buildUserscript())
+      },
+    },
   ],
   resolve: {
-    alias: {
-      // Teleports to document.body, escaping the shadow root - see
-      // app/embed/vue-afloat-noop.ts.
-      'vue-afloat': fileURLToPath(new URL('./app/embed/vue-afloat-noop.ts', import.meta.url)),
-    },
+    alias,
   },
-  // Nothing to serve verbatim for this build, and its outDir sits inside the main
-  // build's publicDir - disable the public-dir copy so it doesn't duplicate into itself.
   publicDir: false,
   build: {
     outDir: 'public/embed',

@@ -17,7 +17,7 @@
     "app/**/*.vue",
     "scripts/**/*.ts",
     "vite.config.ts",
-    "vite.embed.config.ts",
+    "vite.config.embed.ts",
     "vitest.config.ts",
     "uno.config.ts",
     "eslint.config.js"

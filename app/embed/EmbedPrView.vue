@@ -56,6 +56,7 @@ watch(() => diff.value?.meta.id, (id, previousId) => {
     :is-loading="isLoading"
     :error="error"
     :is-stale="isStale"
+    :is-embedded="true"
     @update:layout="layout = $event"
     @update:reviewed="(sha, isReviewed) => toggle(sha, isReviewed)"
     @retry="loadAll"
