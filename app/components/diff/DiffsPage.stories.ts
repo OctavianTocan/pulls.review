@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/vue3-vite'
-import real from '../../fixtures/real/small.json'
-import partiallyReviewed from '../../fixtures/synthetic/partially-reviewed.json'
-import zeroFiles from '../../fixtures/synthetic/zero-files.json'
+import real from '../../../test/fixtures/real/small.json'
+import partiallyReviewed from '../../../test/fixtures/synthetic/partially-reviewed.json'
+import zeroFiles from '../../../test/fixtures/synthetic/zero-files.json'
 import DiffsPage from './DiffsPage.vue'
 
 const meta: Meta<typeof DiffsPage> = {

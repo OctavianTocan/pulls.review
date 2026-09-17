@@ -12,7 +12,7 @@ export default antfu(
       'app/components/diff/pierre-diffs-core.css',
       // Captured verbatim from real GitHub PRs (titles/descriptions are someone else's
       // prose) - see scripts/capture-fixtures.ts.
-      'app/fixtures/real/**',
+      'test/fixtures/real/**',
     ],
   },
 )

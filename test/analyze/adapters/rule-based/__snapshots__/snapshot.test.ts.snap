@@ -1,0 +1,57 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`ruleBasedAdapter output snapshot > matches the snapshot for a representative diff 1`] = `
+{
+  "generatedAt": "2026-01-01T00:00:00.000Z",
+  "groups": [
+    {
+      "category": "code",
+      "filePaths": [
+        "src/factory.ts",
+        "src/configs/antislop.ts",
+      ],
+      "key": "code",
+      "label": "Code",
+      "summary": "Source changes.",
+    },
+    {
+      "category": "config",
+      "filePaths": [
+        "package.json",
+      ],
+      "key": "config",
+      "label": "Config",
+      "summary": "Configuration changes.",
+    },
+    {
+      "category": "docs",
+      "filePaths": [
+        "README.md",
+      ],
+      "key": "docs",
+      "label": "Docs",
+      "summary": "Documentation updates.",
+    },
+    {
+      "category": "tests",
+      "filePaths": [
+        "src/factory.test.ts",
+      ],
+      "key": "tests",
+      "label": "Tests",
+      "summary": "Test coverage for the change.",
+    },
+    {
+      "category": "generated",
+      "filePaths": [
+        "pnpm-lock.yaml",
+      ],
+      "key": "generated",
+      "label": "Generated",
+      "summary": "Generated or build output changes.",
+    },
+  ],
+  "schemaVersion": 1,
+  "source": "rule-based",
+}
+`;

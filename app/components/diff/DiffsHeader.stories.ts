@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/vue3-vite'
-import empty from '../../fixtures/synthetic/empty-group.json'
-import zeroFiles from '../../fixtures/synthetic/zero-files.json'
+import empty from '../../../test/fixtures/synthetic/empty-group.json'
+import zeroFiles from '../../../test/fixtures/synthetic/zero-files.json'
 import DiffsHeader from './DiffsHeader.vue'
 
 const meta: Meta<typeof DiffsHeader> = {

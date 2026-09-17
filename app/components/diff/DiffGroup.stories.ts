@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/vue3-vite'
-import nestedGroups from '../../fixtures/synthetic/nested-groups.json'
-import partiallyReviewed from '../../fixtures/synthetic/partially-reviewed.json'
+import nestedGroups from '../../../test/fixtures/synthetic/nested-groups.json'
+import partiallyReviewed from '../../../test/fixtures/synthetic/partially-reviewed.json'
 import DiffGroup from './DiffGroup.vue'
 import { resolveGroups } from './group-utils'
 

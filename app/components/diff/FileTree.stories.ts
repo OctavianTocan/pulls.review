@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/vue3-vite'
-import partiallyReviewed from '../../fixtures/synthetic/partially-reviewed.json'
-import zeroFiles from '../../fixtures/synthetic/zero-files.json'
+import partiallyReviewed from '../../../test/fixtures/synthetic/partially-reviewed.json'
+import zeroFiles from '../../../test/fixtures/synthetic/zero-files.json'
 import FileTree from './FileTree.vue'
 
 const meta: Meta<typeof FileTree> = {

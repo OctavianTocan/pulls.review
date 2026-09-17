@@ -1,0 +1,29 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`buildDiffPrompt snapshot > matches the snapshot for a representative diff 1`] = `
+"PR title: Add antislop option
+PR description: Adds an opt-in antislop factory option.
+
+### src/factory.ts [modified, +1/-0]
+@@ -1,1 +1,1 @@
+-export function factory() {}
++export function factory(options: Options = {}) {}
+
+### src/factory.test.ts [modified, +1/-0]
+@@ -1,1 +1,1 @@
++it('accepts options', () => {
++  expect(factory({})).toBeDefined()
++})
+
+### README.md [modified, +1/-0]
+@@ -1,1 +1,1 @@
++Also supports an \`antislop\` option."
+`;
+
+exports[`buildDiffPrompt snapshot > omits the description line entirely when there is none 1`] = `
+"PR title: Add antislop option
+
+### src/factory.ts [modified, +1/-0]
+@@ -1,1 +1,1 @@
++export function factory() {}"
+`;

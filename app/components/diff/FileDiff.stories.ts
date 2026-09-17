@@ -1,8 +1,8 @@
 import type { Meta, StoryObj } from '@storybook/vue3-vite'
-import binaryFile from '../../fixtures/synthetic/binary-file.json'
-import hugeFile from '../../fixtures/synthetic/huge-file.json'
-import partiallyReviewed from '../../fixtures/synthetic/partially-reviewed.json'
-import renamedFile from '../../fixtures/synthetic/renamed-file.json'
+import binaryFile from '../../../test/fixtures/synthetic/binary-file.json'
+import hugeFile from '../../../test/fixtures/synthetic/huge-file.json'
+import partiallyReviewed from '../../../test/fixtures/synthetic/partially-reviewed.json'
+import renamedFile from '../../../test/fixtures/synthetic/renamed-file.json'
 import FileDiff from './FileDiff.vue'
 
 const meta: Meta<typeof FileDiff> = {
