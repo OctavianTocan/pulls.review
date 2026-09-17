@@ -7,13 +7,13 @@ level of nesting (e.g. splitting a large feature by sub-area) - children cannot 
 children of their own. Every file path given to you MUST appear in exactly one group,
 either directly in "filePaths" or in exactly one child's "filePaths", never both and
 never omitted. Use short, stable, kebab-case-ish "key"s and human-readable "label"s.
-Keep every "summary" to one or two sentences.`
+Keep every "summary" to one or two sentences. "summary" is rendered as Markdown.`
 
 export const SINGLE_PASS_SYSTEM_PROMPT = `${GROUPING_RULES}
 
 Also write:
 - "overallSummary": a short paragraph summarizing the whole PR for a reviewer who
-  hasn't read it yet.
+  hasn't read it yet. Rendered as Markdown.
 - "walkthrough": optional ordered narrative steps (title + a few sentences + the
   file paths each step is about) guiding a reviewer through the change, when the PR
   is substantial enough to benefit from one. Omit it for small/simple PRs.`
@@ -28,7 +28,7 @@ export const SYNTHESIS_SYSTEM_PROMPT = `You are given per-section summaries and 
 resulting file groups for a GitHub pull request too large to review in one pass, but
 none of the raw diff text. Write:
 - "overallSummary": a short paragraph summarizing the whole PR for a reviewer, based
-  only on the section summaries given.
+  only on the section summaries given. Rendered as Markdown.
 - "walkthrough": optional ordered narrative steps (title + a few sentences + the
   file paths each step is about) guiding a reviewer through the change, when the PR
   is substantial enough to benefit from one. Omit it for small/simple PRs.`

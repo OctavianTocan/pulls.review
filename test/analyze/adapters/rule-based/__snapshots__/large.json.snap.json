@@ -1,0 +1,44 @@
+{
+  "source": "rule-based",
+  "groups": [
+    {
+      "key": "code",
+      "label": "Code",
+      "summary": "Source changes.",
+      "filePaths": [
+        "packages/reactivity/src/arrayInstrumentations.ts",
+        "packages/reactivity/src/computed.ts",
+        "packages/reactivity/src/debug.ts",
+        "packages/reactivity/src/dep.ts",
+        "packages/reactivity/src/effect.ts",
+        "packages/reactivity/src/effectScope.ts",
+        "packages/reactivity/src/ref.ts",
+        "packages/reactivity/src/system.ts",
+        "packages/reactivity/src/watch.ts",
+        "packages/runtime-core/src/renderer.ts"
+      ]
+    },
+    {
+      "key": "tests",
+      "label": "Tests",
+      "summary": "Test coverage for the change.",
+      "filePaths": [
+        "packages/reactivity/__tests__/computed.spec.ts",
+        "packages/reactivity/__tests__/effect.spec.ts",
+        "packages/reactivity/__tests__/gc.spec.ts",
+        "packages/runtime-core/__tests__/apiSetupHelpers.spec.ts",
+        "packages/runtime-core/__tests__/errorHandling.spec.ts"
+      ]
+    },
+    {
+      "key": "config",
+      "label": "Config",
+      "summary": "Configuration changes.",
+      "filePaths": [
+        "vitest.config.ts"
+      ]
+    }
+  ],
+  "generatedAt": "2026-01-01T00:00:00.000Z",
+  "schemaVersion": 1
+}

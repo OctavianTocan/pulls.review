@@ -1,10 +1,23 @@
 import type { PullRequestDiff } from './diff'
 import * as v from 'valibot'
 
-export const GroupSourceSchema = v.picklist(['none', 'rule-based', 'llm', 'web-llm'])
+export const GroupSourceSchema = v.picklist([
+  'none',
+  'rule-based',
+  'llm',
+  'web-llm',
+])
 export type GroupSource = v.InferOutput<typeof GroupSourceSchema>
 
-export const DiffCategorySchema = v.picklist(['code', 'tests', 'docs', 'deps', 'config', 'generated', 'other'])
+export const DiffCategorySchema = v.picklist([
+  'code',
+  'tests',
+  'docs',
+  'deps',
+  'config',
+  'generated',
+  'other',
+])
 export type DiffCategory = v.InferOutput<typeof DiffCategorySchema>
 
 /**
@@ -14,8 +27,7 @@ export type DiffCategory = v.InferOutput<typeof DiffCategorySchema>
 export const DiffGroupLeafSchema = v.object({
   key: v.string(), // stable id, e.g. "docs/featureA" or "tests"
   label: v.string(), // display label (LLM can override; rule-based = category name)
-  category: v.optional(DiffCategorySchema), // present for rule-based; LLM groups may omit or map loosely
-  summary: v.optional(v.string()), // per-group blurb, populated only when an llm/web-llm adapter has run
+  summary: v.optional(v.string()), // per-group blurb (Markdown), populated only when an llm/web-llm adapter has run
   filePaths: v.array(v.string()), // references into PullRequestDiff.files by path
 })
 export type DiffGroupLeaf = v.InferOutput<typeof DiffGroupLeafSchema>
@@ -35,7 +47,7 @@ export type WalkthroughStep = v.InferOutput<typeof WalkthroughStepSchema>
 
 export const GroupedResultSchema = v.object({
   source: GroupSourceSchema,
-  overallSummary: v.optional(v.string()), // only when an 'llm' or 'web-llm' adapter has run
+  overallSummary: v.optional(v.string()), // Markdown, only when an 'llm' or 'web-llm' adapter has run
   groups: v.array(DiffGroupSchema),
   walkthrough: v.optional(v.array(WalkthroughStepSchema)), // only when an llm/web-llm adapter has run; absent for rule-based
   generatedAt: v.string(),

@@ -2,8 +2,8 @@ import type { PullRequestDiff } from '../../../types/diff'
 import { describe, expect, it } from 'vitest'
 import { ruleBasedAdapter } from './index'
 
-function file(path: string): PullRequestDiff['files'][number] {
-  return { path, status: 'modified', additions: 1, deletions: 0, isBinary: false, sha: path, hunks: [] }
+function file(path: string, isBinary = false): PullRequestDiff['files'][number] {
+  return { path, status: 'modified', additions: 1, deletions: 0, isBinary, sha: path, hunks: [] }
 }
 
 describe('ruleBasedAdapter', () => {
@@ -20,7 +20,7 @@ describe('ruleBasedAdapter', () => {
     for (const group of result.groups)
       expect(group.children).toBeUndefined()
 
-    const byCategory = Object.fromEntries(result.groups.map(g => [g.category, g.filePaths]))
+    const byCategory = Object.fromEntries(result.groups.map(g => [g.key, g.filePaths]))
     expect(byCategory.code).toEqual(['src/index.ts'])
     expect(byCategory.tests).toEqual(['src/index.test.ts'])
     expect(byCategory.docs).toEqual(['README.md'])
@@ -34,7 +34,18 @@ describe('ruleBasedAdapter', () => {
     }
     const result = await ruleBasedAdapter.analyze(diff)
     expect(result.groups).toHaveLength(1)
-    expect(result.groups[0]?.category).toBe('code')
+    expect(result.groups[0]?.key).toBe('code')
+  })
+
+  it('puts binary files (images, fonts, ...) under "other", regardless of path', async () => {
+    const diff: PullRequestDiff = {
+      meta: { provider: 'github', id: 'github:o/r#1', title: 't', description: '' },
+      files: [file('docs/logo.png', true), file('src/index.ts')],
+    }
+    const result = await ruleBasedAdapter.analyze(diff)
+    const byCategory = Object.fromEntries(result.groups.map(g => [g.key, g.filePaths]))
+    expect(byCategory.other).toEqual(['docs/logo.png'])
+    expect(byCategory.code).toEqual(['src/index.ts'])
   })
 
   it('is always available and needs no network', () => {

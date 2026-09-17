@@ -18,14 +18,12 @@ describe('defaultRules', () => {
     ['README.md', 'docs'],
     ['docs/guide.mdx', 'docs'],
     ['package.json', 'deps'],
-    ['pnpm-lock.yaml', 'deps'],
+    // Lockfiles are machine-generated, not a dependency manifest a reviewer edits.
+    ['pnpm-lock.yaml', 'generated'],
     ['.eslintrc.json', 'config'],
     ['.github/workflows/ci.yml', 'config'],
     ['tsconfig.json', 'config'],
-    ['Dockerfile', 'build'],
-    // `config`'s `*.config.*` pattern is checked before `build`'s more specific
-    // `vite.config.*`, so any `*.config.*` file lands in `config` first. First
-    // match wins, per the rule order.
+    ['Dockerfile', 'config'],
     ['vite.config.ts', 'config'],
     ['dist/bundle.js', 'generated'],
     ['schema.generated.ts', 'generated'],

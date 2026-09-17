@@ -49,13 +49,14 @@ export const ruleBasedAdapter: AnalyzeAdapter = {
     const groupsByCategory = new Map<DiffCategory, DiffGroup>()
 
     for (const file of diff.files) {
-      const category = categorize(file.path)
+      // Binary files (images, fonts, archives, ...) never match a meaningful
+      // path-based category - path patterns only make sense for text files.
+      const category = file.isBinary ? 'other' : categorize(file.path)
       let group = groupsByCategory.get(category)
       if (!group) {
         group = {
           key: category,
           label: CATEGORY_LABELS[category],
-          category,
           summary: CATEGORY_SUMMARIES[category],
           filePaths: [],
         }
@@ -64,10 +65,12 @@ export const ruleBasedAdapter: AnalyzeAdapter = {
       group.filePaths.push(file.path)
     }
 
+    const groups = Array.from(groupsByCategory.values())
+      .sort((a, b) => defaultRules.findIndex(rule => rule.category === a.key) - defaultRules.findIndex(rule => rule.category === b.key))
+
     const result: GroupedResult = {
       source: 'rule-based',
-      groups: Array.from(groupsByCategory.values())
-        .sort((a, b) => defaultRules.findIndex(rule => rule.category === a.key) - defaultRules.findIndex(rule => rule.category === b.key)),
+      groups,
       generatedAt: new Date().toISOString(),
       schemaVersion: RULE_BASED_SCHEMA_VERSION,
     }

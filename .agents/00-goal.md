@@ -20,7 +20,7 @@ management product.
 ## Core value proposition
 
 1. **Grouping** — files are grouped (code / tests / docs / deps / config /
-   build / generated / other, or LLM-defined groups) instead of presented as
+   generated / other, or LLM-defined groups) instead of presented as
    one flat list, so a reviewer can skip straight to what matters.
 2. **Summarization** — when an LLM is configured, each group (and the PR as
    a whole) gets a short written summary, with an optional fuller narrative

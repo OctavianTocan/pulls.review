@@ -12,6 +12,11 @@ describe('ruleBasedAdapter output snapshot', () => {
     const { diff } = JSON.parse(readFileSync(join(fixturesDir, name), 'utf-8'))
     const result = await ruleBasedAdapter.analyze(diff)
     // `generatedAt` is a timestamp - fixed to a constant so the snapshot is deterministic.
-    expect({ ...result, generatedAt: '2026-01-01T00:00:00.000Z' }).toMatchSnapshot()
+    await expect(
+      JSON.stringify({ ...result, generatedAt: '2026-01-01T00:00:00.000Z' }, null, 2),
+    )
+      .toMatchFileSnapshot(
+        `./__snapshots__/${name}.snap.json`,
+      )
   })
 })
