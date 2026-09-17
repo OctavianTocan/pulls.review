@@ -17,8 +17,8 @@ const loadDiffOpen = ref(false)
 
 <template>
   <div class="flex shrink-0 gap-1 items-center">
-    <ActionIconButton v-if="loadDiff" icon="i-ph:upload-simple" label="Load a diff" tooltip="Load a diff" @click="loadDiffOpen = true" />
-    <ActionIconButton icon="i-ph:gear" label="Settings" tooltip="Settings" @click="settingsOpen = true" />
+    <ActionIconButton v-if="loadDiff" icon="i-ph:upload-simple-duotone" label="Load a diff" tooltip="Load a diff" @click="loadDiffOpen = true" />
+    <ActionIconButton icon="i-ph:gear-duotone" label="Settings" tooltip="Settings" @click="settingsOpen = true" />
     <DarkToggle />
   </div>
   <SettingsModal v-model:open="settingsOpen" :document="document" />

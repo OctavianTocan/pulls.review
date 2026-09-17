@@ -39,6 +39,7 @@
     "@iconify-json/catppuccin": "catalog:icons",
     "@iconify-json/ph": "catalog:icons",
     "@iconify-json/twemoji": "catalog:icons",
+    "@shikijs/engine-javascript": "^4.4.3",
     "@storybook/vue3-vite": "catalog:storybook",
     "@types/node": "catalog:dev",
     "@types/picomatch": "catalog:dev",

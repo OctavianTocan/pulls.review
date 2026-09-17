@@ -61,7 +61,7 @@ function toggleGroup(key: string) {
     <template v-else-if="error">
       <div class="mxa px-4 py-12 max-w-500 w-full">
         <slot name="error" :error="error" :retry="() => emit('retry')">
-          <FeedbackEmptyState icon="i-ph:warning" title="Something went wrong">
+          <FeedbackEmptyState icon="i-ph:warning-duotone" title="Something went wrong">
             <template #hint>
               {{ error.message }}
             </template>

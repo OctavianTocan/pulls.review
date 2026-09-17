@@ -31,8 +31,8 @@ const emit = defineEmits<{
 const progress = computed(() => props.totalFiles === 0 ? 1 : props.reviewedCount / props.totalFiles)
 
 const layoutOptions = [
-  { value: 'unified', label: 'Unified', icon: 'i-ph:rows' },
-  { value: 'split', label: 'Split', icon: 'i-ph:columns' },
+  { value: 'unified', label: 'Unified', icon: 'i-ph:rows-duotone' },
+  { value: 'split', label: 'Split', icon: 'i-ph:columns-duotone' },
 ]
 
 const githubRef = computed(() => props.meta.provider === 'github' ? parseGithubDiffId(props.meta.id) : undefined)
@@ -67,7 +67,7 @@ useEventListener(() => props.document ?? document, 'scroll', (event) => {
           {{ meta.title }}
           <a v-if="githubRef" :href="meta.url" target="_blank" rel="noopener" class="text-base font-normal op-fade hover:underline">#{{ githubRef.number }}</a>
         </h1>
-        <ActionIconButton v-if="meta.provider === 'github'" icon="i-ph:arrows-clockwise" label="Refresh" tooltip="Refresh" class="shrink-0" @click="emit('refresh')" />
+        <ActionIconButton v-if="meta.provider === 'github'" icon="i-ph:arrows-clockwise-duotone" label="Refresh" tooltip="Refresh" class="shrink-0" @click="emit('refresh')" />
         <ActionToggleGroup
           class="shrink-0"
           :model-value="layout"

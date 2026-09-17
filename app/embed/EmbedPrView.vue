@@ -64,7 +64,7 @@ watch(() => diff.value?.meta.id, (id, previousId) => {
     </template>
     <template #error="{ error: err, retry }">
       <FeedbackEmptyState
-        icon="i-ph:warning"
+        icon="i-ph:warning-duotone"
         title="Couldn't load this pull request"
       >
         <template #hint>

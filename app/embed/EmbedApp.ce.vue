@@ -101,7 +101,7 @@ onBeforeUnmount(() => {
     <button
       v-if="pr"
       type="button"
-      class="z-[2147483000] text-xs color-base font-semibold px-2 py-2.5 border border-base rounded-l-lg bg-base shadow-lg [writing-mode:vertical-rl] right-0 top-1/2 fixed -translate-y-1/2"
+      class="z-[2147483000] text-xs color-base font-semibold px-2 py-2.5 border border-base border-r-0 rounded-l-lg bg-base shadow-lg [writing-mode:vertical-rl] right-0 top-1/2 fixed -translate-y-1/2"
       :style="{ right: open ? `${width}px` : '0' }"
       @click="toggleOpen"
     >
@@ -119,8 +119,11 @@ onBeforeUnmount(() => {
       />
       <header class="text-sm font-semibold px-3 py-2 border-b border-base flex shrink-0 gap-2 items-center justify-between">
         <span>Diffs</span>
+        <a v-if="pr" target="_blank" :href="`https://github.com/${pr.owner}/${pr.repo}/pull/${pr.number}`" rel="noopener noreferrer" aria-label="Open in Diffs" class="op-fade hover:op-100">
+          <div class="i-ph-arrow-square-out-duotone" />
+        </a>
         <button type="button" aria-label="Close" class="op-fade hover:op-100" @click="toggleOpen">
-          ✕
+          <div class="i-ph-x" />
         </button>
       </header>
       <EmbedPrView

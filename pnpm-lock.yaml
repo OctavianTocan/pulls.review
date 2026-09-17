@@ -358,6 +358,9 @@ importers:
       '@iconify-json/twemoji':
         specifier: catalog:icons
         version: 1.2.5
+      '@shikijs/engine-javascript':
+        specifier: ^4.4.3
+        version: 4.4.3
       '@storybook/vue3-vite':
         specifier: catalog:storybook
         version: 10.6.0(storybook@10.6.0(prettier@3.9.6))(typescript@6.0.3)(vite@8.3.0)(vue@3.5.42(typescript@6.0.3))

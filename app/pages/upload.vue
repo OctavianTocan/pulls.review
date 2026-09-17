@@ -57,7 +57,7 @@ onMounted(loadAll)
       </template>
       <template #error="{ error: err }">
         <FeedbackEmptyState
-          icon="i-ph:warning"
+          icon="i-ph:warning-duotone"
           title="Couldn't parse this diff"
         >
           <template #hint>
@@ -67,7 +67,7 @@ onMounted(loadAll)
       </template>
       <template #empty>
         <FeedbackEmptyState
-          icon="i-ph:upload-simple"
+          icon="i-ph:upload-simple-duotone"
           title="No diff loaded"
         >
           <template #hint>
