@@ -1,5 +1,5 @@
 import type { AnalyzeAdapter, DiffGroup, GroupedResultCore } from '../../../types/analyze'
-import type { FileChange, PullRequestDiff } from '../../../types/diff'
+import type { DiffsPayload, FileChange } from '../../../types/diff'
 import type { Analysis } from './schema'
 import { generateText, Output } from 'ai'
 import { normalizeGroupedResult } from '../../../types/analyze'
@@ -13,22 +13,22 @@ import { toModelSchema } from './valibot-schema'
 
 export const LLM_SCHEMA_VERSION = 1
 
-async function analyzeWhole(diff: PullRequestDiff, model: NonNullable<ReturnType<typeof resolveLanguageModel>>): Promise<Analysis> {
+async function analyzeWhole(diff: DiffsPayload, model: NonNullable<ReturnType<typeof resolveLanguageModel>>): Promise<Analysis> {
   const { output } = await generateText({
     model,
     system: SINGLE_PASS_SYSTEM_PROMPT,
-    prompt: buildDiffPrompt(diff.meta.title, diff.meta.description, diff.files),
+    prompt: buildDiffPrompt(diff),
     output: Output.object({ schema: toModelSchema(AnalysisSchema) }),
   })
   return output
 }
 
-async function analyzeChunked(diff: PullRequestDiff, model: NonNullable<ReturnType<typeof resolveLanguageModel>>, chunks: FileChange[][]): Promise<Analysis> {
+async function analyzeChunked(diff: DiffsPayload, model: NonNullable<ReturnType<typeof resolveLanguageModel>>, chunks: FileChange[][]): Promise<Analysis> {
   const chunkResults = await Promise.all(chunks.map(async (files, index) => {
     const { output } = await generateText({
       model,
       system: CHUNK_SYSTEM_PROMPT,
-      prompt: `Part ${index + 1} of ${chunks.length}.\n\n${buildDiffPrompt(diff.meta.title, diff.meta.description, files)}`,
+      prompt: `Part ${index + 1} of ${chunks.length}.\n\n${buildDiffPrompt(diff, files)}`,
       output: Output.object({ schema: toModelSchema(ChunkAnalysisSchema) }),
     })
     return output
@@ -38,7 +38,7 @@ async function analyzeChunked(diff: PullRequestDiff, model: NonNullable<ReturnTy
   const { output: synthesis } = await generateText({
     model,
     system: SYNTHESIS_SYSTEM_PROMPT,
-    prompt: `PR title: ${diff.meta.title}\n\nSection summaries:\n${
+    prompt: `PR title: ${diff.title}\n\nSection summaries:\n${
       chunkResults.map((result, index) => `${index + 1}. ${result.summary}`).join('\n')
     }\n\nResulting groups: ${groups.map(group => `"${group.label}" (${group.filePaths.length + (group.children?.reduce((n, c) => n + c.filePaths.length, 0) ?? 0)} files)`).join(', ')}`,
     output: Output.object({ schema: toModelSchema(SynthesisSchema) }),
@@ -52,7 +52,7 @@ async function analyzeChunked(diff: PullRequestDiff, model: NonNullable<ReturnTy
  * across groups (first group wins), then appends the diff's remaining, un-grouped
  * files as a catch-all group rather than silently dropping them from the view.
  */
-function reconcile(diff: PullRequestDiff, analysis: Analysis): DiffGroup[] {
+function reconcile(diff: DiffsPayload, analysis: Analysis): DiffGroup[] {
   const validPaths = new Set(diff.files.map(file => file.path))
   const seen = new Set<string>()
   const groups: DiffGroup[] = []

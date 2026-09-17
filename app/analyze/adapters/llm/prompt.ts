@@ -1,4 +1,8 @@
-import type { FileChange } from '../../../types/diff'
+import type { DiffsPayload, FileChange } from '../../../types/diff'
+import picomatch from 'picomatch'
+import { GENERATED_PATTERNS } from '../rule-based/rules'
+
+const isGeneratedPath = picomatch(GENERATED_PATTERNS)
 
 // Per-field rules (nesting depth, filePaths coverage, key/label style, summary
 // length/Markdown, ...) live as `description`s on the response schema itself
@@ -26,11 +30,26 @@ export function renderFilesAsText(files: FileChange[]): string {
     const header = `### ${file.path}${rename} [${file.status}, +${file.additions}/-${file.deletions}]`
     if (file.isBinary)
       return `${header}\n(binary file, no diff shown)`
+    // Lockfiles/build output are rarely worth reviewing line-by-line and can be huge -
+    // omitting their diff body saves tokens without losing anything a reviewer needs.
+    if (isGeneratedPath(file.path))
+      return `${header}\n(generated file, diff omitted to save tokens)`
     const body = file.hunks.map(hunk => `${hunk.header}\n${hunk.patch}`).join('\n')
     return `${header}\n${body}`
   }).join('\n\n')
 }
 
-export function buildDiffPrompt(title: string, description: string | undefined, files: FileChange[]): string {
-  return `PR title: ${title}\n${description ? `PR description: ${description}\n` : ''}\n${renderFilesAsText(files)}`
+/**
+ * Builds the model-facing prompt for a diff (or, from `analyzeChunked`, one chunk of
+ * it - `files` defaults to the whole `diff.files` otherwise). `---DESCRIPTION---` and
+ * `---CHANGES---` mark the sections so the model can tell PR prose from patch text.
+ */
+export function buildDiffPrompt(diff: DiffsPayload, files: FileChange[] = diff.files): string {
+  const parts = [`PR title: ${diff.title}`]
+  if (diff.url)
+    parts.push(`PR link: ${diff.url}`)
+  if (diff.description)
+    parts.push(`---DESCRIPTION---\n${diff.description}`)
+  parts.push(`---CHANGES---\n${renderFilesAsText(files)}`)
+  return parts.join('\n\n')
 }

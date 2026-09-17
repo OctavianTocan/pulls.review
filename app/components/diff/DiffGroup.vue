@@ -3,6 +3,7 @@ import type { ResolvedGroupWithChildren } from './group-utils'
 import ActionIconButton from '@antfu/design/components/Action/ActionIconButton.vue'
 import DisplayDonut from '@antfu/design/components/Display/DisplayDonut.vue'
 import { computed, nextTick, ref } from 'vue'
+import { renderInlineMarkdown } from '../../utils/markdown'
 import DiffGroup from './DiffGroup.vue'
 import DiffStats from './DiffStats.vue'
 import FileDiff from './FileDiff.vue'
@@ -98,10 +99,8 @@ function navigateToFile(sha: string) {
           </div>
         </header>
         <template v-if="!collapsed">
-          <!-- TODO: support Markdown rendering using Comark -->
-          <p v-if="group.summary" class="text-sm pb-2 border-b border-base op-fade">
-            {{ group.summary }}
-          </p>
+          <!-- eslint-disable-next-line vue/no-v-html -- renderInlineMarkdown always escapes its input first, then only ever re-introduces the few safe tags it itself generates -->
+          <p v-if="group.summary" class="text-sm pb-2 border-b border-base op-fade" v-html="renderInlineMarkdown(group.summary)" />
           <FileTree
             :files="group.files"
             :reviewed="reviewed"

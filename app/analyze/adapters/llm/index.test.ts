@@ -1,4 +1,4 @@
-import type { PullRequestDiff } from '../../../types/diff'
+import type { DiffsPayload } from '../../../types/diff'
 import { generateText } from 'ai'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { defaultLlmSettings, settings } from '../../../state/settings'
@@ -11,7 +11,7 @@ vi.mock('ai', async (importOriginal) => {
 
 const generateTextMock = vi.mocked(generateText)
 
-function file(path: string, patch = '+x'): PullRequestDiff['files'][number] {
+function file(path: string, patch = '+x'): DiffsPayload['files'][number] {
   return {
     path,
     status: 'modified',
@@ -23,9 +23,12 @@ function file(path: string, patch = '+x'): PullRequestDiff['files'][number] {
   }
 }
 
-function diffWithFiles(...files: PullRequestDiff['files']): PullRequestDiff {
+function diffWithFiles(...files: DiffsPayload['files']): DiffsPayload {
   return {
-    meta: { provider: 'github', id: 'github:o/r#1', title: 'My PR', description: 'Does things' },
+    provider: 'github',
+    id: 'github:o/r#1',
+    title: 'My PR',
+    description: 'Does things',
     files,
   }
 }

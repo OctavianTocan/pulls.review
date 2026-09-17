@@ -37,7 +37,7 @@ async function loadAll() {
 }
 
 onMounted(loadAll)
-watch(() => diff.value?.meta.id, (id, previousId) => {
+watch(() => diff.value?.id, (id, previousId) => {
   if (id && id !== previousId)
     loadReviewed(diff.value!.files.map(file => file.sha))
 })

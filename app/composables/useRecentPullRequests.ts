@@ -4,7 +4,7 @@ import { ref } from 'vue'
 import { listRecentEntries } from '../cache/pr-cache'
 import { getReviewed } from '../cache/review-cache'
 import { getDefaultCacheStorage } from '../cache/storage'
-import { parseGithubDiffId } from '../types/diff'
+import { parseGithubDiffId } from '../providers/github/diff-id'
 
 export interface RecentPullRequest {
   owner: string
@@ -41,15 +41,15 @@ export function useRecentPullRequests(limit = 8): UseRecentPullRequestsReturn {
     const items: RecentPullRequest[] = []
     for (const entry of entries) {
       const { diff } = entry
-      const ref = parseGithubDiffId(diff.meta.id)
+      const ref = parseGithubDiffId(diff.id)
       if (!ref)
         continue
       const reviewed = await getReviewed(storage, diff.files.map(file => file.sha))
       items.push({
         ...ref,
-        title: diff.meta.title,
-        url: diff.meta.url,
-        state: diff.meta.pullRequest?.state,
+        title: diff.title,
+        url: diff.url,
+        state: diff.pullRequest?.state,
         additions: diff.files.reduce((sum, file) => sum + file.additions, 0),
         deletions: diff.files.reduce((sum, file) => sum + file.deletions, 0),
         reviewedCount: diff.files.filter(file => reviewed.has(file.sha)).length,

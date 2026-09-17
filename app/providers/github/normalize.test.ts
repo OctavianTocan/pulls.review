@@ -30,7 +30,7 @@ describe('normalizePullRequest', () => {
     ]
     const diff = await normalizePullRequest('owner', 'repo', '1', PR_JSON, files, async () => '')
 
-    expect(diff.meta).toMatchObject({
+    expect(diff).toMatchObject({
       provider: 'github',
       id: 'github:owner/repo#1',
       title: 'Add feature',
@@ -107,9 +107,9 @@ describe('normalizePullRequest', () => {
     [{ state: 'open' as const, draft: true, merged: false }, 'draft'],
     [{ state: 'closed' as const, draft: false, merged: false }, 'closed'],
     [{ state: 'closed' as const, draft: false, merged: true }, 'merged'],
-  ])('resolves meta.pullRequest.state from %o to %s', async (overrides, expected) => {
+  ])('resolves pullRequest.state from %o to %s', async (overrides, expected) => {
     const diff = await normalizePullRequest('owner', 'repo', '1', { ...PR_JSON, ...overrides }, [], async () => '')
-    expect(diff.meta.pullRequest?.state).toBe(expected)
+    expect(diff.pullRequest?.state).toBe(expected)
   })
 
   it('only fetches the fallback diff text once even with multiple omitted-patch files', async () => {

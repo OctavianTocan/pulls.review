@@ -1,4 +1,4 @@
-import type { PullRequestDiff } from './diff'
+import type { DiffsPayload } from './diff'
 import * as v from 'valibot'
 
 export const GroupSourceSchema = v.picklist([
@@ -32,7 +32,7 @@ export const DiffGroupLeafSchema = v.object({
   key: v.pipe(v.string(), v.description('Stable, short, kebab-case-ish id, e.g. "docs" or "feature-a".')),
   label: v.pipe(v.string(), v.description('Short, human-readable display name for this group.')),
   summary: v.optional(v.pipe(v.string(), v.description('One or two sentence blurb about this group, rendered as Markdown.'))), // populated only when an llm/web-llm adapter has run
-  filePaths: v.pipe(v.array(v.string()), v.description('File paths belonging directly to this group (not to a child). Every file path given to you MUST end up in exactly one group or child - never both, never omitted.')), // references into PullRequestDiff.files by path
+  filePaths: v.pipe(v.array(v.string()), v.description('File paths belonging directly to this group (not to a child). Every file path given to you MUST end up in exactly one group or child - never both, never omitted.')), // references into DiffsPayload.files by path
 })
 export type DiffGroupLeaf = v.InferOutput<typeof DiffGroupLeafSchema>
 
@@ -70,5 +70,5 @@ export function normalizeGroupedResult(source: GroupSource, core: GroupedResultC
 export interface AnalyzeAdapter {
   readonly id: GroupSource // 'none' | 'rule-based' | 'llm' | 'web-llm'
   readonly available: boolean // none/rule-based: always true; llm: true once a key is configured; web-llm: true once a local model is loaded
-  analyze: (diff: PullRequestDiff) => Promise<GroupedResult>
+  analyze: (diff: DiffsPayload) => Promise<GroupedResult>
 }

@@ -13,17 +13,17 @@ export default meta
 type Story = StoryObj<typeof DiffsHeader>
 
 export const Default: Story = {
-  args: { meta: empty.diff.meta as any },
+  args: { meta: empty.diff as any },
 }
 
 export const NoDescription: Story = {
-  args: { meta: zeroFiles.diff.meta as any },
+  args: { meta: zeroFiles.diff as any },
 }
 
 export const AiNotConfigured: Story = {
-  args: { meta: empty.diff.meta as any, analyzeMode: 'llm', llmAvailable: false },
+  args: { meta: empty.diff as any, analyzeMode: 'llm', llmAvailable: false },
 }
 
 export const AiReady: Story = {
-  args: { meta: empty.diff.meta as any, analyzeMode: 'llm', llmAvailable: true, hasAiResult: true },
+  args: { meta: empty.diff as any, analyzeMode: 'llm', llmAvailable: true, hasAiResult: true },
 }

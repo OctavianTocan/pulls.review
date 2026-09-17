@@ -1,24 +1,22 @@
 {
   "diff": {
-    "meta": {
-      "provider": "github",
-      "id": "github:antfu/diffs#1",
-      "title": "Empty pull request",
-      "description": "",
-      "url": "https://github.com/antfu/diffs/pull/1",
-      "base": {
-        "sha": "base0000",
-        "ref": "main"
-      },
-      "head": {
-        "sha": "head0000",
-        "ref": "feature/example"
-      },
-      "createdAt": "2026-09-16T00:00:00.000Z",
-      "updatedAt": "2026-09-16T00:00:00.000Z",
-      "pullRequest": {
-        "author": "antfu"
-      }
+    "provider": "github",
+    "id": "github:antfu/diffs#1",
+    "title": "Empty pull request",
+    "description": "",
+    "url": "https://github.com/antfu/diffs/pull/1",
+    "base": {
+      "sha": "base0000",
+      "ref": "main"
+    },
+    "head": {
+      "sha": "head0000",
+      "ref": "feature/example"
+    },
+    "createdAt": "2026-09-16T00:00:00.000Z",
+    "updatedAt": "2026-09-16T00:00:00.000Z",
+    "pullRequest": {
+      "author": "antfu"
     },
     "files": []
   },

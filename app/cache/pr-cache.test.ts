@@ -9,7 +9,10 @@ let storage: ReturnType<typeof createCacheStorage>
 
 function makeEntry(key: string, sha: string, lastViewedAt: number, sizeBytes = 100): PrCacheEntry {
   const diff: PrCacheEntry['diff'] = {
-    meta: { provider: 'github', id: key, title: 't', description: '' },
+    provider: 'github',
+    id: key,
+    title: 't',
+    description: '',
     files: [{ path: 'a.ts', status: 'modified', additions: 1, deletions: 0, isBinary: false, sha, hunks: [] }],
   }
   return { key, diff, headSha: sha, analyzedBy: {}, lastViewedAt, sizeBytes }

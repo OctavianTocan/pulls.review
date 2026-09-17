@@ -10,7 +10,7 @@ const fixtureNames = readdirSync(fixturesDir).filter(name => name.endsWith('.jso
 describe('buildDiffPrompt snapshot', () => {
   it.each(fixtureNames)('matches the snapshot for fixtures/real/%s', async (name) => {
     const { diff } = JSON.parse(readFileSync(join(fixturesDir, name), 'utf-8'))
-    const prompt = buildDiffPrompt(diff.meta.title, diff.meta.description, diff.files)
+    const prompt = buildDiffPrompt(diff)
     await expect(prompt).toMatchFileSnapshot(
       `./__snapshots__/${name}.prompt.snap.md`,
     )

@@ -1,5 +1,9 @@
 PR title: perf(reactivity): ports `alien-signals` 0.4.4
-PR description: `alien-signals`(https://github.com/stackblitz/alien-signals) is a research-oriented signal library rewritten based on Vue 3.4's reactivity system. It sets several constraints to ensure the high-performance implementation of a reactivity system. (Currently, it is the fastest implementation among all signal libraries)
+
+PR link: https://github.com/vuejs/core/pull/12349
+
+---DESCRIPTION---
+`alien-signals`(https://github.com/stackblitz/alien-signals) is a research-oriented signal library rewritten based on Vue 3.4's reactivity system. It sets several constraints to ensure the high-performance implementation of a reactivity system. (Currently, it is the fastest implementation among all signal libraries)
 
 This PR ports the https://github.com/stackblitz/alien-signals/blob/master/src/system.ts code to https://github.com/vuejs/core/blob/main/packages/reactivity/src/effect.ts to leverage all the optimizations discovered by `alien-signals`.
 
@@ -103,6 +107,7 @@ This PR ports the https://github.com/stackblitz/alien-signals/blob/master/src/sy
 
 - ~~Merging `dirtyLevel`, `canPropagate`, `pauseLevel`, and `allowRecurse` into one attribute should further reduce memory usage. Reaching the lowest memory usage is not the purpose of this PR, so we will not implement it here currently.~~ Completed when update to alien-signals 0.4.4
 
+---CHANGES---
 ### packages/reactivity/__tests__/computed.spec.ts [modified, +7/-6]
 @@ -25,8 +25,9 @@ import {
    toRaw,

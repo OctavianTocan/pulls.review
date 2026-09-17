@@ -1,4 +1,4 @@
-import type { FileChange, FileChangeStatus, PullRequestDiff, PullRequestState } from '../../types/diff'
+import type { DiffsPayload, FileChange, FileChangeStatus, PullRequestState } from '../../types/diff'
 import type { GithubPullRequestFileJson, GithubPullRequestJson } from './api'
 import { parseHunks, parsePatch } from '../../patch-parser'
 
@@ -79,7 +79,7 @@ export async function normalizePullRequest(
   pr: GithubPullRequestJson,
   files: GithubPullRequestFileJson[],
   loadFallbackDiffText: () => Promise<string>,
-): Promise<PullRequestDiff> {
+): Promise<DiffsPayload> {
   let fallbackDiffTextPromise: Promise<string> | undefined
   const fallbackDiffText = () => fallbackDiffTextPromise ??= loadFallbackDiffText()
 
@@ -88,20 +88,18 @@ export async function normalizePullRequest(
   )
 
   return {
-    meta: {
-      provider: 'github',
-      id: `github:${owner}/${repo}#${number}`,
-      title: pr.title,
-      description: pr.body ?? '',
-      url: pr.html_url,
-      base: { sha: pr.base.sha, ref: pr.base.ref },
-      head: { sha: pr.head.sha, ref: pr.head.ref },
-      createdAt: pr.created_at,
-      updatedAt: pr.updated_at,
-      pullRequest: {
-        author: pr.user?.login,
-        state: resolveState(pr),
-      },
+    provider: 'github',
+    id: `github:${owner}/${repo}#${number}`,
+    title: pr.title,
+    description: pr.body ?? '',
+    url: pr.html_url,
+    base: { sha: pr.base.sha, ref: pr.base.ref },
+    head: { sha: pr.head.sha, ref: pr.head.ref },
+    createdAt: pr.created_at,
+    updatedAt: pr.updated_at,
+    pullRequest: {
+      author: pr.user?.login,
+      state: resolveState(pr),
     },
     files: normalizedFiles,
   }

@@ -19,12 +19,10 @@ export const PasteProvider: Provider = {
     ])
 
     return {
-      meta: {
-        provider: 'paste',
-        id: `paste:${contentHash}`,
-        title: title ?? 'Pasted diff',
-        description: '',
-      },
+      provider: 'paste',
+      id: `paste:${contentHash}`,
+      title: title ?? 'Pasted diff',
+      description: '',
       files,
     }
   },

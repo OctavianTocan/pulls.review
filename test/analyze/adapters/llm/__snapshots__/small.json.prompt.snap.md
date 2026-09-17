@@ -1,5 +1,9 @@
 PR title: feat: add antislop option
-PR description: ## Description
+
+PR link: https://github.com/antfu/eslint-config/pull/861
+
+---DESCRIPTION---
+## Description
 
 Adds an opt-in, experimental `antislop` factory option to guard against low-value code patterns commonly introduced by AI agents, inspired by [this writeup on keeping AI-authored code clean](https://zenn.dev/singularity/articles/clean-code-ci-for-ai-era).
 
@@ -17,6 +21,7 @@ Note: 7 factory snapshots were already stale on `main` (from the earlier pnpm bl
 ---
 This PR was created with the help of an agent.
 
+---CHANGES---
 ### README.md [modified, +44/-0]
 @@ -814,6 +814,50 @@ Running `npx eslint` should prompt you to install the required dependencies, oth
  npm i -D @angular-eslint/eslint-plugin @angular-eslint/eslint-plugin-template @angular-eslint/template-parser
@@ -109,197 +114,7 @@ This PR was created with the help of an agent.
      "eslint-typegen": "catalog:dev",
 
 ### pnpm-lock.yaml [modified, +73/-0]
-@@ -116,9 +116,15 @@ catalogs:
-     eslint-plugin-react-refresh:
-       specifier: ^0.5.5
-       version: 0.5.5
-+    eslint-plugin-slop:
-+      specifier: ^0.1.1
-+      version: 0.1.1
-     eslint-plugin-solid:
-       specifier: ^0.17.0
-       version: 0.17.0
-+    eslint-plugin-sonarjs:
-+      specifier: ^4.2.0
-+      version: 4.2.0
-     eslint-plugin-svelte:
-       specifier: ^3.23.0
-       version: 3.23.0
-@@ -429,9 +435,15 @@ importers:
-       eslint-plugin-react-refresh:
-         specifier: catalog:peer
-         version: 0.5.5(eslint@10.9.1(jiti@2.7.0)(supports-color@7.2.0))
-+      eslint-plugin-slop:
-+        specifier: catalog:peer
-+        version: 0.1.1(eslint@10.9.1(jiti@2.7.0)(supports-color@7.2.0))
-       eslint-plugin-solid:
-         specifier: catalog:peer
-         version: 0.17.0(eslint@10.9.1(jiti@2.7.0)(supports-color@7.2.0))(supports-color@7.2.0)(typescript@6.0.3)
-+      eslint-plugin-sonarjs:
-+        specifier: catalog:peer
-+        version: 4.2.0(eslint@10.9.1(jiti@2.7.0)(supports-color@7.2.0))
-       eslint-plugin-svelte:
-         specifier: catalog:peer
-         version: 3.23.0(eslint@10.9.1(jiti@2.7.0)(supports-color@7.2.0))(svelte@5.57.0(@typescript-eslint/types@8.68.0))
-@@ -2222,6 +2234,10 @@ packages:
-     engines: {node: ^6 || ^7 || ^8 || ^9 || ^10 || ^11 || ^12 || >=13.7}
-     hasBin: true
- 
-+  builtin-modules@3.3.0:
-+    resolution: {integrity: sha512-zhaCDicdLuWN5UbN5IMnFqNMhNfo919sH85y2/ea+5Yg9TsTkeZxpL+JLbp6cgYFS4sRLp3YV4S6yDuqVWHYOw==}
-+    engines: {node: '>=6'}
-+
-   builtin-modules@5.2.0:
-     resolution: {integrity: sha512-02yxLeyxF4dNl6SlY6/5HfRSrSdZ/sCPoxy2kZNP5dZZX8LSAD9aE2gtJIUgWrsQTiMPl3mxESyrobSwvRGisQ==}
-     engines: {node: '>=18.20'}
-@@ -2231,6 +2247,10 @@ packages:
-     engines: {node: ^22.18.0 || ^24.11.0 || >=26.0.0}
-     hasBin: true
- 
-+  bytes@3.1.2:
-+    resolution: {integrity: sha512-/Nf7TyzTx6S3yRJObOAV7956r8cr2+Oj8AC5dt8wSP3BQAoeX58NoHyCU8P8zGkNXStjTSi6fzO6F0pBdcYbEg==}
-+    engines: {node: '>= 0.8'}
-+
-   cac@7.0.0:
-     resolution: {integrity: sha512-tixWYgm5ZoOD+3g6UTea91eow5z6AAHaho3g0V9CNSNb45gM8SmflpAc+GRd1InC4AqN/07Unrgp56Y94N9hJQ==}
-     engines: {node: '>=20.19.0'}
-@@ -2446,6 +2466,10 @@ packages:
-     resolution: {integrity: sha512-EjePK1srD3P08o2j4f0ExnylqRs5B9tJjcp9t1krH2qRi8CCdsYfwe9JgSLurFBWwq4uOlipzfk5fHNvwFKr8Q==}
-     engines: {node: ^14.15.0 || ^16.10.0 || >=18.0.0}
- 
-+  diff@9.0.0:
-+    resolution: {integrity: sha512-svtcdpS8CgJyqAjEQIXdb3OjhFVVYjzGAPO8WGCmRbrml64SPw/jJD4GoE98aR7r25A0XcgrK3F02yw9R/vhQw==}
-+    engines: {node: '>=0.3.1'}
-+
-   dts-resolver@3.0.0:
-     resolution: {integrity: sha512-1T1f+z+4tl9XD+m+0HBgWoL/nm0bOIffyWaUuUSBlFg/86IWvfx+wjNaO/ybU0AJzG9/Mi5hBUgGV6zCmWEN7Q==}
-     engines: {node: ^22.18.0 || >=24.0.0}
-@@ -2724,13 +2748,23 @@ packages:
-     peerDependencies:
-       eslint: '>=9.38.0'
- 
-+  eslint-plugin-slop@0.1.1:
-+    resolution: {integrity: sha512-Zcp3WvGF1uC1599Sg0ZZr9kFa/9nGYEDBbw+ZePXD/tuS0MhiiHXv2u5jTtOk1Ou9yxCoG5t3LqFDAV4T7Z9FA==}
-+    peerDependencies:
-+      eslint: ^10.0.0
-+
-   eslint-plugin-solid@0.17.0:
-     resolution: {integrity: sha512-0x38zjAZVm4vW5u5mS14WxO9BJsal3IxsR/8QOB2nBiXBdH1LlbbRs2YfqgtPWVpy3OIlnt6yGhoXuZmoHULwQ==}
-     engines: {node: '>=22.0.0'}
-     peerDependencies:
-       eslint: ^9.0.0 || ^10.0.0
-       typescript: '>=4.8.4'
- 
-+  eslint-plugin-sonarjs@4.2.0:
-+    resolution: {integrity: sha512-bqADfuNtTL7VK6RU29eoiFTtaaBKIpVPuX3bOl+rBpWSBa0zIBVZlqZNZQjfP6s4iXkAJokv5IsD8OsACkwApg==}
-+    peerDependencies:
-+      eslint: ^8.0.0 || ^9.0.0 || ^10.0.0
-+
-   eslint-plugin-svelte@3.23.0:
-     resolution: {integrity: sha512-n9jRklDqy0+W834568a4ZIZTK7DHXxvvHHxxGP8nNq7N//pOZMubttskHOquyGgfTR4Z05q2NdGNlsTpIEA48w==}
-     engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
-@@ -2985,6 +3019,9 @@ packages:
-     resolution: {integrity: sha512-jObKIik1P2QjPHP5nz5BaOtUlfgS0fWo8IUByNXkM+o+02sJOi94em77GwJKQSJ3gfPHdgzLNrHc1uokV4P/ew==}
-     engines: {node: '>= 0.4'}
- 
-+  functional-red-black-tree@1.0.1:
-+    resolution: {integrity: sha512-dsKNQNdj6xA3T+QlADDA7mOSlX0qiMINjn0cgr+eGHGsbSHzTabcIogz2+p/iqP1Xs6EP/sS2SbqH+brGTbq0g==}
-+
-   functions-have-names@1.2.3:
-     resolution: {integrity: sha512-xckBUXyTIqT97tq2x2AMb+g163b5JFysYk0x4qxNFwbfQkmNZoiRHb6sPzI9/QV33WeuvVYBUIiD4NzNIyqaRQ==}
- 
-@@ -3323,6 +3360,10 @@ packages:
-   jsonc-parser@3.3.1:
-     resolution: {integrity: sha512-HUgH65KyejrUFPvHFPbqOY0rsFip3Bo5wb4ngvdi1EpCYWUQDC5V+Y7mZws+DLkr4M//zQJoanu1SP+87Dv1oQ==}
- 
-+  jsx-ast-utils-x@0.1.0:
-+    resolution: {integrity: sha512-eQQBjBnsVtGacsG9uJNB8qOr3yA8rga4wAaGG1qRcBzSIvfhERLrWxMAM1hp5fcS6Abo8M4+bUBTekYR0qTPQw==}
-+    engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
-+
-   jsx-ast-utils@3.3.5:
-     resolution: {integrity: sha512-ZZow9HBI5O6EPgSJLUb8n2NKgmVWTwCvHGwFuJlMjvLFqlGG6pjirPhtdsseaLZjSibD8eegzmYpUZwoIlj2cQ==}
-     engines: {node: '>=4.0'}
-@@ -6042,6 +6083,8 @@ snapshots:
-       node-releases: 2.0.54
-       update-browserslist-db: 1.3.2(browserslist@4.28.8)
- 
-+  builtin-modules@3.3.0: {}
-+
-   builtin-modules@5.2.0: {}
- 
-   bumpp@12.2.2:
-@@ -6056,6 +6099,8 @@ snapshots:
-       verkit: 0.3.2
-       yaml: 2.9.0
- 
-+  bytes@3.1.2: {}
-+
-   cac@7.0.0: {}
- 
-   cached-factory@0.3.0: {}
-@@ -6233,6 +6278,8 @@ snapshots:
- 
-   diff-sequences@29.6.3: {}
- 
-+  diff@9.0.0: {}
-+
-   dts-resolver@3.0.0: {}
- 
-   dunder-proto@1.0.1:
-@@ -6691,6 +6738,11 @@ snapshots:
-       regexp-ast-analysis: 0.7.1
-       scslre: 0.3.0
- 
-+  eslint-plugin-slop@0.1.1(eslint@10.9.1(jiti@2.7.0)(supports-color@7.2.0)):
-+    dependencies:
-+      diff: 9.0.0
-+      eslint: 10.9.1(jiti@2.7.0)(supports-color@7.2.0)
-+
-   eslint-plugin-solid@0.17.0(eslint@10.9.1(jiti@2.7.0)(supports-color@7.2.0))(supports-color@7.2.0)(typescript@6.0.3):
-     dependencies:
-       '@typescript-eslint/utils': 8.68.0(eslint@10.9.1(jiti@2.7.0)(supports-color@7.2.0))(supports-color@7.2.0)(typescript@6.0.3)
-@@ -6704,6 +6756,23 @@ snapshots:
-     transitivePeerDependencies:
-       - supports-color
- 
-+  eslint-plugin-sonarjs@4.2.0(eslint@10.9.1(jiti@2.7.0)(supports-color@7.2.0)):
-+    dependencies:
-+      '@eslint-community/regexpp': 4.12.2
-+      builtin-modules: 3.3.0
-+      bytes: 3.1.2
-+      eslint: 10.9.1(jiti@2.7.0)(supports-color@7.2.0)
-+      functional-red-black-tree: 1.0.1
-+      globals: 17.11.0
-+      jsx-ast-utils-x: 0.1.0
-+      lodash.merge: 4.6.2
-+      minimatch: 10.2.5
-+      scslre: 0.3.0
-+      semver: 7.8.5
-+      ts-api-utils: 2.5.0(typescript@6.0.3)
-+      typescript: 6.0.3
-+      yaml: 2.9.0
-+
-   eslint-plugin-svelte@3.23.0(eslint@10.9.1(jiti@2.7.0)(supports-color@7.2.0))(svelte@5.57.0(@typescript-eslint/types@8.68.0)):
-     dependencies:
-       '@eslint-community/eslint-utils': 4.9.1(eslint@10.9.1(jiti@2.7.0)(supports-color@7.2.0))
-@@ -7037,6 +7106,8 @@ snapshots:
-       is-callable: 1.2.7
-       is-document.all: 1.0.0
- 
-+  functional-red-black-tree@1.0.1: {}
-+
-   functions-have-names@1.2.3: {}
- 
-   fzf@0.5.2: {}
-@@ -7370,6 +7441,8 @@ snapshots:
- 
-   jsonc-parser@3.3.1: {}
- 
-+  jsx-ast-utils-x@0.1.0: {}
-+
-   jsx-ast-utils@3.3.5:
-     dependencies:
-       array-includes: 3.1.9
+(generated file, diff omitted to save tokens)
 
 ### pnpm-workspace.yaml [modified, +3/-0]
 @@ -4,6 +4,7 @@ minimumReleaseAgeExcludePrune: true

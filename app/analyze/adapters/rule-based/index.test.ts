@@ -1,15 +1,18 @@
-import type { PullRequestDiff } from '../../../types/diff'
+import type { DiffsPayload } from '../../../types/diff'
 import { describe, expect, it } from 'vitest'
 import { ruleBasedAdapter } from './index'
 
-function file(path: string, isBinary = false): PullRequestDiff['files'][number] {
+function file(path: string, isBinary = false): DiffsPayload['files'][number] {
   return { path, status: 'modified', additions: 1, deletions: 0, isBinary, sha: path, hunks: [] }
 }
 
 describe('ruleBasedAdapter', () => {
   it('groups files across multiple categories, flat (no nesting)', async () => {
-    const diff: PullRequestDiff = {
-      meta: { provider: 'github', id: 'github:o/r#1', title: 't', description: '' },
+    const diff: DiffsPayload = {
+      provider: 'github',
+      id: 'github:o/r#1',
+      title: 't',
+      description: '',
       files: [file('src/index.ts'), file('src/index.test.ts'), file('README.md'), file('package.json')],
     }
     const result = await ruleBasedAdapter.analyze(diff)
@@ -27,8 +30,11 @@ describe('ruleBasedAdapter', () => {
   })
 
   it('falls back to the code category for anything unmatched', async () => {
-    const diff: PullRequestDiff = {
-      meta: { provider: 'github', id: 'github:o/r#1', title: 't', description: '' },
+    const diff: DiffsPayload = {
+      provider: 'github',
+      id: 'github:o/r#1',
+      title: 't',
+      description: '',
       files: [file('src/weird-file.xyz')],
     }
     const result = await ruleBasedAdapter.analyze(diff)
@@ -37,8 +43,11 @@ describe('ruleBasedAdapter', () => {
   })
 
   it('puts binary files (images, fonts, ...) under "other", regardless of path', async () => {
-    const diff: PullRequestDiff = {
-      meta: { provider: 'github', id: 'github:o/r#1', title: 't', description: '' },
+    const diff: DiffsPayload = {
+      provider: 'github',
+      id: 'github:o/r#1',
+      title: 't',
+      description: '',
       files: [file('docs/logo.png', true), file('src/index.ts')],
     }
     const result = await ruleBasedAdapter.analyze(diff)
@@ -52,8 +61,11 @@ describe('ruleBasedAdapter', () => {
   })
 
   it('gives every group a human label and a basic summary, even without an LLM', async () => {
-    const diff: PullRequestDiff = {
-      meta: { provider: 'github', id: 'github:o/r#1', title: 't', description: '' },
+    const diff: DiffsPayload = {
+      provider: 'github',
+      id: 'github:o/r#1',
+      title: 't',
+      description: '',
       files: [file('src/index.ts')],
     }
     const result = await ruleBasedAdapter.analyze(diff)

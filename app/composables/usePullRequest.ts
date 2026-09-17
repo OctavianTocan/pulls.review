@@ -1,6 +1,6 @@
 import type { Ref } from 'vue'
 import type { GroupedResult, GroupSource } from '../types/analyze'
-import type { PullRequestDiff } from '../types/diff'
+import type { DiffsPayload } from '../types/diff'
 import type { FetchDiffParams } from '../types/provider'
 import { computed, ref } from 'vue'
 import { resolveAdapter } from '../analyze'
@@ -12,7 +12,7 @@ import { fetchPullRequest } from '../providers/github/api'
 import { useProvider } from './useProvider'
 
 export interface UsePullRequestReturn {
-  diff: Ref<PullRequestDiff | undefined>
+  diff: Ref<DiffsPayload | undefined>
   grouped: Ref<GroupedResult | undefined>
   isLoading: Ref<boolean>
   error: Ref<Error | undefined>
@@ -31,7 +31,7 @@ export interface UsePullRequestReturn {
 }
 
 export function usePullRequest(params: FetchDiffParams, opts: { token?: string } = {}): UsePullRequestReturn {
-  const diff = ref<PullRequestDiff>()
+  const diff = ref<DiffsPayload>()
   const analyzedBy = ref<Partial<Record<GroupSource, GroupedResult>>>({})
   const isLoading = ref(false)
   const error = ref<Error>()
@@ -76,7 +76,7 @@ export function usePullRequest(params: FetchDiffParams, opts: { token?: string }
     await runAnalysis('llm')
   }
 
-  async function analyzeAndStore(key: string, freshDiff: PullRequestDiff) {
+  async function analyzeAndStore(key: string, freshDiff: DiffsPayload) {
     const storage = await getDefaultCacheStorage()
     const result = await ruleBasedAdapter.analyze(freshDiff)
     diff.value = freshDiff
@@ -86,7 +86,7 @@ export function usePullRequest(params: FetchDiffParams, opts: { token?: string }
     await putEntry(storage, {
       key,
       diff: freshDiff,
-      headSha: freshDiff.meta.head?.sha ?? '',
+      headSha: freshDiff.head?.sha ?? '',
       analyzedBy: freshAnalyzedBy,
       lastViewedAt: Date.now(),
       sizeBytes: computeEntrySizeBytes(freshDiff, freshAnalyzedBy),
@@ -100,7 +100,7 @@ export function usePullRequest(params: FetchDiffParams, opts: { token?: string }
   async function fetchFresh() {
     const provider = useProvider(params.kind === 'github-pr' ? 'github' : 'paste')
     const freshDiff = await provider.fetchDiff(params, opts)
-    const key = freshDiff.meta.id // already `github:owner/repo#number` or `paste:<contentHash>`, matching pr-cache's key scheme
+    const key = freshDiff.id // already `github:owner/repo#number` or `paste:<contentHash>`, matching pr-cache's key scheme
     await analyzeAndStore(key, freshDiff)
     return key
   }
@@ -142,7 +142,7 @@ export function usePullRequest(params: FetchDiffParams, opts: { token?: string }
         // let the cache short-circuit re-analysis on a same-session revisit (e.g. a reload).
         const provider = useProvider('paste')
         const freshDiff = await provider.fetchDiff(params, opts)
-        const key = freshDiff.meta.id // already `github:owner/repo#number` or `paste:<contentHash>`, matching pr-cache's key scheme
+        const key = freshDiff.id // already `github:owner/repo#number` or `paste:<contentHash>`, matching pr-cache's key scheme
         const storage = await getDefaultCacheStorage()
         const cached = await getEntry(storage, key)
         if (cached) {

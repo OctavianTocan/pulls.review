@@ -1,4 +1,4 @@
-import type { PullRequestDiff } from './diff'
+import type { DiffsPayload } from './diff'
 import * as v from 'valibot'
 
 export const ProviderCapabilitiesSchema = v.object({
@@ -31,5 +31,5 @@ export type FetchDiffParams = v.InferOutput<typeof FetchDiffParamsSchema>
 export interface Provider {
   readonly id: 'github' | 'local' | 'paste'
   readonly capabilities: ProviderCapabilities
-  fetchDiff: (params: FetchDiffParams, opts: { token?: string }) => Promise<PullRequestDiff>
+  fetchDiff: (params: FetchDiffParams, opts: { token?: string }) => Promise<DiffsPayload>
 }

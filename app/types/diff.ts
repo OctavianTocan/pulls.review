@@ -50,6 +50,7 @@ const RefSchema = v.object({
 /**
  * Universal across sources (github, local diffs, pasted diffs) so the same
  * view components can render any of them without knowing which produced it.
+ * Carries its own `files` directly - there is no separate "diff" wrapper type.
  */
 export const DiffsPayloadSchema = v.object({
   provider: v.picklist(['github', 'local', 'paste']),
@@ -65,22 +66,6 @@ export const DiffsPayloadSchema = v.object({
   createdAt: v.optional(v.string()),
   updatedAt: v.optional(v.string()),
   pullRequest: v.optional(PullRequestMetaSchema),
-})
-export type DiffsPayload = v.InferOutput<typeof DiffsPayloadSchema>
-
-export const PullRequestDiffSchema = v.object({
-  meta: DiffsPayloadSchema,
   files: v.array(FileChangeSchema),
 })
-export type PullRequestDiff = v.InferOutput<typeof PullRequestDiffSchema>
-
-/**
- * Parses a github-provider `DiffsPayload.id` (`github:{owner}/{repo}#{number}`) back
- * into its parts - `undefined` for a paste/local id, which has no such structure.
- */
-export function parseGithubDiffId(id: string): { owner: string, repo: string, number: string } | undefined {
-  const match = id.match(/^github:([^/]+)\/([^#]+)#(\d+)$/)
-  if (!match)
-    return undefined
-  return { owner: match[1]!, repo: match[2]!, number: match[3]! }
-}
+export type DiffsPayload = v.InferOutput<typeof DiffsPayloadSchema>

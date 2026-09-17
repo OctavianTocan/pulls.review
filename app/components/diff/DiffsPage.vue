@@ -1,18 +1,18 @@
 <script setup lang="ts">
 import type { GroupedResult, GroupSource } from '../../types/analyze'
-import type { PullRequestDiff } from '../../types/diff'
+import type { DiffsPayload } from '../../types/diff'
 import ActionButton from '@antfu/design/components/Action/ActionButton.vue'
 import FeedbackEmptyState from '@antfu/design/components/Feedback/FeedbackEmptyState.vue'
 import FeedbackLoading from '@antfu/design/components/Feedback/FeedbackLoading.vue'
 import { useEventListener } from '@vueuse/core'
-import { computed, ref } from 'vue'
+import { computed, nextTick, ref, watch } from 'vue'
 import DiffGroup from './DiffGroup.vue'
 import DiffsHeader from './DiffsHeader.vue'
 import { resolveGroups } from './group-utils'
 
 const props = defineProps<{
   document?: Document | ShadowRoot
-  diff?: PullRequestDiff
+  diff?: DiffsPayload
   grouped?: GroupedResult
   layout: 'split' | 'unified'
   reviewed: Set<string>
@@ -62,12 +62,30 @@ function toggleGroup(key: string) {
 const scrollY = ref(0)
 useEventListener(() => props.document ?? document, 'scroll', (event) => {
   scrollY.value = event.target instanceof Element ? event.target.scrollTop : window.scrollY
+  updateVisibleGroups()
 }, { capture: true })
 
-const groupsVisable = computed((): string[] => {
-  // TODO: return the visable group's keys
-  return []
-})
+// top-40 (160px) approximates the sticky DiffsHeader's own height (see DiffGroup.vue's
+// aside for the same constant) - a group counts as "visible" once it's scrolled past
+// that, not merely past the very top of the viewport.
+const HEADER_HEIGHT_PX = 160
+const groupsVisable = ref<string[]>([])
+function updateVisibleGroups() {
+  const root = props.document ?? document
+  const viewportHeight = window.innerHeight
+  groupsVisable.value = resolvedGroups.value
+    .filter((group) => {
+      const el = root.getElementById(`group-${group.key}`)
+      if (!el)
+        return false
+      const rect = el.getBoundingClientRect()
+      return rect.bottom > HEADER_HEIGHT_PX && rect.top < viewportHeight
+    })
+    .map(group => group.key)
+}
+// Groups render async (v-for over `resolvedGroups`), so the first measurement has to
+// wait for that DOM to actually exist - re-run whenever the group list itself changes.
+watch(resolvedGroups, () => nextTick(updateVisibleGroups), { immediate: true })
 </script>
 
 <template>
@@ -98,7 +116,7 @@ const groupsVisable = computed((): string[] => {
     <template v-else-if="diff && grouped">
       <DiffsHeader
         :document
-        :meta="diff.meta"
+        :meta="diff"
         :layout="layout"
         :reviewed-count="reviewedCount"
         :total-files="diff.files.length"

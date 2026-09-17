@@ -35,7 +35,7 @@ Two pluggable-adapter boundaries exist so that adding a data source or an
 analysis strategy later never touches the view layer:
 
 - **`Provider`** (`app/providers/`) fetches + normalizes a diff from some
-  source into the canonical `PullRequestDiff` shape, and declares its
+  source into the canonical `DiffsPayload` shape, and declares its
   capabilities (`supportsAuth`, `supportsComments`, ...). `FetchDiffParams` is
   a discriminated union (by `kind`) so each provider only accepts params that
   make sense for its source. Implementations:
@@ -54,7 +54,7 @@ analysis strategy later never touches the view layer:
   infrastructure, not itself a provider: `github`'s normalizer falls back to
   it only for files whose `patch` GitHub's JSON API omitted (very large
   diffs); `paste` uses it as its only parsing path; `local` will too.
-- **`AnalyzeAdapter`** (`app/analyze/`) turns a `PullRequestDiff` into a
+- **`AnalyzeAdapter`** (`app/analyze/`) turns a `DiffsPayload` into a
   `GroupedResult` (grouped files + optional summaries). Each
   adapter lives in its own folder (`app/analyze/adapters/{id}/index.ts`):
   - `none` — implemented. A single flat group containing every file, for
@@ -71,14 +71,14 @@ analysis strategy later never touches the view layer:
     total — enforced structurally in the schema (child groups have no further
     `children`), not by convention.
 - **View components** (`app/components/`) MUST stay pure and data-driven:
-  props in (`PullRequestDiff`, `GroupedResult`, reviewed-state sets), events
+  props in (`DiffsPayload`, `GroupedResult`, reviewed-state sets), events
   out (`update:reviewed`, etc.). They MUST NOT know which provider or analyze
   adapter produced their data, and MUST NOT talk to storage directly — that
   keeps them Storybook-friendly and provider/adapter-agnostic.
 
 ## Canonical data structures
 
-All canonical shapes (`PullRequestDiff`, `GroupedResult`, `PrCacheEntry`,
+All canonical shapes (`DiffsPayload`, `GroupedResult`, `PrCacheEntry`,
 `FileReviewState`, ...) are defined as `valibot` schemas first, with the TS
 type derived via `v.InferOutput`. Runtime validation happens at the two
 boundaries that see untrusted/versioned data: normalizing a provider's raw
