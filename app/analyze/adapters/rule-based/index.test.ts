@@ -16,7 +16,6 @@ describe('ruleBasedAdapter', () => {
 
     expect(result.source).toBe('rule-based')
     expect(result.overallSummary).toBeUndefined()
-    expect(result.walkthrough).toBeUndefined()
     for (const group of result.groups)
       expect(group.children).toBeUndefined()
 

@@ -23,9 +23,8 @@ management product.
    generated / other, or LLM-defined groups) instead of presented as
    one flat list, so a reviewer can skip straight to what matters.
 2. **Summarization** — when an LLM is configured, each group (and the PR as
-   a whole) gets a short written summary, with an optional fuller narrative
-   walkthrough. Without one, a fast deterministic rule-based grouping still
-   gives structure for free.
+   a whole) gets a short written summary. Without one, a fast deterministic
+   rule-based grouping still gives structure for free.
 3. **Performance** — large PRs (hundreds of files, huge individual files)
    should stay fast via virtualization, not degrade the way GitHub's own UI
    does.
@@ -36,9 +35,9 @@ management product.
 
 ## Longer-term direction (see `01-architecture.md` for what's deferred vs. built)
 
-- LLM-powered analysis (richer summaries/walkthroughs) as an opt-in
-  alongside the always-available rule-based fallback, plus a fully
-  in-browser (`web-llm`) option requiring no API key at all.
+- LLM-powered analysis (richer summaries) as an opt-in alongside the
+  always-available rule-based fallback, plus a fully in-browser (`web-llm`)
+  option requiring no API key at all.
 - Reviewing PRs interactively from within Diffs: seeing and replying to
   existing GitHub review comment threads.
 - Sources beyond GitHub: pasted/uploaded raw patches (built early, since

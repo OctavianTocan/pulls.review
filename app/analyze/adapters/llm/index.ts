@@ -44,7 +44,7 @@ async function analyzeChunked(diff: PullRequestDiff, model: NonNullable<ReturnTy
     output: Output.object({ schema: toModelSchema(SynthesisSchema) }),
   })
 
-  return { overallSummary: synthesis.overallSummary, groups, walkthrough: synthesis.walkthrough }
+  return { overallSummary: synthesis.overallSummary, groups }
 }
 
 /**
@@ -104,7 +104,6 @@ export const llmAdapter: AnalyzeAdapter = {
       const core: GroupedResultCore = {
         overallSummary: analysis.overallSummary,
         groups: reconcile(diff, analysis),
-        walkthrough: analysis.walkthrough,
         schemaVersion: LLM_SCHEMA_VERSION,
       }
       return normalizeGroupedResult('llm', core)

@@ -68,7 +68,6 @@ describe('llmAdapter.analyze', () => {
         groups: [
           { key: 'feature', label: 'Feature', filePaths: [], children: [{ key: 'feature/core', label: 'Core', filePaths: ['a.ts'] }] },
         ],
-        walkthrough: [{ title: 'Add feature', narrative: 'Implements the thing.', filePaths: ['a.ts'] }],
       },
     } as any)
 
@@ -77,7 +76,6 @@ describe('llmAdapter.analyze', () => {
 
     expect(result.source).toBe('llm')
     expect(result.overallSummary).toBe('Adds a feature.')
-    expect(result.walkthrough).toHaveLength(1)
     expect(result.groups[0]?.children?.[0]?.filePaths).toEqual(['a.ts'])
     expect(generateTextMock).toHaveBeenCalledTimes(1)
   })

@@ -42,13 +42,6 @@ export const DiffGroupSchema = v.object({
 })
 export type DiffGroup = v.InferOutput<typeof DiffGroupSchema>
 
-export const WalkthroughStepSchema = v.object({
-  title: v.pipe(v.string(), v.description('Short title for this walkthrough step.')),
-  narrative: v.pipe(v.string(), v.description('A few sentences narrating this step for a reviewer, rendered as Markdown.')),
-  filePaths: v.pipe(v.array(v.string()), v.description('The file paths this step is about.')),
-})
-export type WalkthroughStep = v.InferOutput<typeof WalkthroughStepSchema>
-
 /**
  * What an adapter itself decides by analyzing the diff. `source` (which adapter ran)
  * and `generatedAt` (when) are invocation metadata the caller already knows - not
@@ -58,7 +51,6 @@ export type WalkthroughStep = v.InferOutput<typeof WalkthroughStepSchema>
 export const GroupedResultCoreSchema = v.object({
   overallSummary: v.optional(v.pipe(v.string(), v.description('Short paragraph summarizing the whole PR for a reviewer, rendered as Markdown.'))), // only when an 'llm' or 'web-llm' adapter has run
   groups: v.array(DiffGroupSchema),
-  walkthrough: v.optional(v.array(WalkthroughStepSchema)), // only when an llm/web-llm adapter has run; absent for rule-based
   schemaVersion: v.number(), // bump on breaking shape changes, used for cache invalidation
 })
 export type GroupedResultCore = v.InferOutput<typeof GroupedResultCoreSchema>

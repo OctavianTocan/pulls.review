@@ -44,7 +44,7 @@ function updateLlm<K extends keyof LlmSettings>(llmSettings: LlmSettings, key: K
           Model providers
         </h3>
         <p class="text-sm color-faint">
-          Configure any one of these to enable AI-generated summaries and walkthroughs. Stored only in this browser and sent only to the provider you configure.
+          Configure any one of these to enable AI-generated summaries. Stored only in this browser and sent only to the provider you configure.
         </p>
       </div>
 

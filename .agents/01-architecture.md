@@ -55,7 +55,7 @@ analysis strategy later never touches the view layer:
   it only for files whose `patch` GitHub's JSON API omitted (very large
   diffs); `paste` uses it as its only parsing path; `local` will too.
 - **`AnalyzeAdapter`** (`app/analyze/`) turns a `PullRequestDiff` into a
-  `GroupedResult` (grouped files + optional summaries/walkthrough). Each
+  `GroupedResult` (grouped files + optional summaries). Each
   adapter lives in its own folder (`app/analyze/adapters/{id}/index.ts`):
   - `none` — implemented. A single flat group containing every file, for
     users who just want the plain file list with no classification.
