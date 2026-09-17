@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import { computed, onBeforeUnmount, onMounted, ref, useTemplateRef } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref, useTemplateRef, watch } from 'vue'
 import { useEmbedDark } from './dark'
 import EmbedPrView from './EmbedPrView.vue'
+import { injectGithubPageStyles, PANEL_OPEN_CLASS, setupFilesTabToggle } from './githubIntegration'
 
 const WIDTH_STORAGE_KEY = 'diffs-embed:drawer-width'
 const DEFAULT_WIDTH = 800
@@ -46,13 +47,26 @@ const width = ref(loadWidth())
 // fresh instance (and fresh data fetch) per PR, same as a routed page's fresh mount.
 function syncPr() {
   pr.value = parsePr(location.pathname)
-  if (!pr.value)
+  if (!pr.value) {
     open.value = false
+    return
+  }
+  // Turbo swaps in a fresh tab bar per PR navigation, taking our inserted button
+  // with it - re-run both on every navigation, not just the initial mount.
+  injectGithubPageStyles()
+  setupFilesTabToggle(toggleOpen)
 }
 
 function toggleOpen() {
   open.value = !open.value
 }
+
+// The drawer only ever renders inside this component's own shadow root, but
+// `[id="diff-comparison-viewer-container"]` is GitHub's own element on the real
+// page - toggling this class there is how it finds out the drawer is open.
+watch(open, (isOpen) => {
+  window.document.body.classList.toggle(PANEL_OPEN_CLASS, isOpen)
+})
 
 let dragStartX = 0
 let dragStartWidth = 0
@@ -89,10 +103,15 @@ onMounted(() => {
   // regardless of where this custom element is mounted - not the shadow root.
   window.document.addEventListener('turbo:load', syncPr)
   window.addEventListener('popstate', syncPr)
+  if (pr.value) {
+    injectGithubPageStyles()
+    setupFilesTabToggle(toggleOpen)
+  }
 })
 onBeforeUnmount(() => {
   window.document.removeEventListener('turbo:load', syncPr)
   window.removeEventListener('popstate', syncPr)
+  window.document.body.classList.remove(PANEL_OPEN_CLASS)
 })
 </script>
 
