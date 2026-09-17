@@ -8,9 +8,9 @@ import DiffsPage from '../components/diff/DiffsPage.vue'
 import { UPLOAD_SESSION_STORAGE_KEY } from '../composables/uploadSession'
 import { usePullRequest } from '../composables/usePullRequest'
 import { useReviewedFiles } from '../composables/useReviewedFiles'
+import { layout } from '../state/layout'
 
 const router = useRouter()
-const layout = ref<'split' | 'unified'>('unified')
 const hasPending = ref(false)
 
 const pending = (() => {

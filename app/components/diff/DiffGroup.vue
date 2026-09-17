@@ -114,7 +114,7 @@ function navigateToFile(sha: string) {
         <template v-if="!collapsed">
           <FileDiff
             v-for="file of group.files"
-            :key="`${file.sha}:${layout}`"
+            :key="file.sha"
             :ref="el => setFileDiffRef(file.sha, el as InstanceType<typeof FileDiff> | null)"
             :file="file"
             :layout="layout"

@@ -75,18 +75,23 @@ function onResizeDown(event: PointerEvent) {
   handle.addEventListener('pointerup', onResizeUp)
 }
 
-// `ownerDocument` is always the top-level `Document`, even for a node inside a shadow
-// tree - `getRootNode()` is the one that actually returns the ShadowRoot, which is
-// what anything mounting/querying "within this component" (the quick-nav scroll
-// target, AppModal's Teleport target) needs to stay inside the shadow boundary.
-const hostContainer = computed(() => (rootRef.value?.getRootNode() ?? document) as Document | ShadowRoot)
+// Named `document` (not `hostContainer`) deliberately: shadowing the global forces
+// every reference below to make an explicit choice between "this component's
+// document" and `window.document`, the actual top-level one - the same mistake
+// class as the earlier bug where `ownerDocument` (always the top `Document`, even
+// for a shadow-tree node) was used where `getRootNode()` (the actual ShadowRoot)
+// was needed. Anything mounting/querying "within this component" (the quick-nav
+// scroll target, AppModal's Teleport target) should read this, not the bare global.
+const document = computed(() => (rootRef.value?.getRootNode() ?? window.document) as Document | ShadowRoot)
 
 onMounted(() => {
-  document.addEventListener('turbo:load', syncPr)
+  // Turbo's own navigation event always fires on the real top-level document,
+  // regardless of where this custom element is mounted - not the shadow root.
+  window.document.addEventListener('turbo:load', syncPr)
   window.addEventListener('popstate', syncPr)
 })
 onBeforeUnmount(() => {
-  document.removeEventListener('turbo:load', syncPr)
+  window.document.removeEventListener('turbo:load', syncPr)
   window.removeEventListener('popstate', syncPr)
 })
 </script>
@@ -120,7 +125,7 @@ onBeforeUnmount(() => {
       </header>
       <EmbedPrView
         v-if="pr"
-        :key="prKey" :owner="pr.owner" :repo="pr.repo" :number="pr.number" :host-container="hostContainer" class="flex-1 min-h-0 overflow-auto"
+        :key="prKey" :owner="pr.owner" :repo="pr.repo" :number="pr.number" :document="document" class="flex-1 min-h-0 overflow-auto"
       />
     </div>
   </div>

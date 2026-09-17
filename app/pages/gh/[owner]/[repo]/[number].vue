@@ -2,17 +2,15 @@
 import ActionButton from '@antfu/design/components/Action/ActionButton.vue'
 import FeedbackEmptyState from '@antfu/design/components/Feedback/FeedbackEmptyState.vue'
 import FeedbackLoading from '@antfu/design/components/Feedback/FeedbackLoading.vue'
-import { computed, onMounted, ref, watch } from 'vue'
+import { computed, onMounted, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import DiffsPage from '../../../../components/diff/DiffsPage.vue'
 import { usePullRequest } from '../../../../composables/usePullRequest'
 import { useReviewedFiles } from '../../../../composables/useReviewedFiles'
-import { useSettings } from '../../../../composables/useSettings'
+import { layout } from '../../../../state/layout'
+import { githubToken } from '../../../../state/settings'
 
 const route = useRoute()
-const { githubToken } = useSettings()
-
-const layout = ref<'split' | 'unified'>('unified')
 
 const params = computed(() => ({
   kind: 'github-pr' as const,

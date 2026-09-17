@@ -2,26 +2,23 @@
 import ActionButton from '@antfu/design/components/Action/ActionButton.vue'
 import FeedbackEmptyState from '@antfu/design/components/Feedback/FeedbackEmptyState.vue'
 import FeedbackLoading from '@antfu/design/components/Feedback/FeedbackLoading.vue'
-import { computed, onMounted, ref, watch } from 'vue'
+import { computed, onMounted, watch } from 'vue'
 import DiffsPage from '../components/diff/DiffsPage.vue'
 import { usePullRequest } from '../composables/usePullRequest'
 import { useReviewedFiles } from '../composables/useReviewedFiles'
-import { useSettings } from '../composables/useSettings'
+import { layout } from '../state/layout'
+import { githubToken } from '../state/settings'
 
 // Mirrors `pages/gh/[owner]/[repo]/[number].vue`'s wiring, from plain props instead of
 // route params - there's no router here. `EmbedApp.ce.vue` gives this a `:key` per PR,
 // so a fresh instance (and fresh `usePullRequest` call) is created per navigation,
 // same as the routed page getting a fresh mount per route change.
 const props = defineProps<{
-  hostContainer?: Document | ShadowRoot
+  document?: Document | ShadowRoot
   owner: string
   repo: string
   number: string
 }>()
-
-const { githubToken } = useSettings()
-
-const layout = ref<'split' | 'unified'>('unified')
 
 const params = computed(() => ({
   kind: 'github-pr' as const,
@@ -48,7 +45,7 @@ watch(() => diff.value?.meta.id, (id, previousId) => {
 
 <template>
   <DiffsPage
-    :host-container
+    :document
     :diff="diff"
     :grouped="grouped"
     :layout="layout"

@@ -4,7 +4,7 @@ import ActionIconButton from '@antfu/design/components/Action/ActionIconButton.v
 import DisplayFilePath from '@antfu/design/components/Display/DisplayFilePath.vue'
 import FormCheckbox from '@antfu/design/components/Form/FormCheckbox.vue'
 import { FileDiff as PierreFileDiff, processFile } from '@pierre/diffs'
-import { inject, onBeforeUnmount, onMounted, ref, useTemplateRef, watch } from 'vue'
+import { computed, inject, onBeforeUnmount, onMounted, ref, useTemplateRef, watch } from 'vue'
 import { isDark as globalIsDark, isDarkKey } from '../../state/dark'
 import DiffStats from './DiffStats.vue'
 import FileStatus from './FileStatus.vue'
@@ -48,19 +48,24 @@ function buildUnifiedDiffText(file: FileChange): string {
   return lines.join('\n')
 }
 
-function render() {
-  if (!containerRef.value || props.file.isBinary || collapsed.value)
+const fileDiff = computed(() => {
+  if (collapsed.value || props.file.isBinary)
     return
-  const fileDiff = processFile(buildUnifiedDiffText(props.file))
-  if (!fileDiff)
-    return
-  ensurePierreDiffsShadowRoot(containerRef.value)
+  return processFile(buildUnifiedDiffText(props.file))
+})
+
+function mount() {
   // Recreated on every render rather than reused + `setOptions()`: switching `diffStyle`
   // (unified/split) on an existing instance left stale, un-columned DOM behind. `cleanUp()`
   // would otherwise `.remove()` our own template-owned container from the DOM entirely
   // (its default assumption is that it created the container itself) - the third
   // `isContainerManaged: true` constructor arg opts out of that.
   instance?.cleanUp()
+
+  if (!containerRef.value || props.file.isBinary || collapsed.value || !fileDiff.value)
+    return
+
+  ensurePierreDiffsShadowRoot(containerRef.value)
   // `disableFileHeader`: we render our own header (filename, status, +/-, reviewed
   // checkbox) above the diff body, so pierre's own file-header row would be redundant.
   // `themeType`: defaults to `'system'` (OS-level `prefers-color-scheme`) otherwise,
@@ -71,17 +76,43 @@ function render() {
     disableErrorHandling: false,
     disableFileHeader: true,
   }, undefined, true)
-  instance.render({ fileDiff, fileContainer: containerRef.value })
+
+  instance.render({
+    fileDiff: fileDiff.value,
+    fileContainer: containerRef.value,
+  })
 }
 
-onMounted(render)
+onMounted(mount)
 onBeforeUnmount(() => instance?.cleanUp())
 
-watch(() => [props.layout, collapsed.value, props.file], () => render(), { deep: false, flush: 'post' })
+watch(() => [collapsed.value], () => mount(), { deep: false, flush: 'post' })
 
 watch(isDark, (dark) => {
   instance?.setThemeType(dark ? 'dark' : 'light')
 })
+
+watch(
+  () => props.layout,
+  (layout) => {
+    instance?.setOptions({
+      diffStyle: layout,
+    })
+  },
+)
+
+watch(
+  () => [fileDiff.value, containerRef.value] as const,
+  ([fileDiff, containerRef]) => {
+    if (!fileDiff || !containerRef) {
+      return
+    }
+    instance?.render({
+      fileDiff,
+      fileContainer: containerRef,
+    })
+  },
+)
 
 watch(() => props.reviewed, (isReviewed) => {
   // Auto-collapse a file once it's marked reviewed (and re-expand it if unmarked) - it's

@@ -70,7 +70,7 @@ export async function buildEmbedCSS() {
   }
 
   const reset = await fs.readFile(require.resolve('@unocss/reset/tailwind.css'), 'utf-8')
-  const mainCss = await fs.readFile(join(root, 'app/assets/css/main.css'), 'utf-8')
+  const mainCss = await fs.readFile(join(root, 'app/main.css'), 'utf-8')
 
   const { css: unoCss } = await generator.generate(tokens)
   // Dedicated pass for the surface safelist (see its own comment) - always present,

@@ -12,7 +12,7 @@ import DiffStats from './DiffStats.vue'
 import PrStatusIcon from './PrStatusIcon.vue'
 
 const props = defineProps<{
-  hostContainer?: Document | ShadowRoot
+  document?: Document | ShadowRoot
   meta: DiffsPayload
   layout: 'split' | 'unified'
   reviewedCount: number
@@ -20,7 +20,6 @@ const props = defineProps<{
   additions: number
   deletions: number
   isEmbedded?: boolean
-  /** Top-level groups, for the quick-nav row - matches ids the page gives each group section. */
   groups: { key: string, label: string }[]
 }>()
 
@@ -39,15 +38,15 @@ const layoutOptions = [
 const githubRef = computed(() => props.meta.provider === 'github' ? parseGithubDiffId(props.meta.id) : undefined)
 
 function scrollToGroup(key: string) {
-  (props.hostContainer || document).getElementById(`group-${key}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  (props.document ?? document).getElementById(`group-${key}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
 }
 
 // `scroll` doesn't bubble, but a capture-phase listener still sees it on the way down
-// regardless - attaching on `hostContainer` (the embed's shadow root, where the actual
-// scrolling element is a descendant `overflow-auto` div) or `document` (the main
-// site, where the page itself scrolls) both work the same way.
+// regardless - attaching on `props.document` (the embed's shadow root, where the actual
+// scrolling element is a descendant `overflow-auto` div) or the real `document` (the
+// main site, where the page itself scrolls) both work the same way.
 const y = ref(0)
-useEventListener(() => props.hostContainer ?? document, 'scroll', (event) => {
+useEventListener(() => props.document ?? document, 'scroll', (event) => {
   y.value = event.target instanceof Element ? event.target.scrollTop : window.scrollY
 }, { capture: true })
 
@@ -75,7 +74,7 @@ useEventListener(() => props.hostContainer ?? document, 'scroll', (event) => {
           :options="layoutOptions"
           @update:model-value="emit('update:layout', $event as 'split' | 'unified')"
         />
-        <NavControls v-if="!isEmbedded" class="shrink-0" :host-container="hostContainer" />
+        <NavControls v-if="!isEmbedded" class="shrink-0" :document="document" />
       </div>
 
       <div class="text-sm op-fade flex flex-wrap gap-x-3 gap-y-1 items-center">

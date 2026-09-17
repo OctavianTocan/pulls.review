@@ -4,14 +4,14 @@ import { computed, onBeforeUnmount, watch } from 'vue'
 // A minimal in-house replacement for `@antfu/design`'s `OverlayModal`: that one's
 // `reka-ui` `DialogPortal` always teleports to `document.body`, which - inside the
 // GitHub-embed custom element - escapes the shadow root entirely and renders
-// unstyled directly on the host page. `hostContainer` (the embed's own shadow root,
-// see `EmbedApp.ce.vue`) lets this Teleport stay inside it instead; the main site
-// (no `hostContainer`) keeps teleporting to `document.body` as before.
+// unstyled directly on the host page. `document` (the embed's own shadow root, see
+// `EmbedApp.ce.vue`) lets this Teleport stay inside it instead; the main site (no
+// `document` prop) keeps teleporting to the real `document.body` as before.
 const props = defineProps<{
   open: boolean
   title?: string
   description?: string
-  hostContainer?: Document | ShadowRoot
+  document?: Document | ShadowRoot
 }>()
 
 const emit = defineEmits<{
@@ -20,9 +20,9 @@ const emit = defineEmits<{
 
 // A `ShadowRoot` isn't a valid CSS selector, so Teleport's `to` (typed as
 // `string | HTMLElement` but happy with any target used directly) needs the
-// object itself, not a stringified target - `document` also isn't a selector,
-// so that case falls back to `'body'`.
-const teleportTarget = computed(() => props.hostContainer instanceof ShadowRoot ? props.hostContainer : 'body')
+// object itself, not a stringified target - the real `document` also isn't a
+// selector, so that case falls back to `'body'`.
+const teleportTarget = computed(() => props.document instanceof ShadowRoot ? props.document : 'body')
 
 function close() {
   emit('update:open', false)

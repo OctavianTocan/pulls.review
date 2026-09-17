@@ -6,7 +6,7 @@ import LoadDiffPanel from './LoadDiffPanel.vue'
 
 defineProps<{
   open: boolean
-  hostContainer?: Document | ShadowRoot
+  document?: Document | ShadowRoot
 }>()
 
 const emit = defineEmits<{
@@ -27,7 +27,7 @@ function handleSubmit(text: string, title?: string) {
     title="Load a diff"
     description="Paste or drop a unified diff / .patch file to review it."
     :open="open"
-    :host-container="hostContainer"
+    :document="document"
     @update:open="emit('update:open', $event ?? false)"
   >
     <LoadDiffPanel @submit="handleSubmit" />
