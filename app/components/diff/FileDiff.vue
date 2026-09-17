@@ -98,6 +98,7 @@ watch(
     instance?.setOptions({
       diffStyle: layout,
     })
+    instance?.rerender()
   },
 )
 
