@@ -1,5 +1,6 @@
-import type { AnalyzeAdapter, DiffCategory, DiffGroup, GroupedResult } from '../../../types/analyze'
+import type { AnalyzeAdapter, DiffCategory, DiffGroup, GroupedResultCore } from '../../../types/analyze'
 import picomatch from 'picomatch'
+import { normalizeGroupedResult } from '../../../types/analyze'
 import { defaultRules } from './rules'
 
 const FALLBACK_CATEGORY: DiffCategory = 'code'
@@ -68,12 +69,10 @@ export const ruleBasedAdapter: AnalyzeAdapter = {
     const groups = Array.from(groupsByCategory.values())
       .sort((a, b) => defaultRules.findIndex(rule => rule.category === a.key) - defaultRules.findIndex(rule => rule.category === b.key))
 
-    const result: GroupedResult = {
-      source: 'rule-based',
+    const core: GroupedResultCore = {
       groups,
-      generatedAt: new Date().toISOString(),
       schemaVersion: RULE_BASED_SCHEMA_VERSION,
     }
-    return result
+    return normalizeGroupedResult('rule-based', core)
   },
 }

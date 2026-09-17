@@ -49,15 +49,31 @@ export const WalkthroughStepSchema = v.object({
 })
 export type WalkthroughStep = v.InferOutput<typeof WalkthroughStepSchema>
 
-export const GroupedResultSchema = v.object({
-  source: GroupSourceSchema,
+/**
+ * What an adapter itself decides by analyzing the diff. `source` (which adapter ran)
+ * and `generatedAt` (when) are invocation metadata the caller already knows - not
+ * something the adapter decides - so they're stamped on separately to normalize this
+ * into the full `GroupedResultSchema` below, instead of every adapter repeating them.
+ */
+export const GroupedResultCoreSchema = v.object({
   overallSummary: v.optional(v.pipe(v.string(), v.description('Short paragraph summarizing the whole PR for a reviewer, rendered as Markdown.'))), // only when an 'llm' or 'web-llm' adapter has run
   groups: v.array(DiffGroupSchema),
   walkthrough: v.optional(v.array(WalkthroughStepSchema)), // only when an llm/web-llm adapter has run; absent for rule-based
-  generatedAt: v.string(),
   schemaVersion: v.number(), // bump on breaking shape changes, used for cache invalidation
 })
+export type GroupedResultCore = v.InferOutput<typeof GroupedResultCoreSchema>
+
+export const GroupedResultSchema = v.object({
+  ...GroupedResultCoreSchema.entries,
+  source: GroupSourceSchema,
+  generatedAt: v.string(),
+})
 export type GroupedResult = v.InferOutput<typeof GroupedResultSchema>
+
+/** Stamps the invocation metadata an adapter doesn't decide onto its analysis. */
+export function normalizeGroupedResult(source: GroupSource, core: GroupedResultCore): GroupedResult {
+  return { ...core, source, generatedAt: new Date().toISOString() }
+}
 
 export interface AnalyzeAdapter {
   readonly id: GroupSource // 'none' | 'rule-based' | 'llm' | 'web-llm'

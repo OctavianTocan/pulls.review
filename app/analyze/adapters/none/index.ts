@@ -1,4 +1,5 @@
-import type { AnalyzeAdapter, GroupedResult } from '../../../types/analyze'
+import type { AnalyzeAdapter, GroupedResultCore } from '../../../types/analyze'
+import { normalizeGroupedResult } from '../../../types/analyze'
 
 export const NONE_SCHEMA_VERSION = 1
 
@@ -6,12 +7,10 @@ export const noneAdapter: AnalyzeAdapter = {
   id: 'none',
   available: true,
   async analyze(diff) {
-    const result: GroupedResult = {
-      source: 'none',
+    const core: GroupedResultCore = {
       groups: [{ key: 'all', label: 'All files', filePaths: diff.files.map(file => file.path) }],
-      generatedAt: new Date().toISOString(),
       schemaVersion: NONE_SCHEMA_VERSION,
     }
-    return result
+    return normalizeGroupedResult('none', core)
   },
 }

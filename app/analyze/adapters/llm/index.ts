@@ -1,7 +1,8 @@
-import type { AnalyzeAdapter, DiffGroup, GroupedResult } from '../../../types/analyze'
+import type { AnalyzeAdapter, DiffGroup, GroupedResultCore } from '../../../types/analyze'
 import type { FileChange, PullRequestDiff } from '../../../types/diff'
 import type { Analysis } from './schema'
 import { generateText, Output } from 'ai'
+import { normalizeGroupedResult } from '../../../types/analyze'
 import { ruleBasedAdapter } from '../rule-based'
 import { chunkFiles } from './chunk'
 import { mergeGroups } from './merge'
@@ -100,15 +101,13 @@ export const llmAdapter: AnalyzeAdapter = {
         ? await analyzeWhole(diff, model)
         : await analyzeChunked(diff, model, chunks)
 
-      const result: GroupedResult = {
-        source: 'llm',
+      const core: GroupedResultCore = {
         overallSummary: analysis.overallSummary,
         groups: reconcile(diff, analysis),
         walkthrough: analysis.walkthrough,
-        generatedAt: new Date().toISOString(),
         schemaVersion: LLM_SCHEMA_VERSION,
       }
-      return result
+      return normalizeGroupedResult('llm', core)
     }
     catch {
       // A network failure, a misconfigured endpoint, or a response that doesn't fit
