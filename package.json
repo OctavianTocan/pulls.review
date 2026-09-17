@@ -4,7 +4,7 @@
   "private": true,
   "packageManager": "pnpm@12.4.2",
   "scripts": {
-    "build": "vite build && pnpm run build:embed",
+    "build": "pnpm run build:embed && vite build",
     "build:embed": "vite build --config vite.config.embed.ts",
     "dev": "vite",
     "play:embed": "pnpm run build:embed && vite --open /playgrounds/embed/",
