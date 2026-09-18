@@ -11,31 +11,18 @@ import { parseGithubDiffId } from '../../providers/github/diff-id'
 import DiffGroup from './DiffGroup.vue'
 import DiffsHeader from './DiffsHeader.vue'
 import { fileContentContextKey } from './file-content-context'
-import { resolveGroups } from './group-utils'
 
 const props = defineProps<{
   document?: Document | ShadowRoot
   store?: DiffsStore
-  layout: 'split' | 'unified'
-  isEmbedded?: boolean
-}>()
-
-const emit = defineEmits<{
-  'update:layout': [layout: 'split' | 'unified']
 }>()
 
 const diff = computed(() => props.store?.diff)
 const grouped = computed(() => props.store?.grouped)
-const reviewed = computed(() => props.store?.reviewed ?? new Set<string>())
 const isLoading = computed(() => props.store?.isLoading ?? false)
 const error = computed(() => props.store?.error)
 const isStale = computed(() => props.store?.isStale ?? false)
-
-const reviewedCount = computed(() => diff.value?.files.filter(file => reviewed.value.has(file.sha)).length ?? 0)
-const totalAdditions = computed(() => diff.value?.files.reduce((sum, file) => sum + file.additions, 0) ?? 0)
-const totalDeletions = computed(() => diff.value?.files.reduce((sum, file) => sum + file.deletions, 0) ?? 0)
-
-const resolvedGroups = computed(() => diff.value && grouped.value ? resolveGroups(grouped.value.groups, diff.value.files) : [])
+const groups = computed(() => props.store?.groups ?? [])
 
 // `undefined` for any source that can't refetch a file's full content (a pasted patch
 // has no live source, and no base/head refs to fetch at) - `FileDiff.vue` uses this to
@@ -83,7 +70,7 @@ const groupsVisable = ref<string[]>([])
 function updateVisibleGroups() {
   const root = props.document ?? document
   const viewportHeight = window.innerHeight
-  groupsVisable.value = resolvedGroups.value
+  groupsVisable.value = groups.value
     .filter((group) => {
       const el = root.getElementById(`group-${group.key}`)
       if (!el)
@@ -93,9 +80,9 @@ function updateVisibleGroups() {
     })
     .map(group => group.key)
 }
-// Groups render async (v-for over `resolvedGroups`), so the first measurement has to
-// wait for that DOM to actually exist - re-run whenever the group list itself changes.
-watch(resolvedGroups, () => nextTick(updateVisibleGroups), { immediate: true })
+// Groups render async (v-for over `groups`), so the first measurement has to wait for
+// that DOM to actually exist - re-run whenever the group list itself changes.
+watch(groups, () => nextTick(updateVisibleGroups), { immediate: true })
 </script>
 
 <template>
@@ -127,17 +114,8 @@ watch(resolvedGroups, () => nextTick(updateVisibleGroups), { immediate: true })
       <DiffsHeader
         :document
         :store="store!"
-        :meta="diff"
-        :layout="layout"
-        :reviewed-count="reviewedCount"
-        :total-files="diff.files.length"
-        :additions="totalAdditions"
-        :deletions="totalDeletions"
-        :is-embedded="isEmbedded"
         :groups-visable="groupsVisable"
-        :groups="resolvedGroups"
         :scroll-y="scrollY"
-        @update:layout="emit('update:layout', $event)"
       />
 
       <div class="mxa py-4 flex flex-col gap-4 max-w-500 w-full">
@@ -155,12 +133,11 @@ watch(resolvedGroups, () => nextTick(updateVisibleGroups), { immediate: true })
         </Suspense>
 
         <DiffGroup
-          v-for="group in resolvedGroups"
+          v-for="group in groups"
           :id="`group-${group.key}`"
           :key="group.key"
           :store="store!"
           :group="group"
-          :layout="layout"
           :collapsed="collapsedGroups.has(group.key)"
           @toggle="toggleGroup(group.key)"
         />

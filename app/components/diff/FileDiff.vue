@@ -21,7 +21,6 @@ import { ensurePierreDiffsShadowRoot } from './pierre-diffs-shadow'
 const props = defineProps<{
   store: DiffsStore
   file: FileChange
-  layout: 'split' | 'unified'
 }>()
 
 const isReviewed = computed(() => props.store.reviewed.has(props.file.sha))
@@ -139,11 +138,11 @@ const MIN_SPLIT_WIDTH_PX = 640
 // (a file that's purely additions or purely deletions has nothing on the other side).
 const isOneSided = computed(() => props.file.additions === 0 || props.file.deletions === 0)
 const effectiveLayout = computed<'split' | 'unified'>(() => {
-  if (props.layout === 'unified' || isOneSided.value)
+  if (props.store.ui.layout === 'unified' || isOneSided.value)
     return 'unified'
   if (containerWidth.value > 0 && containerWidth.value < MIN_SPLIT_WIDTH_PX)
     return 'unified'
-  return props.layout
+  return props.store.ui.layout
 })
 
 const pierreOptions = computed((): FileDiffOptions<undefined, undefined> => ({

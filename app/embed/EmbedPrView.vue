@@ -4,7 +4,6 @@ import FeedbackEmptyState from '@antfu/design/components/Feedback/FeedbackEmptyS
 import FeedbackLoading from '@antfu/design/components/Feedback/FeedbackLoading.vue'
 import { computed, onMounted } from 'vue'
 import DiffsPage from '../components/diff/DiffsPage.vue'
-import { layout } from '../state/layout'
 import { settings } from '../state/settings'
 import { createDiffsStore } from '../stores/diffs-store'
 
@@ -13,6 +12,7 @@ import { createDiffsStore } from '../stores/diffs-store'
 // so a fresh instance (and fresh store) is created per navigation, same as the routed
 // page getting a fresh mount per route change. `llm: false` - the store's `llm` is
 // `undefined` in the embed, since LLM analysis isn't available in this environment.
+// `isEmbedded: true` similarly flows into `store.ui.isEmbedded`.
 const props = defineProps<{
   document?: Document | ShadowRoot
   owner: string
@@ -27,7 +27,7 @@ const params = computed(() => ({
   number: props.number,
 }))
 
-const store = createDiffsStore(params.value, { token: settings.value.githubToken, llm: false })
+const store = createDiffsStore(params.value, { token: settings.value.githubToken, llm: false, isEmbedded: true })
 
 onMounted(() => store.load())
 </script>
@@ -36,9 +36,6 @@ onMounted(() => store.load())
   <DiffsPage
     :document
     :store="store"
-    :layout="layout"
-    :is-embedded="true"
-    @update:layout="layout = $event"
   >
     <template #loading>
       <FeedbackLoading text="Loading pull request…" />

@@ -2,6 +2,7 @@ import type { GroupedResult, GroupSource } from '../types/analyze'
 import type { DiffsPayload } from '../types/diff'
 import type { DiffsStore } from './types'
 import { computed, reactive, ref } from 'vue'
+import { resolveGroups } from '../components/diff/group-utils'
 
 /**
  * In-memory `DiffsStore` for Storybook stories and tests: same interface as
@@ -18,6 +19,8 @@ export function createMockDiffsStore(input: {
   isStale?: boolean
   isSetup?: boolean
   llm?: boolean
+  layout?: 'split' | 'unified'
+  isEmbedded?: boolean
 }): DiffsStore {
   const llmEnabled = input.llm ?? true
 
@@ -32,6 +35,10 @@ export function createMockDiffsStore(input: {
   const hasAiResultOverride = ref(grouped.value?.source === 'llm')
   const isSetup = computed(() => input.isSetup ?? true)
   const hasAiResult = computed(() => hasAiResultOverride.value)
+  const groups = computed(() => diff.value && grouped.value ? resolveGroups(grouped.value.groups, diff.value.files) : [])
+  // A local ref, not the app's real `state/layout.ts` singleton - a story/test's layout
+  // choice shouldn't leak into (or be affected by) the real app's persisted preference.
+  const layout = ref(input.layout ?? 'unified')
 
   async function load() {}
   async function refresh() {}
@@ -54,6 +61,12 @@ export function createMockDiffsStore(input: {
     analyzeMode.value = 'llm'
   }
 
+  const ui = reactive({
+    layout,
+    isEmbedded: input.isEmbedded ?? false,
+    setLayout: (mode: 'split' | 'unified') => { layout.value = mode },
+  })
+
   return reactive({
     diff,
     grouped,
@@ -61,6 +74,8 @@ export function createMockDiffsStore(input: {
     error,
     isStale,
     reviewed,
+    groups,
+    ui,
     llm: llmEnabled
       ? reactive({
           isSetup,

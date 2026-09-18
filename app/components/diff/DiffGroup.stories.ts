@@ -8,7 +8,7 @@ import { resolveGroups } from './group-utils'
 const meta: Meta<typeof DiffGroup> = {
   title: 'Diff/DiffGroup',
   component: DiffGroup,
-  args: { layout: 'unified', collapsed: false },
+  args: { collapsed: false },
 }
 export default meta
 

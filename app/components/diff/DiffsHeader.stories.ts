@@ -8,14 +8,8 @@ const meta: Meta<typeof DiffsHeader> = {
   title: 'Diff/DiffsHeader',
   component: DiffsHeader,
   args: {
-    groups: [],
     groupsVisable: [],
     scrollY: 0,
-    reviewedCount: 0,
-    totalFiles: 0,
-    additions: 0,
-    deletions: 0,
-    store: createMockDiffsStore({ isSetup: true }),
   },
 }
 export default meta
@@ -23,17 +17,17 @@ export default meta
 type Story = StoryObj<typeof DiffsHeader>
 
 export const Default: Story = {
-  args: { meta: empty.diff as any },
+  args: { store: createMockDiffsStore({ diff: empty.diff as any, grouped: empty.grouped as any, isSetup: true }) },
 }
 
 export const NoDescription: Story = {
-  args: { meta: zeroFiles.diff as any },
+  args: { store: createMockDiffsStore({ diff: zeroFiles.diff as any, grouped: zeroFiles.grouped as any, isSetup: true }) },
 }
 
 export const AiNotConfigured: Story = {
-  args: { meta: empty.diff as any, store: createMockDiffsStore({ isSetup: false }) },
+  args: { store: createMockDiffsStore({ diff: empty.diff as any, grouped: { ...empty.grouped, source: 'llm' } as any, isSetup: false }) },
 }
 
 export const AiReady: Story = {
-  args: { meta: empty.diff as any, store: createMockDiffsStore({ isSetup: true, grouped: { source: 'llm' } as any }) },
+  args: { store: createMockDiffsStore({ diff: empty.diff as any, grouped: { ...empty.grouped, source: 'llm' } as any, isSetup: true }) },
 }

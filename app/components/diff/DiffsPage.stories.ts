@@ -8,7 +8,6 @@ import DiffsPage from './DiffsPage.vue'
 const meta: Meta<typeof DiffsPage> = {
   title: 'Diff/DiffsPage',
   component: DiffsPage,
-  args: { layout: 'unified' },
 }
 export default meta
 

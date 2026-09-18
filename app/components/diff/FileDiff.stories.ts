@@ -9,7 +9,7 @@ import FileDiff from './FileDiff.vue'
 const meta: Meta<typeof FileDiff> = {
   title: 'Diff/FileDiff',
   component: FileDiff,
-  args: { layout: 'unified', store: createMockDiffsStore({}) },
+  args: { store: createMockDiffsStore({}) },
 }
 export default meta
 
@@ -24,7 +24,7 @@ export const Reviewed: Story = {
 }
 
 export const Split: Story = {
-  args: { file: partiallyReviewed.diff.files[0] as any, layout: 'split' },
+  args: { file: partiallyReviewed.diff.files[0] as any, store: createMockDiffsStore({ layout: 'split' }) },
 }
 
 export const Renamed: Story = {

@@ -5,7 +5,6 @@ import FeedbackLoading from '@antfu/design/components/Feedback/FeedbackLoading.v
 import { computed, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import DiffsPage from '../../../../components/diff/DiffsPage.vue'
-import { layout } from '../../../../state/layout'
 import { settings } from '../../../../state/settings'
 import { createDiffsStore } from '../../../../stores/diffs-store'
 
@@ -27,8 +26,6 @@ onMounted(() => store.load())
   <main>
     <DiffsPage
       :store="store"
-      :layout="layout"
-      @update:layout="layout = $event"
     >
       <template #loading>
         <FeedbackLoading text="Loading pull request…" />

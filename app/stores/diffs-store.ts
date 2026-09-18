@@ -9,15 +9,17 @@ import { ruleBasedAdapter } from '../analyze/adapters/rule-based'
 import { computeEntrySizeBytes, getEntry, putEntry, setAnalyzedResult, touchEntry } from '../cache/pr-cache'
 import { getReviewed, setReviewed } from '../cache/review-cache'
 import { getDefaultCacheStorage } from '../cache/storage'
+import { resolveGroups } from '../components/diff/group-utils'
 import { useProvider } from '../composables/useProvider'
 import { fetchPullRequest } from '../providers/github/api'
+import { layout } from '../state/layout'
 
 /**
  * Creates a `DiffsStore` backed by real providers/cache/adapters - the isomorphic
  * counterpart to `createMockDiffsStore`. Works for both `github-pr` and `patch-text`
  * params, matching `FetchDiffParams`'s discriminated union.
  */
-export function createDiffsStore(params: FetchDiffParams, opts: { token?: string, llm?: boolean } = {}): DiffsStore {
+export function createDiffsStore(params: FetchDiffParams, opts: { token?: string, llm?: boolean, isEmbedded?: boolean } = {}): DiffsStore {
   const llmEnabled = opts.llm ?? true
 
   const diff = ref<DiffsPayload>()
@@ -36,6 +38,7 @@ export function createDiffsStore(params: FetchDiffParams, opts: { token?: string
   const grouped = computed(() => analyzedBy.value[analyzeMode.value] ?? analyzedBy.value['rule-based'])
   const hasAiResult = computed(() => analyzedBy.value.llm !== undefined)
   const isSetup = computed(() => llmAdapter.available)
+  const groups = computed(() => diff.value && grouped.value ? resolveGroups(grouped.value.groups, diff.value.files) : [])
 
   async function loadReviewed() {
     if (!diff.value)
@@ -116,7 +119,7 @@ export function createDiffsStore(params: FetchDiffParams, opts: { token?: string
     return key
   }
 
-  async function checkStaleness(key: string, cachedHeadSha: string) {
+  async function checkStaleness(cachedHeadSha: string) {
     if (params.kind !== 'github-pr')
       return
     try {
@@ -143,7 +146,7 @@ export function createDiffsStore(params: FetchDiffParams, opts: { token?: string
           analyzedBy.value = cached.analyzedBy
           await touchEntry(storage, key)
           await loadReviewed()
-          void checkStaleness(key, cached.headSha)
+          void checkStaleness(cached.headSha)
         }
         else {
           await fetchFresh()
@@ -192,6 +195,12 @@ export function createDiffsStore(params: FetchDiffParams, opts: { token?: string
     }
   }
 
+  const ui = reactive({
+    layout,
+    isEmbedded: opts.isEmbedded ?? false,
+    setLayout: (mode: 'split' | 'unified') => { layout.value = mode },
+  })
+
   return reactive({
     diff,
     grouped,
@@ -199,6 +208,8 @@ export function createDiffsStore(params: FetchDiffParams, opts: { token?: string
     error,
     isStale,
     reviewed,
+    groups,
+    ui,
     llm: llmEnabled
       ? reactive({
           isSetup,

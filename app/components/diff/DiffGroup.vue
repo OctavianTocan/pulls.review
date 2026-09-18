@@ -13,7 +13,6 @@ import FileTree from './FileTree.vue'
 const props = defineProps<{
   store: DiffsStore
   group: ResolvedGroupWithChildren
-  layout: 'split' | 'unified'
   collapsed: boolean
   /** Nested (child) groups render without their own sticky header or further children. */
   nested?: boolean
@@ -118,7 +117,6 @@ function navigateToFile(sha: string) {
             :ref="el => setFileDiffRef(file.sha, el as InstanceType<typeof FileDiff> | null)"
             :store="store"
             :file="file"
-            :layout="layout"
           />
         </template>
       </div>
@@ -130,7 +128,6 @@ function navigateToFile(sha: string) {
         :key="child.key"
         :store="store"
         :group="{ ...child, children: [] }"
-        :layout="layout"
         :collapsed="collapsedChildren.has(child.key)"
         nested
         @toggle="toggleChild(child.key)"

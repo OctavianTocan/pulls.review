@@ -7,7 +7,6 @@ import { onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import DiffsPage from '../components/diff/DiffsPage.vue'
 import { UPLOAD_SESSION_STORAGE_KEY } from '../composables/uploadSession'
-import { layout } from '../state/layout'
 import { createDiffsStore } from '../stores/diffs-store'
 
 const router = useRouter()
@@ -43,8 +42,6 @@ onMounted(loadAll)
   <main>
     <DiffsPage
       :store="store"
-      :layout="layout"
-      @update:layout="layout = $event"
     >
       <template #loading>
         <FeedbackLoading text="Parsing diff…" />

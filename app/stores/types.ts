@@ -1,3 +1,4 @@
+import type { ResolvedGroupWithChildren } from '../components/diff/group-utils'
 import type { GroupedResult, GroupSource } from '../types/analyze'
 import type { DiffsPayload } from '../types/diff'
 
@@ -24,6 +25,21 @@ export interface DiffsStoreLlm {
 }
 
 /**
+ * Presentation-level settings every diff view component needs, grouped so they can be
+ * read off the same `store` prop instead of threaded down as their own separate props.
+ * `layout` is a shared app-wide preference (backed by the same persisted singleton
+ * across every `DiffsStore` instance, like `state/dark.ts`'s `isDark`) - writing it
+ * through one store's `ui.layout` updates it everywhere. `isEmbedded` is fixed per
+ * store instance (set at creation) - the GitHub-embedded view is the one place it's
+ * `true`.
+ */
+export interface DiffsStoreUi {
+  readonly layout: 'split' | 'unified'
+  readonly isEmbedded: boolean
+  setLayout: (layout: 'split' | 'unified') => void
+}
+
+/**
  * One reactive store per loaded diff - created explicitly by `createDiffsStore` (real
  * data) or `createMockDiffsStore` (Storybook/tests), never a global singleton/registry.
  * Passed down as a single prop through the whole view tree; components call its methods
@@ -42,6 +58,9 @@ export interface DiffsStore {
   /** Only meaningful once `diff`/`grouped` are loaded - a source with no live origin (paste) just never sets this. */
   readonly isStale: boolean
   readonly reviewed: Set<string>
+  /** Each group's `filePaths` resolved into real `FileChange`s, `[]` until `diff`/`grouped` are both loaded. */
+  readonly groups: ResolvedGroupWithChildren[]
+  readonly ui: DiffsStoreUi
   /** `undefined` = LLM analysis isn't available in this environment (embed, or disabled). */
   readonly llm?: DiffsStoreLlm
   load: () => Promise<void>

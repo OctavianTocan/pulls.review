@@ -1,8 +1,6 @@
 <script setup lang="ts">
 import type { DiffsStore } from '../../stores/types'
 import type { GroupSource } from '../../types/analyze'
-import type { DiffsPayload } from '../../types/diff'
-import type { ResolvedGroupWithChildren } from './group-utils'
 import ActionButton from '@antfu/design/components/Action/ActionButton.vue'
 import ActionIconButton from '@antfu/design/components/Action/ActionIconButton.vue'
 import ActionToggleGroup from '@antfu/design/components/Action/ActionToggleGroup.vue'
@@ -18,23 +16,19 @@ import PrStatusIcon from './PrStatusIcon.vue'
 const props = defineProps<{
   document?: Document | ShadowRoot
   store: DiffsStore
-  meta: DiffsPayload
-  layout: 'split' | 'unified'
-  reviewedCount: number
-  totalFiles: number
-  additions: number
-  deletions: number
-  isEmbedded?: boolean
-  groups: ResolvedGroupWithChildren[]
   groupsVisable: string[]
   scrollY: number
 }>()
 
-const emit = defineEmits<{
-  'update:layout': [layout: 'split' | 'unified']
-}>()
-
-const progress = computed(() => props.totalFiles === 0 ? 1 : props.reviewedCount / props.totalFiles)
+// `store.diff` is guaranteed set - `DiffsPage` only renders this component once it is.
+const meta = computed(() => props.store.diff!)
+const groups = computed(() => props.store.groups)
+const isEmbedded = computed(() => props.store.ui.isEmbedded)
+const totalFiles = computed(() => meta.value.files.length)
+const reviewedCount = computed(() => meta.value.files.filter(file => props.store.reviewed.has(file.sha)).length)
+const additions = computed(() => meta.value.files.reduce((sum, file) => sum + file.additions, 0))
+const deletions = computed(() => meta.value.files.reduce((sum, file) => sum + file.deletions, 0))
+const progress = computed(() => totalFiles.value === 0 ? 1 : reviewedCount.value / totalFiles.value)
 
 const llmIsSetup = computed(() => props.store.llm?.isSetup ?? false)
 const llmIsAnalyzing = computed(() => props.store.llm?.isAnalyzing ?? false)
@@ -51,7 +45,7 @@ const analyzeOptions = [
   { value: 'llm', label: 'AI', icon: 'i-ph-sparkle-duotone' },
 ]
 
-const githubRef = computed(() => props.meta.provider === 'github' ? parseGithubDiffId(props.meta.id) : undefined)
+const githubRef = computed(() => meta.value.provider === 'github' ? parseGithubDiffId(meta.value.id) : undefined)
 
 function scrollToGroup(key: string) {
   (props.document ?? document).getElementById(`group-${key}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
@@ -86,9 +80,9 @@ function scrollToGroup(key: string) {
         <ActionIconButton v-if="meta.provider === 'github'" icon="i-ph:arrows-clockwise-duotone" label="Refresh" tooltip="Refresh" class="shrink-0" @click="store.refresh()" />
         <ActionToggleGroup
           class="shrink-0"
-          :model-value="layout"
+          :model-value="store.ui.layout"
           :options="layoutOptions"
-          @update:model-value="emit('update:layout', $event as 'split' | 'unified')"
+          @update:model-value="store.ui.setLayout($event as 'split' | 'unified')"
         />
         <div v-if="!isEmbedded" class="shrink-0">
           <NavControls :document="document" />
