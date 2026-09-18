@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import type { DiffsStore } from '../../stores/types'
 import type { FileChange } from '../../types/diff'
 import DisplayFileIcon from '@antfu/design/components/Display/DisplayFileIcon.vue'
 import DisplayFilePath from '@antfu/design/components/Display/DisplayFilePath.vue'
@@ -10,13 +11,12 @@ import DiffStats from './DiffStats.vue'
 import FileStatus from './FileStatus.vue'
 
 const props = defineProps<{
+  store: DiffsStore
   files: FileChange[]
-  reviewed: Set<string>
 }>()
 
 const emit = defineEmits<{
-  'update:reviewed': [sha: string, reviewed: boolean]
-  'navigate': [sha: string]
+  navigate: [sha: string]
 }>()
 
 interface TreeRow {
@@ -85,17 +85,17 @@ const rows = computed<TreeRow[]>(() => {
 })
 
 function folderState(files: FileChange[]): boolean | 'indeterminate' {
-  const reviewedCount = files.filter(file => props.reviewed.has(file.sha)).length
+  const reviewedCount = files.filter(file => props.store.reviewed.has(file.sha)).length
   if (reviewedCount === 0)
     return false
   return reviewedCount === files.length ? true : 'indeterminate'
 }
 
-// One `update:reviewed` per file, same as clicking each checkbox individually - there's
-// no batched API on the reviewed-state store, so a very large folder toggles as N writes.
+// One `toggleReviewed` call per file, same as clicking each checkbox individually -
+// there's no batched API on the store, so a very large folder toggles as N writes.
 function toggleFolder(files: FileChange[], reviewed: boolean) {
   for (const file of files)
-    emit('update:reviewed', file.sha, reviewed)
+    props.store.toggleReviewed(file.sha, reviewed)
 }
 
 const scrollElRef = useTemplateRef<HTMLDivElement>('scrollEl')
@@ -141,8 +141,8 @@ const virtualizer = useVirtualizer(computed(() => ({
         </template>
         <template v-else-if="row.row.file">
           <FormCheckbox
-            :model-value="reviewed.has(row.row.file.sha)"
-            @update:model-value="emit('update:reviewed', row.row.file.sha, $event)"
+            :model-value="store.reviewed.has(row.row.file.sha)"
+            @update:model-value="store.toggleReviewed(row.row.file.sha, $event)"
           />
           <button
             type="button"

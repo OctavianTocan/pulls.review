@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import type { DiffsStore } from '../stores/types'
 import ActionButton from '@antfu/design/components/Action/ActionButton.vue'
 import FeedbackEmptyState from '@antfu/design/components/Feedback/FeedbackEmptyState.vue'
 import FeedbackLoading from '@antfu/design/components/Feedback/FeedbackLoading.vue'
@@ -6,9 +7,8 @@ import { onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import DiffsPage from '../components/diff/DiffsPage.vue'
 import { UPLOAD_SESSION_STORAGE_KEY } from '../composables/uploadSession'
-import { usePullRequest } from '../composables/usePullRequest'
-import { useReviewedFiles } from '../composables/useReviewedFiles'
 import { layout } from '../state/layout'
+import { createDiffsStore } from '../stores/diffs-store'
 
 const router = useRouter()
 const hasPending = ref(false)
@@ -20,32 +20,20 @@ const pending = (() => {
   return JSON.parse(raw) as { text: string, title?: string }
 })()
 
-const {
-  diff,
-  grouped,
-  isLoading,
-  error,
-  analyzeMode,
-  isAnalyzing,
-  llmAvailable,
-  hasAiResult,
-  load,
-  setAnalyzeMode,
-  reanalyzeWithAi,
-} = usePullRequest(
-  pending ? { kind: 'patch-text', text: pending.text, title: pending.title } : { kind: 'patch-text', text: '' },
-)
-const { reviewed, load: loadReviewed, toggle } = useReviewedFiles()
+// No store at all when there's no pending upload - `DiffsPage`'s `store` prop is
+// optional exactly for this case, so the empty-state slot renders around nothing
+// rather than a store wrapping empty text.
+const store: DiffsStore | undefined = pending
+  ? createDiffsStore({ kind: 'patch-text', text: pending.text, title: pending.title })
+  : undefined
 
 async function loadAll() {
-  if (!pending) {
+  if (!store) {
     hasPending.value = false
     return
   }
   hasPending.value = true
-  await load()
-  if (diff.value)
-    await loadReviewed(diff.value.files.map(file => file.sha))
+  await store.load()
 }
 
 onMounted(loadAll)
@@ -54,21 +42,9 @@ onMounted(loadAll)
 <template>
   <main>
     <DiffsPage
-      :diff="diff"
-      :grouped="grouped"
+      :store="store"
       :layout="layout"
-      :reviewed="reviewed"
-      :is-loading="isLoading"
-      :error="error"
-      :analyze-mode="analyzeMode"
-      :is-analyzing="isAnalyzing"
-      :llm-available="llmAvailable"
-      :has-ai-result="hasAiResult"
       @update:layout="layout = $event"
-      @update:reviewed="(sha, isReviewed) => toggle(sha, isReviewed)"
-      @update:analyze-mode="setAnalyzeMode"
-      @reanalyze-ai="reanalyzeWithAi"
-      @retry="loadAll"
     >
       <template #loading>
         <FeedbackLoading text="Parsing diff…" />

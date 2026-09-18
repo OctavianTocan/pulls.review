@@ -1,51 +1,59 @@
-import type { Ref } from 'vue'
 import type { GroupedResult, GroupSource } from '../types/analyze'
 import type { DiffsPayload } from '../types/diff'
 import type { FetchDiffParams } from '../types/provider'
-import { computed, ref } from 'vue'
+import type { DiffsStore } from './types'
+import { computed, reactive, ref } from 'vue'
 import { resolveAdapter } from '../analyze'
 import { llmAdapter } from '../analyze/adapters/llm'
 import { ruleBasedAdapter } from '../analyze/adapters/rule-based'
 import { computeEntrySizeBytes, getEntry, putEntry, setAnalyzedResult, touchEntry } from '../cache/pr-cache'
+import { getReviewed, setReviewed } from '../cache/review-cache'
 import { getDefaultCacheStorage } from '../cache/storage'
+import { useProvider } from '../composables/useProvider'
 import { fetchPullRequest } from '../providers/github/api'
-import { useProvider } from './useProvider'
 
-export interface UsePullRequestReturn {
-  diff: Ref<DiffsPayload | undefined>
-  grouped: Ref<GroupedResult | undefined>
-  isLoading: Ref<boolean>
-  error: Ref<Error | undefined>
-  isStale: Ref<boolean>
-  analyzeMode: Ref<GroupSource>
-  isAnalyzing: Ref<boolean>
-  /** Whether the `llm` adapter has a usable key/gateway token configured. */
-  llmAvailable: Ref<boolean>
-  /** Whether `llm` has already produced a result for the current diff. */
-  hasAiResult: Ref<boolean>
-  load: () => Promise<void>
-  refresh: () => Promise<void>
-  /** Switches the active grouping. `none`/`rule-based` analyze immediately (free, instant); `llm` only switches the view - call `reanalyzeWithAi` to actually run it. */
-  setAnalyzeMode: (mode: GroupSource) => Promise<void>
-  reanalyzeWithAi: () => Promise<void>
-}
+/**
+ * Creates a `DiffsStore` backed by real providers/cache/adapters - the isomorphic
+ * counterpart to `createMockDiffsStore`. Works for both `github-pr` and `patch-text`
+ * params, matching `FetchDiffParams`'s discriminated union.
+ */
+export function createDiffsStore(params: FetchDiffParams, opts: { token?: string, llm?: boolean } = {}): DiffsStore {
+  const llmEnabled = opts.llm ?? true
 
-export function usePullRequest(params: FetchDiffParams, opts: { token?: string } = {}): UsePullRequestReturn {
   const diff = ref<DiffsPayload>()
   const analyzedBy = ref<Partial<Record<GroupSource, GroupedResult>>>({})
   const isLoading = ref(false)
   const error = ref<Error>()
   const isStale = ref(false)
-  const analyzeMode = ref<GroupSource>('llm')
+  const analyzeMode = ref<GroupSource>(llmEnabled ? 'llm' : 'rule-based')
   const isAnalyzing = ref(false)
   const cacheKey = ref<string>()
+  const reviewed = ref(new Set<string>())
 
   // Falls back to the always-instant rule-based grouping while the selected mode
   // (currently only `llm` can be in this state) hasn't been analyzed yet for this
   // diff, so the header/view never lose their data just from switching modes.
   const grouped = computed(() => analyzedBy.value[analyzeMode.value] ?? analyzedBy.value['rule-based'])
-  const llmAvailable = computed(() => llmAdapter.available)
   const hasAiResult = computed(() => analyzedBy.value.llm !== undefined)
+  const isSetup = computed(() => llmAdapter.available)
+
+  async function loadReviewed() {
+    if (!diff.value)
+      return
+    const storage = await getDefaultCacheStorage()
+    reviewed.value = await getReviewed(storage, diff.value.files.map(file => file.sha))
+  }
+
+  async function toggleReviewed(sha: string, isReviewed: boolean) {
+    const storage = await getDefaultCacheStorage()
+    await setReviewed(storage, sha, isReviewed)
+    const next = new Set(reviewed.value)
+    if (isReviewed)
+      next.add(sha)
+    else
+      next.delete(sha)
+    reviewed.value = next
+  }
 
   async function runAnalysis(mode: GroupSource) {
     if (!diff.value)
@@ -72,9 +80,9 @@ export function usePullRequest(params: FetchDiffParams, opts: { token?: string }
       await runAnalysis(mode)
   }
 
-  async function reanalyzeWithAi() {
+  async function reanalyze() {
     await runAnalysis('llm')
-    setAnalyzeMode('llm')
+    await setAnalyzeMode('llm')
   }
 
   async function analyzeAndStore(key: string, freshDiff: DiffsPayload) {
@@ -92,9 +100,11 @@ export function usePullRequest(params: FetchDiffParams, opts: { token?: string }
       lastViewedAt: Date.now(),
       sizeBytes: computeEntrySizeBytes(freshDiff, freshAnalyzedBy),
     })
-    // A user-initiated refresh, not a silent one - safe to re-run the currently
-    // selected mode (even `llm`) against the fresh diff right away.
-    if (analyzeMode.value !== 'rule-based')
+    await loadReviewed()
+    // `llm` is never auto-run, even here - a paid/slow call must always be an explicit
+    // click (the "(Re-)Analyze with AI" button), never a side effect of loading or
+    // refreshing a diff. Only the free/instant modes re-run automatically.
+    if (analyzeMode.value !== 'rule-based' && analyzeMode.value !== 'llm')
       await runAnalysis(analyzeMode.value)
   }
 
@@ -132,6 +142,7 @@ export function usePullRequest(params: FetchDiffParams, opts: { token?: string }
           cacheKey.value = key
           analyzedBy.value = cached.analyzedBy
           await touchEntry(storage, key)
+          await loadReviewed()
           void checkStaleness(key, cached.headSha)
         }
         else {
@@ -151,6 +162,7 @@ export function usePullRequest(params: FetchDiffParams, opts: { token?: string }
           cacheKey.value = key
           analyzedBy.value = cached.analyzedBy
           await touchEntry(storage, key)
+          await loadReviewed()
         }
         else {
           await analyzeAndStore(key, freshDiff)
@@ -180,19 +192,25 @@ export function usePullRequest(params: FetchDiffParams, opts: { token?: string }
     }
   }
 
-  return {
+  return reactive({
     diff,
     grouped,
     isLoading,
     error,
     isStale,
-    analyzeMode,
-    isAnalyzing,
-    llmAvailable,
-    hasAiResult,
+    reviewed,
+    llm: llmEnabled
+      ? reactive({
+          isSetup,
+          isAnalyzing,
+          hasAiResult,
+          analyzeMode,
+          setAnalyzeMode,
+          reanalyze,
+        })
+      : undefined,
     load,
     refresh,
-    setAnalyzeMode,
-    reanalyzeWithAi,
-  }
+    toggleReviewed,
+  }) as DiffsStore
 }

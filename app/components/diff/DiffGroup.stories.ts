@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/vue3-vite'
 import nestedGroups from '../../../test/fixtures/synthetic/nested-groups.json'
 import partiallyReviewed from '../../../test/fixtures/synthetic/partially-reviewed.json'
+import { createMockDiffsStore } from '../../stores/mock-diffs-store'
 import DiffGroup from './DiffGroup.vue'
 import { resolveGroups } from './group-utils'
 
@@ -16,21 +17,21 @@ type Story = StoryObj<typeof DiffGroup>
 export const Default: Story = {
   args: {
     group: resolveGroups(partiallyReviewed.grouped.groups as any, partiallyReviewed.diff.files as any)[0]!,
-    reviewed: new Set(partiallyReviewed.reviewedShas),
+    store: createMockDiffsStore({ reviewed: partiallyReviewed.reviewedShas }),
   },
 }
 
 export const WithNestedChildren: Story = {
   args: {
     group: resolveGroups(nestedGroups.grouped.groups as any, nestedGroups.diff.files as any)[0]!,
-    reviewed: new Set(),
+    store: createMockDiffsStore({}),
   },
 }
 
 export const Collapsed: Story = {
   args: {
     group: resolveGroups(partiallyReviewed.grouped.groups as any, partiallyReviewed.diff.files as any)[0]!,
-    reviewed: new Set(partiallyReviewed.reviewedShas),
+    store: createMockDiffsStore({ reviewed: partiallyReviewed.reviewedShas }),
     collapsed: true,
   },
 }

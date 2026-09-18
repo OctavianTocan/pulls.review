@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import type { DiffsStore } from '../../stores/types'
 import type { GroupSource } from '../../types/analyze'
 import type { DiffsPayload } from '../../types/diff'
 import type { ResolvedGroupWithChildren } from './group-utils'
@@ -16,6 +17,7 @@ import PrStatusIcon from './PrStatusIcon.vue'
 
 const props = defineProps<{
   document?: Document | ShadowRoot
+  store: DiffsStore
   meta: DiffsPayload
   layout: 'split' | 'unified'
   reviewedCount: number
@@ -26,20 +28,18 @@ const props = defineProps<{
   groups: ResolvedGroupWithChildren[]
   groupsVisable: string[]
   scrollY: number
-  analyzeMode: GroupSource
-  isAnalyzing?: boolean
-  llmAvailable: boolean
-  hasAiResult: boolean
 }>()
 
 const emit = defineEmits<{
   'update:layout': [layout: 'split' | 'unified']
-  'update:analyzeMode': [mode: GroupSource]
-  'reanalyzeAi': []
-  'refresh': []
 }>()
 
 const progress = computed(() => props.totalFiles === 0 ? 1 : props.reviewedCount / props.totalFiles)
+
+const llmIsSetup = computed(() => props.store.llm?.isSetup ?? false)
+const llmIsAnalyzing = computed(() => props.store.llm?.isAnalyzing ?? false)
+const llmHasAiResult = computed(() => props.store.llm?.hasAiResult ?? false)
+const llmAnalyzeMode = computed(() => props.store.llm?.analyzeMode ?? 'rule-based')
 
 const layoutOptions = [
   { value: 'unified', label: 'Unified', icon: 'i-ph:rows-duotone' },
@@ -72,18 +72,18 @@ function scrollToGroup(key: string) {
         </h1>
 
         <div
-          v-if="llmAvailable && hasAiResult"
+          v-if="store.llm && llmHasAiResult"
           class="text-sm flex shrink-0 gap-1.5 items-center"
         >
           <span class="op-fade">Analyze by</span>
           <ActionToggleGroup
-            :model-value="analyzeMode"
+            :model-value="llmAnalyzeMode"
             :options="analyzeOptions"
-            @update:model-value="emit('update:analyzeMode', $event as GroupSource)"
+            @update:model-value="store.llm?.setAnalyzeMode($event as GroupSource)"
           />
         </div>
 
-        <ActionIconButton v-if="meta.provider === 'github'" icon="i-ph:arrows-clockwise-duotone" label="Refresh" tooltip="Refresh" class="shrink-0" @click="emit('refresh')" />
+        <ActionIconButton v-if="meta.provider === 'github'" icon="i-ph:arrows-clockwise-duotone" label="Refresh" tooltip="Refresh" class="shrink-0" @click="store.refresh()" />
         <ActionToggleGroup
           class="shrink-0"
           :model-value="layout"
@@ -142,9 +142,9 @@ function scrollToGroup(key: string) {
           </button>
         </div>
 
-        <template v-if="!isEmbedded">
+        <template v-if="store.llm">
           <ActionButton
-            v-if="!llmAvailable"
+            v-if="!llmIsSetup"
             class="text-xs shadow"
             size="sm"
             icon="i-ph:key-duotone"
@@ -154,14 +154,14 @@ function scrollToGroup(key: string) {
             Setup API Keys
           </ActionButton>
           <ActionButton
-            v-else-if="!hasAiResult || analyzeMode === 'llm'"
+            v-else-if="!llmHasAiResult || llmAnalyzeMode === 'llm'"
             class="text-xs shadow"
-            :disabled="isAnalyzing"
-            :variant="hasAiResult ? 'action' : 'primary'"
-            :icon="isAnalyzing ? 'i-ph:spinner-duotone animate-spin' : 'i-ph-sparkle-duotone'"
-            @click="emit('reanalyzeAi')"
+            :disabled="llmIsAnalyzing"
+            :variant="llmHasAiResult ? 'action' : 'primary'"
+            :icon="llmIsAnalyzing ? 'i-ph:spinner-duotone animate-spin' : 'i-ph-sparkle-duotone'"
+            @click="store.llm.reanalyze()"
           >
-            {{ isAnalyzing ? 'Analyzing…' : hasAiResult ? 'Re-analyze with AI' : 'Analyze with AI' }}
+            {{ llmIsAnalyzing ? 'Analyzing…' : llmHasAiResult ? 'Re-analyze with AI' : 'Analyze with AI' }}
           </ActionButton>
         </template>
 

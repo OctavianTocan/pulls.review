@@ -3,12 +3,13 @@ import binaryFile from '../../../test/fixtures/synthetic/binary-file.json'
 import hugeFile from '../../../test/fixtures/synthetic/huge-file.json'
 import partiallyReviewed from '../../../test/fixtures/synthetic/partially-reviewed.json'
 import renamedFile from '../../../test/fixtures/synthetic/renamed-file.json'
+import { createMockDiffsStore } from '../../stores/mock-diffs-store'
 import FileDiff from './FileDiff.vue'
 
 const meta: Meta<typeof FileDiff> = {
   title: 'Diff/FileDiff',
   component: FileDiff,
-  args: { layout: 'unified', reviewed: false },
+  args: { layout: 'unified', store: createMockDiffsStore({}) },
 }
 export default meta
 
@@ -19,7 +20,7 @@ export const Modified: Story = {
 }
 
 export const Reviewed: Story = {
-  args: { file: partiallyReviewed.diff.files[0] as any, reviewed: true },
+  args: { file: partiallyReviewed.diff.files[0] as any, store: createMockDiffsStore({ reviewed: [(partiallyReviewed.diff.files[0] as any).sha] }) },
 }
 
 export const Split: Story = {

@@ -1,6 +1,5 @@
 <script setup lang="ts">
-import type { GroupedResult, GroupSource } from '../../types/analyze'
-import type { DiffsPayload } from '../../types/diff'
+import type { DiffsStore } from '../../stores/types'
 import ActionButton from '@antfu/design/components/Action/ActionButton.vue'
 import FeedbackEmptyState from '@antfu/design/components/Feedback/FeedbackEmptyState.vue'
 import FeedbackLoading from '@antfu/design/components/Feedback/FeedbackLoading.vue'
@@ -16,50 +15,41 @@ import { resolveGroups } from './group-utils'
 
 const props = defineProps<{
   document?: Document | ShadowRoot
-  diff?: DiffsPayload
-  grouped?: GroupedResult
+  store?: DiffsStore
   layout: 'split' | 'unified'
-  reviewed: Set<string>
-  isLoading?: boolean
-  error?: Error
   isEmbedded?: boolean
-  // Only meaningful once `diff`/`grouped` are loaded - a source with no live
-  // origin (paste) just never sets this.
-  isStale?: boolean
-  analyzeMode: GroupSource
-  isAnalyzing?: boolean
-  llmAvailable: boolean
-  hasAiResult: boolean
 }>()
 
 const emit = defineEmits<{
-  'update:reviewed': [sha: string, reviewed: boolean]
   'update:layout': [layout: 'split' | 'unified']
-  'update:analyzeMode': [mode: GroupSource]
-  'reanalyzeAi': []
-  'retry': []
-  'refresh': []
 }>()
 
-const reviewedCount = computed(() => props.diff?.files.filter(file => props.reviewed.has(file.sha)).length ?? 0)
-const totalAdditions = computed(() => props.diff?.files.reduce((sum, file) => sum + file.additions, 0) ?? 0)
-const totalDeletions = computed(() => props.diff?.files.reduce((sum, file) => sum + file.deletions, 0) ?? 0)
+const diff = computed(() => props.store?.diff)
+const grouped = computed(() => props.store?.grouped)
+const reviewed = computed(() => props.store?.reviewed ?? new Set<string>())
+const isLoading = computed(() => props.store?.isLoading ?? false)
+const error = computed(() => props.store?.error)
+const isStale = computed(() => props.store?.isStale ?? false)
 
-const resolvedGroups = computed(() => props.diff && props.grouped ? resolveGroups(props.grouped.groups, props.diff.files) : [])
+const reviewedCount = computed(() => diff.value?.files.filter(file => reviewed.value.has(file.sha)).length ?? 0)
+const totalAdditions = computed(() => diff.value?.files.reduce((sum, file) => sum + file.additions, 0) ?? 0)
+const totalDeletions = computed(() => diff.value?.files.reduce((sum, file) => sum + file.deletions, 0) ?? 0)
+
+const resolvedGroups = computed(() => diff.value && grouped.value ? resolveGroups(grouped.value.groups, diff.value.files) : [])
 
 // `undefined` for any source that can't refetch a file's full content (a pasted patch
 // has no live source, and no base/head refs to fetch at) - `FileDiff.vue` uses this to
 // hide its "load full file" action entirely rather than show a button that would fail.
 const fileContentContext = computed(() => {
-  const diff = props.diff
-  if (!diff || diff.provider !== 'github' || !diff.base || !diff.head)
+  const d = diff.value
+  if (!d || d.provider !== 'github' || !d.base || !d.head)
     return undefined
   if (!useProvider('github').capabilities.supportsFullFileContent)
     return undefined
-  const ref = parseGithubDiffId(diff.id)
+  const ref = parseGithubDiffId(d.id)
   if (!ref)
     return undefined
-  return { owner: ref.owner, repo: ref.repo, baseSha: diff.base.sha, headSha: diff.head.sha }
+  return { owner: ref.owner, repo: ref.repo, baseSha: d.base.sha, headSha: d.head.sha }
 })
 provide(fileContentContextKey, fileContentContext)
 
@@ -119,13 +109,13 @@ watch(resolvedGroups, () => nextTick(updateVisibleGroups), { immediate: true })
     </template>
     <template v-else-if="error">
       <div class="mxa px-4 py-12 max-w-500 w-full">
-        <slot name="error" :error="error" :retry="() => emit('retry')">
+        <slot name="error" :error="error" :retry="() => store?.load()">
           <FeedbackEmptyState icon="i-ph:warning-duotone" title="Something went wrong">
             <template #hint>
               {{ error.message }}
             </template>
             <template #actions>
-              <ActionButton variant="primary" @click="emit('retry')">
+              <ActionButton variant="primary" @click="store?.load()">
                 Retry
               </ActionButton>
             </template>
@@ -136,6 +126,7 @@ watch(resolvedGroups, () => nextTick(updateVisibleGroups), { immediate: true })
     <template v-else-if="diff && grouped">
       <DiffsHeader
         :document
+        :store="store!"
         :meta="diff"
         :layout="layout"
         :reviewed-count="reviewedCount"
@@ -146,39 +137,31 @@ watch(resolvedGroups, () => nextTick(updateVisibleGroups), { immediate: true })
         :groups-visable="groupsVisable"
         :groups="resolvedGroups"
         :scroll-y="scrollY"
-        :analyze-mode="analyzeMode"
-        :is-analyzing="isAnalyzing"
-        :llm-available="llmAvailable"
-        :has-ai-result="hasAiResult"
         @update:layout="emit('update:layout', $event)"
-        @update:analyze-mode="emit('update:analyzeMode', $event)"
-        @reanalyze-ai="emit('reanalyzeAi')"
-        @refresh="emit('refresh')"
       />
 
       <div class="mxa py-4 flex flex-col gap-4 max-w-500 w-full">
-        <slot name="stale" :refresh="() => emit('refresh')">
+        <slot name="stale" :refresh="() => store?.refresh()">
           <div v-if="isStale" class="text-sm text-amber-700 mb-4 px-3 py-2 border border-amber:20 rounded-lg bg-amber:10 bg-raised flex gap-3 items-center justify-between dark:text-amber-400">
             <span>This pull request has new commits since it was cached.</span>
-            <ActionButton size="sm" @click="emit('refresh')">
+            <ActionButton size="sm" @click="store?.refresh()">
               Refresh
             </ActionButton>
           </div>
         </slot>
 
-        <Suspense v-if="props.grouped?.overallSummary">
-          <Markdown :value="props.grouped?.overallSummary" class="text-sm pb-2 border-b border-base op-fade" />
+        <Suspense v-if="grouped?.overallSummary">
+          <Markdown :value="grouped?.overallSummary" class="text-sm pb-2 border-b border-base op-fade" />
         </Suspense>
 
         <DiffGroup
           v-for="group in resolvedGroups"
           :id="`group-${group.key}`"
           :key="group.key"
+          :store="store!"
           :group="group"
           :layout="layout"
-          :reviewed="reviewed"
           :collapsed="collapsedGroups.has(group.key)"
-          @update:reviewed="(sha, isReviewed) => emit('update:reviewed', sha, isReviewed)"
           @toggle="toggleGroup(group.key)"
         />
 

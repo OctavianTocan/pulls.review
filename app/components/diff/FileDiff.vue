@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { FileDiffOptions } from '@pierre/diffs'
+import type { DiffsStore } from '../../stores/types'
 import type { FileChange } from '../../types/diff'
 import ActionIconButton from '@antfu/design/components/Action/ActionIconButton.vue'
 import DisplayFilePath from '@antfu/design/components/Display/DisplayFilePath.vue'
@@ -18,14 +19,12 @@ import { isNoisyFile } from './noisy-files'
 import { ensurePierreDiffsShadowRoot } from './pierre-diffs-shadow'
 
 const props = defineProps<{
+  store: DiffsStore
   file: FileChange
   layout: 'split' | 'unified'
-  reviewed: boolean
 }>()
 
-const emit = defineEmits<{
-  'update:reviewed': [reviewed: boolean]
-}>()
+const isReviewed = computed(() => props.store.reviewed.has(props.file.sha))
 
 // Reads the embed's own scoped ref when provided (see `state/dark.ts`), otherwise the
 // app-wide singleton - never targets `document.documentElement` from inside the embed.
@@ -34,7 +33,7 @@ const isDark = inject(isDarkKey, globalIsDark)
 const fileContentContext = inject(fileContentContextKey, undefined)
 
 const containerRef = useTemplateRef<HTMLDivElement>('container')
-const collapsed = ref(props.reviewed || isNoisyFile(props.file.path))
+const collapsed = ref(isReviewed.value || isNoisyFile(props.file.path))
 let instance: PierreFileDiff | undefined
 
 function buildUnifiedDiffText(file: FileChange): string {
@@ -208,11 +207,11 @@ watch(
   },
 )
 
-watch(() => props.reviewed, (isReviewed) => {
+watch(isReviewed, (value) => {
   // Auto-collapse a file once it's marked reviewed (and re-expand it if unmarked) - it's
   // already handled, no need to keep it open. `collapsed`'s initial value above mirrors
   // this for a file that's already reviewed on first render.
-  collapsed.value = isReviewed
+  collapsed.value = value
 })
 
 defineExpose({
@@ -230,9 +229,9 @@ defineExpose({
     >
       <div class="text-sm flex gap-2 min-w-0 items-center">
         <FormCheckbox
-          :model-value="reviewed"
+          :model-value="isReviewed"
           aria-label="Mark as reviewed"
-          @update:model-value="emit('update:reviewed', $event)"
+          @update:model-value="store.toggleReviewed(file.sha, $event)"
         />
         <DisplayFilePath :path="file.path" class="min-w-0" />
       </div>

@@ -71,11 +71,20 @@ analysis strategy later never touches the view layer:
     `docs/featureA`); `rule-based` groups MUST stay flat. Depth is capped at 2
     total — enforced structurally in the schema (child groups have no further
     `children`), not by convention.
-- **View components** (`app/components/`) MUST stay pure and data-driven:
-  props in (`DiffsPayload`, `GroupedResult`, reviewed-state sets), events
-  out (`update:reviewed`, etc.). They MUST NOT know which provider or analyze
-  adapter produced their data, and MUST NOT talk to storage directly — that
-  keeps them Storybook-friendly and provider/adapter-agnostic.
+- **View components** (`app/components/`) MUST stay pure and data-driven: they
+  receive a single `DiffsStore` (`app/stores/types.ts`) as a `store` prop,
+  threaded explicitly down the tree (no provide/inject, no global singleton
+  registry), and call its methods directly (`store.toggleReviewed(...)`,
+  `store.llm?.reanalyze()`) instead of emitting events that bubble up to
+  whoever created the store. `store.llm` is `undefined` when LLM analysis
+  isn't available in the current environment (e.g. the GitHub-embedded view),
+  which components use structurally to hide AI-related UI. Components MUST
+  NOT know which provider or analyze adapter produced the store's data, and
+  MUST NOT talk to storage/providers/adapters directly — only the store
+  factories (`app/stores/diffs-store.ts`'s `createDiffsStore`,
+  `app/stores/mock-diffs-store.ts`'s `createMockDiffsStore`) do that. This
+  keeps every view component Storybook-friendly and isomorphic across a real
+  PR, a pasted patch, and mock data — a story just builds a different store.
 
 ## Canonical data structures
 

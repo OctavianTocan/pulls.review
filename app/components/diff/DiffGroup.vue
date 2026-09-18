@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import type { DiffsStore } from '../../stores/types'
 import type { ResolvedGroupWithChildren } from './group-utils'
 import ActionIconButton from '@antfu/design/components/Action/ActionIconButton.vue'
 import DisplayDonut from '@antfu/design/components/Display/DisplayDonut.vue'
@@ -10,17 +11,16 @@ import FileDiff from './FileDiff.vue'
 import FileTree from './FileTree.vue'
 
 const props = defineProps<{
+  store: DiffsStore
   group: ResolvedGroupWithChildren
   layout: 'split' | 'unified'
-  reviewed: Set<string>
   collapsed: boolean
   /** Nested (child) groups render without their own sticky header or further children. */
   nested?: boolean
 }>()
 
 const emit = defineEmits<{
-  'update:reviewed': [sha: string, reviewed: boolean]
-  'toggle': []
+  toggle: []
 }>()
 
 const totalFiles = computed(() => props.group.files.length + props.group.children.reduce((n, c) => n + c.files.length, 0))
@@ -28,7 +28,7 @@ const totalAdded = computed(() => props.group.added + props.group.children.reduc
 const totalDeleted = computed(() => props.group.deleted + props.group.children.reduce((n, c) => n + c.deleted, 0))
 const reviewedCount = computed(() => {
   const files = [...props.group.files, ...props.group.children.flatMap(child => child.files)]
-  return files.filter(file => props.reviewed.has(file.sha)).length
+  return files.filter(file => props.store.reviewed.has(file.sha)).length
 })
 
 // Each child group collapses independently of its parent and of its siblings.
@@ -103,9 +103,8 @@ function navigateToFile(sha: string) {
             <Markdown :value="group.summary" class="text-sm pb-2 border-b border-base op-fade" />
           </Suspense>
           <FileTree
+            :store="store"
             :files="group.files"
-            :reviewed="reviewed"
-            @update:reviewed="(sha, isReviewed) => emit('update:reviewed', sha, isReviewed)"
             @navigate="navigateToFile"
           />
         </template>
@@ -117,10 +116,9 @@ function navigateToFile(sha: string) {
             v-for="file of group.files"
             :key="file.sha"
             :ref="el => setFileDiffRef(file.sha, el as InstanceType<typeof FileDiff> | null)"
+            :store="store"
             :file="file"
             :layout="layout"
-            :reviewed="reviewed.has(file.sha)"
-            @update:reviewed="isReviewed => emit('update:reviewed', file.sha, isReviewed)"
           />
         </template>
       </div>
@@ -130,12 +128,11 @@ function navigateToFile(sha: string) {
       <DiffGroup
         v-for="child in group.children"
         :key="child.key"
+        :store="store"
         :group="{ ...child, children: [] }"
         :layout="layout"
-        :reviewed="reviewed"
         :collapsed="collapsedChildren.has(child.key)"
         nested
-        @update:reviewed="(sha, isReviewed) => emit('update:reviewed', sha, isReviewed)"
         @toggle="toggleChild(child.key)"
       />
     </div>
