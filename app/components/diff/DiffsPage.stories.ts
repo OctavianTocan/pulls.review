@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/vue3-vite'
-import real from '../../../test/fixtures/real/small.json'
+import real from '../../../test/fixtures/real/antfu-eslint-config-861.json'
 import partiallyReviewed from '../../../test/fixtures/synthetic/partially-reviewed.json'
 import zeroFiles from '../../../test/fixtures/synthetic/zero-files.json'
 import DiffsPage from './DiffsPage.vue'

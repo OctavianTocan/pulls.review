@@ -1,0 +1,522 @@
+{
+  "diff": {
+    "provider": "github",
+    "id": "github:devframes/devframe#387",
+    "title": "fix(hub-ui): initialize dock page scripts before activation",
+    "description": "## Background (Why)\n\nAn iframe dock's page script can register commands used by notifications before the user opens its panel. The reference hub UI waits for activation, leaving those commands unavailable until then.\n\n## Changes (What)\n\nAdd optional `eager: true` to the existing `ClientScriptEntry` descriptor, defaulting to lazy initialization as discussed in review. Both the reference hub UI and the headless runtime wait for RPC trust before eager initialization. Activation shares pending setup, and failed setup remains retryable. Cache setup per RPC connection and import descriptor; action clicks still execute each time.\n\nKeep the existing script fields: `clientScript` on iframe docks, `action` on action docks, and `renderer` on custom-render docks. The common dock base and JSON-render API are unchanged.\n\n## Verification (Testing)\n\n53 focused tests pass across the headless runtime, renderer fixtures, and reference UI context/script suites. Coverage includes opt-in eager initialization, default lazy behavior, trust gating, separate RPC connections, concurrent activation and setup failure/retry. Scoped hub/hub-ui type checks and changed-file lint pass.\n\nThe rebuilt assets at `51d41004` were checked in the in-app Chromium browser before the subsequent trust-race correction. Embedded iframe setup remained lazy unless opted in; eager setup ran before panel activation, stayed deduplicated on activation, and registered a working page-local command. A standalone page initialized its own script instance and its command remained functional after closing the embedded page.\n\nCommit `91291de9` adds six regression cases for trust revocation during dynamic import and while iframe setup completes. Both runtimes recheck trust before invocation/activation, and interrupted setup remains retryable after re-authentication. All 53 focused tests, changed-file lint and both package type checks pass. CI is running on this revision. The previous revision failed two Node 22 `plugin-code-server` declaration snapshots; that failure is retained pending the new run. The PR remains draft.\n\n",
+    "url": "https://github.com/devframes/devframe/pull/387",
+    "base": {
+      "sha": "582920e03652c662dd6e940c225aaa4bd002d730",
+      "ref": "main"
+    },
+    "head": {
+      "sha": "b3ff1695800e9e93dc56f85246b08a87a5e460cf",
+      "ref": "dvcol/dock-page-scripts"
+    },
+    "createdAt": "2026-09-13T23:58:17Z",
+    "updatedAt": "2026-09-16T00:26:47Z",
+    "pullRequest": {
+      "author": "dvcolomban",
+      "state": "merged"
+    },
+    "files": [
+      {
+        "path": "docs/content/1.guide/17.client-context.md",
+        "status": "modified",
+        "additions": 4,
+        "deletions": 2,
+        "isBinary": false,
+        "sha": "846cb62bb34838049d26445384f44a04b8a4170c",
+        "hunks": [
+          {
+            "header": "@@ -67,14 +67,16 @@ A client-only dock can also carry `type: 'json-render'` with an inline [JSON-ren",
+            "oldStart": 67,
+            "oldLines": 14,
+            "newStart": 67,
+            "newLines": 16,
+            "patch": " \n ## Dock client scripts\n \n-A client script is a `ClientScriptEntry`: `{ importFrom, importName? }` (`importName` defaults `'default'`). The field varies by entry kind: an `action` entry's `action` runs when the dock button is activated, a `custom-render` entry's `renderer` renders its panel, and an `iframe` entry's optional `clientScript` runs alongside the iframe panel inside the host page ([Hub API reference](/references/hub-api#dock-client-script-fields)).\n+A client script is a `ClientScriptEntry`: `{ importFrom, importName?, eager? }`. `importName` defaults to `'default'` and `eager` defaults to `false`. An `iframe` entry's optional `clientScript` runs inside the host page when the dock entry is first activated. An `action` entry runs its `action` on each activation, while a `custom-render` entry initializes its `renderer` after selection so it can mount into the panel.\n+\n+Set `eager: true` on an `iframe` `clientScript` or an `action` to initialize it as soon as the RPC connection is trusted, before opening a dock panel. This suits background subscriptions and page commands, such as an `action` that registers page commands or subscribes to `entry:activated` before its first click. A `custom-render` `renderer` needs its mounted panel, so it always initializes on activation. Both the reference hub UI and `createDevframeClientRuntime()` honor these settings ([Hub API reference](/references/hub-api#dock-client-script-fields)).\n \n The exported function (`DockClientScriptContext`) receives the client context and two dock-scoped extras:\n \n - **`current`** holds this entry's state: `entryMeta`, `isActive`, `domElements`, `events` (`entry:activated`, `entry:deactivated`, `entry:updated`, `dom:panel:mounted`, `dom:iframe:mounted`).\n - **`messages`**: an entry-scoped messages client (`category` defaults to the entry id; `info`/`warn`/`error`/`success`/`debug` shortcuts for `add()`).\n \n-A failed import retries on the next dock update.\n+Failed setup retries on the next activation, or on a dock update for eager scripts. Setup is cached per RPC connection, dock and import descriptor. Action clicks always execute again.\n \n ### Shipping a client script\n "
+          }
+        ]
+      },
+      {
+        "path": "docs/content/8.references/6.hub-api.md",
+        "status": "modified",
+        "additions": 3,
+        "deletions": 1,
+        "isBinary": false,
+        "sha": "fe028948fb8c758d8277ab4145c2b932e682bc2d",
+        "hunks": [
+          {
+            "header": "@@ -131,7 +131,9 @@ Which `ClientScriptEntry` field carries an entry's client script, and when it ru",
+            "oldStart": 131,
+            "oldLines": 7,
+            "newStart": 131,
+            "newLines": 9,
+            "patch": " |---|---|---|\n | `action` | `action` | when the dock button is activated |\n | `custom-render` | `renderer` | to render the entry's panel |\n-| `iframe` | `clientScript` (optional) | alongside the iframe panel, inside the host page |\n+| `iframe` | `clientScript` (optional) | inside the host page on first activation |\n+\n+`ClientScriptEntry.eager` defaults to `false`. Set it to `true` on an `iframe` `clientScript` or an `action` to initialize it after RPC trust, before dock activation. A `custom-render` `renderer` needs its mounted panel, so it always initializes on activation regardless of `eager`. Setup is cached per RPC connection and dock; action clicks execute on every activation.\n \n ## Frame-nav messages\n "
+          }
+        ]
+      },
+      {
+        "path": "examples/custom-hub-next/src/client/devframe/next-devframe-hub.ts",
+        "status": "modified",
+        "additions": 3,
+        "deletions": 2,
+        "isBinary": false,
+        "sha": "d2a5988e85813f53bb25a3a9081524ef7a55c496",
+        "hunks": [
+          {
+            "header": "@@ -287,7 +287,8 @@ export async function nextDevframeHub(",
+            "oldStart": 287,
+            "oldLines": 7,
+            "newStart": 287,
+            "newLines": 8,
+            "patch": " \n       // The demo dock-client script - the same package the Vite reference\n       // host loads via a bare specifier - mounted statically and attached as\n-      // a momentary `action` dock by its served URL.\n+      // a momentary `action` dock by its served URL. `eager: true` runs it on\n+      // trust so it subscribes to `entry:activated` before the first click.\n       if (demoDockClient) {\n         await ctx.host.mountStatic(DEMO_CLIENT_MOUNT_BASE, demoDockClient.dir)\n         ctx.docks.register({"
+          },
+          {
+            "header": "@@ -296,7 +297,7 @@ export async function nextDevframeHub(",
+            "oldStart": 296,
+            "oldLines": 7,
+            "newStart": 297,
+            "newLines": 7,
+            "patch": "           title: 'Client Script Demo',\n           icon: 'ph:plugs-connected-duotone',\n           category: 'app',\n-          action: { importFrom: demoDockClient.importFrom },\n+          action: { importFrom: demoDockClient.importFrom, eager: true },\n         })\n       }\n "
+          }
+        ]
+      },
+      {
+        "path": "examples/custom-hub-vite/vite.config.ts",
+        "status": "modified",
+        "additions": 4,
+        "deletions": 3,
+        "isBinary": false,
+        "sha": "a86a66908511191877491fc804d10235028c110a",
+        "hunks": [
+          {
+            "header": "@@ -176,15 +176,16 @@ export default defineConfig({",
+            "oldStart": 176,
+            "oldLines": 15,
+            "newStart": 176,
+            "newLines": 16,
+            "patch": "         // Bare-specifier client script demo: `importFrom` names the npm\n         // package itself, imported through Vite's own module graph via the\n         // host's `clientModuleResolution` (`'/@id/{specifier}'`). The Next\n-        // reference host consumes the same package as a prebuilt\n-        // self-contained bundle instead (see examples/demo-dock-client).\n+        // host uses the same package as a prebuilt bundle (see\n+        // examples/demo-dock-client). `eager: true` runs it on trust so it\n+        // subscribes to `entry:activated` before the first click.\n         context.docks.register({\n           type: 'action',\n           id: 'example:demo-client-script',\n           title: 'Client Script Demo',\n           icon: 'ph:plugs-connected-duotone',\n           category: 'app',\n-          action: { importFrom: 'demo-dock-client' },\n+          action: { importFrom: 'demo-dock-client', eager: true },\n         })\n \n         // Witness the missing-renderer path: a dock type nothing covers, so"
+          }
+        ]
+      },
+      {
+        "path": "packages/devframe/src/types/devframe.ts",
+        "status": "modified",
+        "additions": 5,
+        "deletions": 0,
+        "isBinary": false,
+        "sha": "cb8150b0e7e40ec75665d4d25a89c1659794d1a1",
+        "hunks": [
+          {
+            "header": "@@ -329,6 +329,11 @@ export interface DevframeDockDefaults {",
+            "oldStart": 329,
+            "oldLines": 6,
+            "newStart": 329,
+            "newLines": 11,
+            "patch": "    * host wiring; a URL or bare specifier passes through untouched.\n    */\n   clientScript?: {\n+    /**\n+     * Initialize after RPC trust without waiting for dock activation.\n+     * @default false\n+     */\n+    eager?: boolean\n     /** An absolute filesystem path, a served URL, or a bare npm specifier. */\n     importFrom: string\n     /**"
+          }
+        ]
+      },
+      {
+        "path": "packages/hub-ui/src/client/state/client-script.integration.test.ts",
+        "status": "modified",
+        "additions": 235,
+        "deletions": 4,
+        "isBinary": false,
+        "sha": "01585a5f3a7ced27cfa386c1d4cac19cd875f58a",
+        "hunks": [
+          {
+            "header": "@@ -1,6 +1,7 @@",
+            "oldStart": 1,
+            "oldLines": 6,
+            "newStart": 1,
+            "newLines": 7,
+            "patch": " import type { DevframeDockEntry } from '@devframes/hub'\n import type { DevframeRpcClient } from '@devframes/hub/client'\n import type { SharedState } from 'devframe/utils/shared-state'\n+import { DEVFRAME_EVENTS } from 'devframe/constants'\n import { createEventEmitter } from 'devframe/utils/events'\n import { createSharedState } from 'devframe/utils/shared-state'\n import { afterEach, describe, expect, it, vi } from 'vitest'"
+          },
+          {
+            "header": "@@ -42,7 +43,7 @@ function createStubRpc() {",
+            "oldStart": 42,
+            "oldLines": 7,
+            "newStart": 43,
+            "newLines": 7,
+            "patch": " \n declare global {\n   // eslint-disable-next-line vars-on-top -- test hook called by the dynamically imported client module\n-  var __DEVFRAME_CLIENT_SCRIPT_ATTEMPT__: (() => void) | undefined\n+  var __DEVFRAME_CLIENT_SCRIPT_ATTEMPT__: (() => void | Promise<void>) | undefined\n }\n \n afterEach(() => {"
+          },
+          {
+            "header": "@@ -52,6 +53,7 @@ afterEach(() => {",
+            "oldStart": 52,
+            "oldLines": 6,
+            "newStart": 53,
+            "newLines": 7,
+            "patch": " \n describe('dock client scripts', () => {\n   it('retries setup on a later activation after it fails', async () => {\n+    expect.assertions(3)\n     vi.spyOn(console, 'error').mockImplementation(() => {})\n     let attempts = 0\n     globalThis.__DEVFRAME_CLIENT_SCRIPT_ATTEMPT__ = () => {"
+          },
+          {
+            "header": "@@ -63,11 +65,10 @@ describe('dock client scripts', () => {",
+            "oldStart": 63,
+            "oldLines": 11,
+            "newStart": 65,
+            "newLines": 10,
+            "patch": "     const context = await createDocksContext('embedded', rpc)\n     const entry = {\n       id: 'retry-client-script',\n-      type: 'iframe',\n+      type: 'custom-render',\n       title: 'Retry client script',\n       icon: 'ph:play',\n-      url: '/retry',\n-      clientScript: {\n+      renderer: {\n         importFrom: 'data:text/javascript,export default () => globalThis.__DEVFRAME_CLIENT_SCRIPT_ATTEMPT__()',\n       },\n     } satisfies DevframeDockEntry"
+          },
+          {
+            "header": "@@ -81,3 +82,233 @@ describe('dock client scripts', () => {",
+            "oldStart": 81,
+            "oldLines": 3,
+            "newStart": 82,
+            "newLines": 233,
+            "patch": "     expect(attempts).toBe(2)\n   })\n })\n+\n+it('starts an eager iframe script before dock activation, once per RPC client', async () => {\n+  expect.assertions(3)\n+  let attempts = 0\n+  globalThis.__DEVFRAME_CLIENT_SCRIPT_ATTEMPT__ = () => {\n+    attempts++\n+  }\n+  const { rpc, sharedStates } = createStubRpc()\n+  const context = await createDocksContext('embedded', rpc)\n+  const clientScript = { eager: true, importFrom: 'data:text/javascript,export default () => globalThis.__DEVFRAME_CLIENT_SCRIPT_ATTEMPT__()' }\n+  const entry = { id: 'background-iframe', type: 'iframe', title: 'Background page script', icon: 'ph:browser', url: '/fixture', clientScript } satisfies DevframeDockEntry\n+  sharedStates.get('devframe:docks')!.push([entry])\n+  await expect.poll(() => attempts).toBe(1)\n+  expect(context.docks.selectedId).toBeNull()\n+  await context.docks.switchEntry(entry.id)\n+  expect(attempts).toBe(1)\n+})\n+\n+it('waits for trust and keeps the same dock script bound separately to each RPC client', async () => {\n+  expect.assertions(4)\n+  let attempts = 0\n+  globalThis.__DEVFRAME_CLIENT_SCRIPT_ATTEMPT__ = () => {\n+    attempts++\n+  }\n+  const first = createStubRpc()\n+  const second = createStubRpc()\n+  Object.assign(first.rpc, { isTrusted: false })\n+  await createDocksContext('embedded', first.rpc)\n+  await createDocksContext('embedded', second.rpc)\n+  const entry = {\n+    id: 'per-rpc-page-script',\n+    type: 'iframe',\n+    title: 'Page commands',\n+    icon: 'ph:browser',\n+    url: '/fixture',\n+    clientScript: { eager: true, importFrom: 'data:text/javascript,export default () => globalThis.__DEVFRAME_CLIENT_SCRIPT_ATTEMPT__()' },\n+  } satisfies DevframeDockEntry\n+  first.sharedStates.get('devframe:docks')!.push([entry])\n+  await nextTick()\n+  expect(attempts).toBe(0)\n+  second.sharedStates.get('devframe:docks')!.push([entry])\n+  await expect.poll(() => attempts).toBe(1)\n+  Object.assign(first.rpc, { isTrusted: true })\n+  first.rpc.events.emit(DEVFRAME_EVENTS.client.isTrustedUpdated, true)\n+  await expect.poll(() => attempts).toBe(2)\n+  first.sharedStates.get('devframe:docks')!.push([{ ...entry }])\n+  second.sharedStates.get('devframe:docks')!.push([{ ...entry }])\n+  await nextTick()\n+  expect(attempts).toBe(2)\n+})\n+\n+it('does not invoke action docks while initializing page scripts', async () => {\n+  expect.assertions(2)\n+  let attempts = 0\n+  globalThis.__DEVFRAME_CLIENT_SCRIPT_ATTEMPT__ = () => {\n+    attempts++\n+  }\n+  const { rpc, sharedStates } = createStubRpc()\n+  const context = await createDocksContext('embedded', rpc)\n+  const entry = {\n+    id: 'explicit-action-script',\n+    type: 'action',\n+    title: 'Explicit action',\n+    icon: 'ph:play',\n+    action: { importFrom: 'data:text/javascript,export default () => globalThis.__DEVFRAME_CLIENT_SCRIPT_ATTEMPT__()' },\n+  } satisfies DevframeDockEntry\n+  sharedStates.get('devframe:docks')!.push([entry])\n+  await nextTick()\n+  expect(attempts).toBe(0)\n+  await context.docks.switchEntry(entry.id)\n+  expect(attempts).toBe(1)\n+})\n+\n+it('keeps an eager custom-render renderer activation-gated so it mounts into its panel', async () => {\n+  expect.assertions(2)\n+  let attempts = 0\n+  globalThis.__DEVFRAME_CLIENT_SCRIPT_ATTEMPT__ = () => {\n+    attempts++\n+  }\n+  const { rpc, sharedStates } = createStubRpc()\n+  const context = await createDocksContext('embedded', rpc)\n+  const entry = {\n+    id: 'eager-renderer',\n+    type: 'custom-render',\n+    title: 'Eager renderer',\n+    icon: 'ph:play',\n+    renderer: { eager: true, importFrom: 'data:text/javascript,export default () => globalThis.__DEVFRAME_CLIENT_SCRIPT_ATTEMPT__()' },\n+  } satisfies DevframeDockEntry\n+  sharedStates.get('devframe:docks')!.push([entry])\n+  await nextTick()\n+  // A renderer needs its mounted panel, so `eager` must not run it before activation.\n+  expect(attempts).toBe(0)\n+  await context.docks.switchEntry(entry.id)\n+  expect(attempts).toBe(1)\n+})\n+\n+it.each([undefined, false] as const)('keeps page setup lazy when eager is %s', async (eager) => {\n+  expect.assertions(3)\n+  const attempt = vi.fn()\n+  globalThis.__DEVFRAME_CLIENT_SCRIPT_ATTEMPT__ = attempt\n+  const { rpc, sharedStates } = createStubRpc()\n+  const context = await createDocksContext('embedded', rpc)\n+  const entry = {\n+    id: 'lazy-page',\n+    type: 'iframe',\n+    title: 'Lazy page',\n+    icon: 'ph:browser',\n+    url: '/fixture',\n+    clientScript: { eager, importFrom: 'data:text/javascript,export default () => globalThis.__DEVFRAME_CLIENT_SCRIPT_ATTEMPT__()' },\n+  } satisfies DevframeDockEntry\n+  sharedStates.get('devframe:docks')!.push([entry])\n+  await nextTick()\n+  expect(attempt).not.toHaveBeenCalled()\n+  await context.docks.switchEntry(entry.id)\n+  expect(attempt).toHaveBeenCalledOnce()\n+  await context.docks.switchEntry(null)\n+  await context.docks.switchEntry(entry.id)\n+  expect(attempt).toHaveBeenCalledOnce()\n+})\n+\n+it('awaits an eager page setup before activation and retries it after failure', async () => {\n+  expect.assertions(5)\n+  vi.spyOn(console, 'error').mockImplementation(() => {})\n+  let complete!: () => void\n+  let attempts = 0\n+  globalThis.__DEVFRAME_CLIENT_SCRIPT_ATTEMPT__ = () => {\n+    attempts++\n+    if (attempts === 1)\n+      throw new Error('page setup failed')\n+    if (attempts === 2)\n+      return new Promise<void>((resolve) => { complete = resolve })\n+  }\n+  const { rpc, sharedStates } = createStubRpc()\n+  const context = await createDocksContext('embedded', rpc)\n+  const script = { importFrom: 'data:text/javascript,export default () => globalThis.__DEVFRAME_CLIENT_SCRIPT_ATTEMPT__()' }\n+  const entry = {\n+    id: 'retry-page-before-activation',\n+    type: 'iframe',\n+    title: 'Retry page',\n+    icon: 'ph:play',\n+    url: '/fixture',\n+    clientScript: { ...script, eager: true },\n+  } satisfies DevframeDockEntry\n+  sharedStates.get('devframe:docks')!.push([entry])\n+  await expect.poll(() => attempts).toBe(1)\n+  const activation = context.docks.switchEntry(entry.id)\n+  await expect.poll(() => attempts).toBe(2)\n+  expect(context.docks.selectedId).toBeNull()\n+  complete()\n+  await expect(activation).resolves.toBe(true)\n+  expect(attempts).toBe(2)\n+})\n+\n+it.each([false, true])('retries setup after trust is revoked during import (eager: %s)', async (eager) => {\n+  expect.assertions(6)\n+  const reportError = vi.spyOn(console, 'error').mockImplementation(() => {})\n+  const { rpc, sharedStates: states } = createStubRpc()\n+  const context = await createDocksContext('embedded', rpc)\n+  const docks = context.docks\n+  const fixture = globalThis as typeof globalThis & { __DF_IMPORT_GATE_UI__?: () => Promise<void>, __DF_IMPORT_SETUP_UI__?: () => void }\n+  let releaseImport!: () => void\n+  const importGate = new Promise<void>((resolve) => {\n+    releaseImport = resolve\n+  })\n+  const importing = vi.fn(() => importGate)\n+  const setup = vi.fn()\n+  fixture.__DF_IMPORT_GATE_UI__ = importing\n+  fixture.__DF_IMPORT_SETUP_UI__ = setup\n+  const entry = {\n+    id: `revoked-import-${eager}`,\n+    type: 'iframe',\n+    title: 'Revoked import',\n+    icon: 'ph:browser',\n+    url: '/fixture',\n+    clientScript: {\n+      eager,\n+      importFrom: `data:text/javascript,await globalThis.__DF_IMPORT_GATE_UI__(); export default () => globalThis.__DF_IMPORT_SETUP_UI__(); // ${eager}`,\n+    },\n+  } satisfies DevframeDockEntry\n+  try {\n+    states.get('devframe:docks')!.push([entry])\n+    const activation = docks.switchEntry(entry.id)\n+    const rejected = expect(activation).rejects.toThrow('no longer trusted')\n+    await expect.poll(() => importing.mock.calls.length).toBe(1)\n+    Object.assign(rpc, { isTrusted: false })\n+    rpc.events.emit(DEVFRAME_EVENTS.client.isTrustedUpdated, false)\n+    releaseImport()\n+    await rejected\n+    expect(setup).not.toHaveBeenCalled()\n+    expect(docks.selectedId).toBeNull()\n+    Object.assign(rpc, { isTrusted: true })\n+    rpc.events.emit(DEVFRAME_EVENTS.client.isTrustedUpdated, true)\n+    await expect(docks.switchEntry(entry.id)).resolves.toBe(true)\n+    expect(setup).toHaveBeenCalledOnce()\n+  }\n+  finally {\n+    releaseImport()\n+    delete fixture.__DF_IMPORT_GATE_UI__\n+    delete fixture.__DF_IMPORT_SETUP_UI__\n+    reportError.mockRestore()\n+  }\n+})\n+\n+it('does not activate an iframe when trust is lost while its setup completes', async () => {\n+  expect.assertions(2)\n+  const { rpc, sharedStates: states } = createStubRpc()\n+  const context = await createDocksContext('embedded', rpc)\n+  const docks = context.docks\n+  const fixture = globalThis as typeof globalThis & { __DF_SETUP_REVOKE_UI__?: () => void }\n+  fixture.__DF_SETUP_REVOKE_UI__ = () => {\n+    Object.assign(rpc, { isTrusted: false })\n+    rpc.events.emit(DEVFRAME_EVENTS.client.isTrustedUpdated, false)\n+  }\n+  const entry = {\n+    id: 'revoked-during-setup',\n+    type: 'iframe',\n+    title: 'Revoked setup',\n+    icon: 'ph:browser',\n+    url: '/fixture',\n+    clientScript: { importFrom: 'data:text/javascript,export default async () => globalThis.__DF_SETUP_REVOKE_UI__()' },\n+  } satisfies DevframeDockEntry\n+  try {\n+    states.get('devframe:docks')!.push([entry])\n+    await expect(docks.switchEntry(entry.id)).resolves.toBe(false)\n+    expect(docks.selectedId).toBeNull()\n+  }\n+  finally {\n+    delete fixture.__DF_SETUP_REVOKE_UI__\n+  }\n+})"
+          }
+        ]
+      },
+      {
+        "path": "packages/hub-ui/src/client/state/context.test.ts",
+        "status": "modified",
+        "additions": 2,
+        "deletions": 1,
+        "isBinary": false,
+        "sha": "e77313a4d5d2f236e73a5fce23e9a7e187097e00",
+        "hunks": [
+          {
+            "header": "@@ -10,7 +10,8 @@ import { nextTick, ref } from 'vue'",
+            "oldStart": 10,
+            "oldLines": 7,
+            "newStart": 10,
+            "newLines": 8,
+            "patch": " import { createDocksContext } from './context'\n import { executeSetupScript } from './setup-script'\n \n-vi.mock('./setup-script', () => ({\n+vi.mock('./setup-script', async importOriginal => ({\n+  ...await importOriginal<typeof import('./setup-script')>(),\n   executeSetupScript: vi.fn(async () => {}),\n }))\n "
+          }
+        ]
+      },
+      {
+        "path": "packages/hub-ui/src/client/state/context.ts",
+        "status": "modified",
+        "additions": 44,
+        "deletions": 11,
+        "isBinary": false,
+        "sha": "b57a04b288b5e4198642421d3fe71c6d8c277357",
+        "hunks": [
+          {
+            "header": "@@ -17,7 +17,7 @@ import { createDockEntryState, DEFAULT_DOCK_PANEL_STORE, DEFAULT_DOCK_SESSION_ST",
+            "oldStart": 17,
+            "oldLines": 7,
+            "newStart": 17,
+            "newLines": 7,
+            "patch": " import { createClientMessagesClient } from './messages-client'\n import { dockCommandId } from './palette'\n import { registerMainFrameDockActionHandler, triggerMainFrameDockAction, useIsDockPopupOpen } from './popup'\n-import { executeSetupScript } from './setup-script'\n+import { clientScriptOf, executeSetupScript } from './setup-script'\n \n const docksContextByRpc = new WeakMap<DevframeRpcClient, DocksContext>()\n export async function createDocksContext("
+          },
+          {
+            "header": "@@ -229,17 +229,39 @@ export async function createDocksContext(",
+            "oldStart": 229,
+            "oldLines": 17,
+            "newStart": 229,
+            "newLines": 39,
+            "patch": "     return null\n   }\n \n-  const runDockSetupScript = async (entry: DevframeDockEntry) => {\n-    const hasScript = entry.type === 'action' || entry.type === 'custom-render' || (entry.type === 'iframe' && entry.clientScript)\n-    if (!hasScript)\n-      return\n-    const messagesClient = createClientMessagesClient(rpc)\n-    const scriptContext: DockClientScriptContext = reactive({\n+  function scriptContext(entry: DevframeDockEntry): DockClientScriptContext {\n+    return reactive({\n       ...toRefs(docksContext) as any,\n       current: dockEntryStateMap.get(entry.id)!,\n-      messages: messagesClient,\n+      messages: createClientMessagesClient(rpc),\n     })\n-    await executeSetupScript(entry, scriptContext)\n+  }\n+\n+  async function runPageScript(entry: DevframeDockEntry): Promise<void> {\n+    if (entry.type !== 'iframe' || !entry.clientScript)\n+      return\n+    await executeSetupScript(entry, scriptContext(entry))\n+  }\n+\n+  async function runActivationScript(entry: DevframeDockEntry): Promise<void> {\n+    if (entry.type === 'action' || entry.type === 'custom-render')\n+      await executeSetupScript(entry, scriptContext(entry))\n+  }\n+\n+  /** Only explicitly eager descriptors run before activation, after the RPC connection is trusted. */\n+  function startPageScripts(): void {\n+    if (!rpc.isTrusted)\n+      return\n+    for (const entry of entries.value) {\n+      // A `custom-render` renderer needs its mounted panel, so it stays\n+      // activation-gated; only panel-independent page and action scripts run eagerly.\n+      if (entry.type !== 'iframe' && entry.type !== 'action')\n+        continue\n+      if (!clientScriptOf(entry)?.eager)\n+        continue\n+      /** Setup reports failures and allows the next activation or publication to retry. */\n+      void executeSetupScript(entry, scriptContext(entry), true).catch(() => {})\n+    }\n   }\n \n   // Remember selection redirects: a member tab as its frame's live tab, and a"
+          },
+          {
+            "header": "@@ -286,11 +308,17 @@ export async function createDocksContext(",
+            "oldStart": 286,
+            "oldLines": 11,
+            "newStart": 308,
+            "newLines": 17,
+            "patch": "         return false\n     }\n \n+    if (!rpc.isTrusted)\n+      return false\n+    await runPageScript(entry)\n+    if (!rpc.isTrusted)\n+      return false\n+\n     initialRestorePending.value = false\n     selectedDockId.value = entry.id\n     sessionStore.value.open = true\n \n-    await runDockSetupScript(entry)\n+    await runActivationScript(entry)\n     rememberEntrySelection(entry)\n     return true\n   }"
+          },
+          {
+            "header": "@@ -372,8 +400,10 @@ export async function createDocksContext(",
+            "oldStart": 372,
+            "oldLines": 8,
+            "newStart": 400,
+            "newLines": 10,
+            "patch": "     name: HUB_EVENTS.broadcast.docksActivate satisfies keyof DevframeRpcClientFunctions,\n     type: 'action',\n     handler: (activation: { dockId: string, params?: Record<string, unknown> }) => {\n+      // `switchEntry` rejects when a lazy client script fails so its cache entry\n+      // stays retryable; the failure is already logged, so swallow it here.\n       if (activation?.dockId)\n-        switchEntry(activation.dockId)\n+        void switchEntry(activation.dockId).catch(() => {})\n     },\n   })\n "
+          },
+          {
+            "header": "@@ -707,6 +737,9 @@ export async function createDocksContext(",
+            "oldStart": 707,
+            "oldLines": 6,
+            "newStart": 737,
+            "newLines": 9,
+            "patch": "   )\n   void restoreAfterInitialization()\n \n+  watch(entries, startPageScripts, { immediate: true })\n+  rpc.events.on(DEVFRAME_EVENTS.client.isTrustedUpdated, startPageScripts)\n+\n   docksContextByRpc.set(rpc, docksContext)\n   return docksContext\n }"
+          }
+        ]
+      },
+      {
+        "path": "packages/hub-ui/src/client/state/setup-script.ts",
+        "status": "modified",
+        "additions": 35,
+        "deletions": 30,
+        "isBinary": false,
+        "sha": "680da220cbfe3f1964248a892ca8b306a3997098",
+        "hunks": [
+          {
+            "header": "@@ -1,29 +1,22 @@",
+            "oldStart": 1,
+            "oldLines": 29,
+            "newStart": 1,
+            "newLines": 22,
+            "patch": " import type { ClientScriptEntry, DevframeDockUserEntry } from '@devframes/hub'\n-import type { DockClientScriptContext } from '@devframes/hub/client'\n+import type { DevframeRpcClient, DockClientScriptContext } from '@devframes/hub/client'\n import { clientScriptFailureHint, resolveClientModuleSpecifier } from '@devframes/hub/client'\n \n-/**\n- * Resolve the {@link ClientScriptEntry} a dock entry carries: an `action`'s\n- * `action`, a `custom-render`'s `renderer`, or an iframe's `clientScript`.\n- */\n-function clientScriptOf(entry: DevframeDockUserEntry): ClientScriptEntry | undefined {\n-  switch (entry.type) {\n-    case 'action':\n-      return entry.action\n-    case 'custom-render':\n-      return entry.renderer\n-    case 'iframe':\n-      return entry.clientScript\n-    default:\n-      return undefined\n-  }\n+/** Resolve the existing script field for this dock kind. */\n+export function clientScriptOf(entry: DevframeDockUserEntry): ClientScriptEntry | undefined {\n+  if (entry.type === 'iframe')\n+    return entry.clientScript\n+  if (entry.type === 'action')\n+    return entry.action\n+  if (entry.type === 'custom-render')\n+    return entry.renderer\n }\n \n async function _executeSetupScript(\n   entry: DevframeDockUserEntry,\n   context: DockClientScriptContext,\n+  script: ClientScriptEntry | undefined,\n ): Promise<void> {\n-  const script = clientScriptOf(entry)\n   if (!script?.importFrom)\n     throw new Error(`[@devframes/hub-ui] Dock entry \"${entry.id}\" carries no client script to run`)\n   // A bare specifier resolves through the host-advertised template; URL"
+          },
+          {
+            "header": "@@ -41,6 +34,9 @@ async function _executeSetupScript(",
+            "oldStart": 41,
+            "oldLines": 6,
+            "newStart": 34,
+            "newLines": 9,
+            "patch": "     const fn = mod[script.importName ?? 'default']\n     if (typeof fn !== 'function')\n       throw new Error(`[@devframes/hub-ui] \"${specifier}\" exports no callable \"${script.importName ?? 'default'}\"`)\n+    /** Trust may change while the module is loading; rejection keeps setup retryable. */\n+    if (!context.rpc.isTrusted)\n+      throw new Error('[@devframes/hub-ui] RPC client is no longer trusted')\n     await fn(context)\n   }\n   catch (error) {"
+          },
+          {
+            "header": "@@ -53,23 +49,32 @@ async function _executeSetupScript(",
+            "oldStart": 53,
+            "oldLines": 23,
+            "newStart": 49,
+            "newLines": 32,
+            "patch": "     throw error\n   }\n }\n-const _setupPromises = new Map<string, Promise<void>>()\n+const setupPromisesByRpc = new WeakMap<DevframeRpcClient, Map<string, Promise<void>>>()\n+\n+/** Cache setup per RPC connection and dock; explicit action clicks always run again. */\n export function executeSetupScript(\n   entry: DevframeDockUserEntry,\n   context: DockClientScriptContext,\n+  cache = entry.type !== 'action',\n ): Promise<void> {\n-  // Actions should re-execute on every click; only cache non-action scripts\n-  if (entry.type !== 'action' && _setupPromises.has(entry.id))\n-    return _setupPromises.get(entry.id)!\n-  const promise = _executeSetupScript(entry, context)\n-  if (entry.type !== 'action') {\n-    _setupPromises.set(entry.id, promise)\n-    promise.catch(() => {\n-      // A failed setup must not poison this entry permanently. The caller still\n-      // receives the rejection, while a later activation or update may retry.\n-      if (_setupPromises.get(entry.id) === promise)\n-        _setupPromises.delete(entry.id)\n-    })\n+  const script = clientScriptOf(entry)\n+  let setupPromises = setupPromisesByRpc.get(context.rpc)\n+  if (!setupPromises) {\n+    setupPromises = new Map()\n+    setupPromisesByRpc.set(context.rpc, setupPromises)\n   }\n+  const key = JSON.stringify([entry.id, script?.importFrom, script?.importName ?? 'default'])\n+  const existing = setupPromises.get(key)\n+  if (cache && existing)\n+    return existing\n+  const promise = _executeSetupScript(entry, context, script)\n+  if (!cache)\n+    return promise\n+  setupPromises.set(key, promise)\n+  void promise.catch(() => {\n+    /** Failed setup can retry on activation or a later dock publication. */\n+    if (setupPromises.get(key) === promise)\n+      setupPromises.delete(key)\n+  })\n   return promise\n }"
+          }
+        ]
+      },
+      {
+        "path": "packages/hub/src/client/__tests__/host.test.ts",
+        "status": "modified",
+        "additions": 144,
+        "deletions": 2,
+        "isBinary": false,
+        "sha": "2cd9fced8f57c1da01ef5259aa243f3f3fedf558",
+        "hunks": [
+          {
+            "header": "@@ -1,6 +1,7 @@",
+            "oldStart": 1,
+            "oldLines": 6,
+            "newStart": 1,
+            "newLines": 7,
+            "patch": " import type { DevframeRpcClient } from 'devframe/client'\n import type { SharedState } from 'devframe/utils/shared-state'\n import type { DevframeDockEntry, DevframeDockPanelState } from '../../types/docks'\n+import { DEVFRAME_EVENTS } from 'devframe/constants'\n import { createEventEmitter } from 'devframe/utils/events'\n import { describe, expect, it, vi } from 'vitest'\n import { HUB_EVENTS } from '../../events'"
+          },
+          {
+            "header": "@@ -38,6 +39,8 @@ function createStubRpc() {",
+            "oldStart": 38,
+            "oldLines": 6,
+            "newStart": 39,
+            "newLines": 8,
+            "patch": "   const states = new Map<string, StubSharedState<any>>()\n   const definitions = new Map<string, { name: string, type: string, handler?: (...args: any[]) => any }>()\n   const partial: DeepPartial<DevframeRpcClient> = {\n+    isTrusted: true,\n+    events: createEventEmitter<any>(),\n     sharedState: {\n       async get(key: string, options?: { initialValue?: any }) {\n         if (!states.has(key))"
+          },
+          {
+            "header": "@@ -301,7 +304,7 @@ describe('createDevframeClientRuntime', () => {",
+            "oldStart": 301,
+            "oldLines": 7,
+            "newStart": 304,
+            "newLines": 7,
+            "patch": "     const received: any[] = []\n     ;(globalThis as any).__DF_TEST_CLIENT_DOCK__ = (ctx: any) => received.push(ctx)\n     const dataUrl = `data:text/javascript,export default ctx => globalThis.__DF_TEST_CLIENT_DOCK__(ctx)`\n-    host.context.docks.register(iframeEntry('local', { clientScript: { importFrom: dataUrl } }))\n+    host.context.docks.register(iframeEntry('local', { clientScript: { eager: true, importFrom: dataUrl } }))\n \n     await vi.waitFor(() => expect(received).toHaveLength(1))\n     expect(received[0].current.entryMeta.id).toBe('local')"
+          },
+          {
+            "header": "@@ -380,7 +383,7 @@ describe('createDevframeClientRuntime', () => {",
+            "oldStart": 380,
+            "oldLines": 7,
+            "newStart": 383,
+            "newLines": 7,
+            "patch": "     ;(globalThis as any).__DF_TEST_SCRIPT__ = (ctx: any) => received.push(ctx)\n     const dataUrl = `data:text/javascript,export default ctx => globalThis.__DF_TEST_SCRIPT__(ctx)`\n     states.get('devframe:docks')!.push([\n-      iframeEntry('scripted', { clientScript: { importFrom: dataUrl } }),\n+      iframeEntry('scripted', { clientScript: { eager: true, importFrom: dataUrl } }),\n     ])\n \n     await vi.waitFor(() => expect(received).toHaveLength(1))"
+          },
+          {
+            "header": "@@ -421,3 +424,142 @@ describe('createDevframeClientRuntime', () => {",
+            "oldStart": 421,
+            "oldLines": 3,
+            "newStart": 424,
+            "newLines": 142,
+            "patch": "     }\n   })\n })\n+\n+it('waits for trust for eager setup and activation for lazy setup in the headless runtime', async () => {\n+  expect.assertions(5)\n+  const { rpc, states } = createStubRpc()\n+  Object.assign(rpc, { isTrusted: false })\n+  const runtime = await createDevframeClientRuntime({ rpc })\n+  const attempt = vi.fn()\n+  const fixture = globalThis as typeof globalThis & { __DF_LAZY_TEST__?: () => void }\n+  fixture.__DF_LAZY_TEST__ = attempt\n+  const script = { importFrom: 'data:text/javascript,export default () => globalThis.__DF_LAZY_TEST__()' }\n+  const eager = iframeEntry('eager', { clientScript: { ...script, eager: true } })\n+  const lazy = iframeEntry('lazy', { clientScript: script })\n+  try {\n+    states.get('devframe:docks')!.push([eager, lazy])\n+    expect(attempt).not.toHaveBeenCalled()\n+    await expect(runtime.context.docks.switchEntry('lazy')).resolves.toBe(false)\n+    Object.assign(rpc, { isTrusted: true })\n+    rpc.events.emit(DEVFRAME_EVENTS.client.isTrustedUpdated, true)\n+    await expect.poll(() => attempt.mock.calls.length).toBe(1)\n+    await runtime.context.docks.switchEntry('lazy')\n+    expect(attempt).toHaveBeenCalledTimes(2)\n+    await runtime.context.docks.switchEntry(null)\n+    await runtime.context.docks.switchEntry('lazy')\n+    expect(attempt).toHaveBeenCalledTimes(2)\n+  }\n+  finally {\n+    runtime.dispose()\n+    delete fixture.__DF_LAZY_TEST__\n+  }\n+})\n+\n+it('keeps an eager custom-render renderer activation-gated in the headless runtime', async () => {\n+  expect.assertions(2)\n+  const { rpc, states } = createStubRpc()\n+  const runtime = await createDevframeClientRuntime({ rpc })\n+  const attempt = vi.fn()\n+  const fixture = globalThis as typeof globalThis & { __DF_RENDERER_TEST__?: () => void }\n+  fixture.__DF_RENDERER_TEST__ = attempt\n+  const entry = {\n+    id: 'eager-renderer',\n+    title: 'Eager renderer',\n+    icon: 'ph:cube',\n+    type: 'custom-render',\n+    renderer: { eager: true, importFrom: 'data:text/javascript,export default () => globalThis.__DF_RENDERER_TEST__()' },\n+  } satisfies DevframeDockEntry\n+  try {\n+    states.get('devframe:docks')!.push([entry])\n+    // Give any eager import a chance to resolve; a renderer needs its mounted\n+    // panel, so `eager` must not run it before activation.\n+    await new Promise(resolve => setTimeout(resolve, 10))\n+    expect(attempt).not.toHaveBeenCalled()\n+    await runtime.context.docks.switchEntry(entry.id)\n+    expect(attempt).toHaveBeenCalledTimes(1)\n+  }\n+  finally {\n+    runtime.dispose()\n+    delete fixture.__DF_RENDERER_TEST__\n+  }\n+})\n+\n+it.each([false, true])('retries setup after trust is revoked during import (eager: %s)', async (eager) => {\n+  expect.assertions(6)\n+  const reportError = vi.spyOn(console, 'error').mockImplementation(() => {})\n+  const { rpc, states } = createStubRpc()\n+  const runtime = await createDevframeClientRuntime({ rpc })\n+  const docks = runtime.context.docks\n+  const fixture = globalThis as typeof globalThis & { __DF_IMPORT_GATE_HEADLESS__?: () => Promise<void>, __DF_IMPORT_SETUP_HEADLESS__?: () => void }\n+  let releaseImport!: () => void\n+  const importGate = new Promise<void>((resolve) => {\n+    releaseImport = resolve\n+  })\n+  const importing = vi.fn(() => importGate)\n+  const setup = vi.fn()\n+  fixture.__DF_IMPORT_GATE_HEADLESS__ = importing\n+  fixture.__DF_IMPORT_SETUP_HEADLESS__ = setup\n+  const entry = {\n+    id: `revoked-import-${eager}`,\n+    type: 'iframe',\n+    title: 'Revoked import',\n+    icon: 'ph:browser',\n+    url: '/fixture',\n+    clientScript: {\n+      eager,\n+      importFrom: `data:text/javascript,await globalThis.__DF_IMPORT_GATE_HEADLESS__(); export default () => globalThis.__DF_IMPORT_SETUP_HEADLESS__(); // ${eager}`,\n+    },\n+  } satisfies DevframeDockEntry\n+  try {\n+    states.get('devframe:docks')!.push([entry])\n+    const activation = docks.switchEntry(entry.id)\n+    const rejected = expect(activation).rejects.toThrow('no longer trusted')\n+    await expect.poll(() => importing.mock.calls.length).toBe(1)\n+    Object.assign(rpc, { isTrusted: false })\n+    rpc.events.emit(DEVFRAME_EVENTS.client.isTrustedUpdated, false)\n+    releaseImport()\n+    await rejected\n+    expect(setup).not.toHaveBeenCalled()\n+    expect(docks.selectedId).toBeNull()\n+    Object.assign(rpc, { isTrusted: true })\n+    rpc.events.emit(DEVFRAME_EVENTS.client.isTrustedUpdated, true)\n+    await expect(docks.switchEntry(entry.id)).resolves.toBe(true)\n+    expect(setup).toHaveBeenCalledOnce()\n+  }\n+  finally {\n+    releaseImport()\n+    delete fixture.__DF_IMPORT_GATE_HEADLESS__\n+    delete fixture.__DF_IMPORT_SETUP_HEADLESS__\n+    reportError.mockRestore()\n+    runtime.dispose()\n+  }\n+})\n+\n+it('does not activate an iframe when trust is lost while its setup completes', async () => {\n+  expect.assertions(2)\n+  const { rpc, states } = createStubRpc()\n+  const runtime = await createDevframeClientRuntime({ rpc })\n+  const docks = runtime.context.docks\n+  const fixture = globalThis as typeof globalThis & { __DF_SETUP_REVOKE_HEADLESS__?: () => void }\n+  fixture.__DF_SETUP_REVOKE_HEADLESS__ = () => {\n+    Object.assign(rpc, { isTrusted: false })\n+    rpc.events.emit(DEVFRAME_EVENTS.client.isTrustedUpdated, false)\n+  }\n+  const entry = {\n+    id: 'revoked-during-setup',\n+    type: 'iframe',\n+    title: 'Revoked setup',\n+    icon: 'ph:browser',\n+    url: '/fixture',\n+    clientScript: { importFrom: 'data:text/javascript,export default async () => globalThis.__DF_SETUP_REVOKE_HEADLESS__()' },\n+  } satisfies DevframeDockEntry\n+  try {\n+    states.get('devframe:docks')!.push([entry])\n+    await expect(docks.switchEntry(entry.id)).resolves.toBe(false)\n+    expect(docks.selectedId).toBeNull()\n+  }\n+  finally {\n+    delete fixture.__DF_SETUP_REVOKE_HEADLESS__\n+    runtime.dispose()\n+  }\n+})"
+          }
+        ]
+      },
+      {
+        "path": "packages/hub/src/client/__tests__/renderers.test.ts",
+        "status": "modified",
+        "additions": 2,
+        "deletions": 0,
+        "isBinary": false,
+        "sha": "5b40a28bf9dac69881010909699757af72175390",
+        "hunks": [
+          {
+            "header": "@@ -33,6 +33,8 @@ function createStubSharedState<T>(initial: T): StubSharedState<T> {",
+            "oldStart": 33,
+            "oldLines": 6,
+            "newStart": 33,
+            "newLines": 8,
+            "patch": " function createStubRpc() {\n   const states = new Map<string, StubSharedState<any>>()\n   const partial: DeepPartial<DevframeRpcClient> = {\n+    isTrusted: true,\n+    events: createEventEmitter<any>(),\n     sharedState: {\n       async get(key: string, options?: { initialValue?: any }) {\n         if (!states.has(key))"
+          }
+        ]
+      },
+      {
+        "path": "packages/hub/src/client/host.ts",
+        "status": "modified",
+        "additions": 71,
+        "deletions": 16,
+        "isBinary": false,
+        "sha": "1d4ffd51ffcd15484ab73b2222f9d2237a299387",
+        "hunks": [
+          {
+            "header": "@@ -27,6 +27,7 @@ import type {",
+            "oldStart": 27,
+            "oldLines": 6,
+            "newStart": 27,
+            "newLines": 7,
+            "patch": " } from './docks'\n import type { DockRenderer, DockRendererManifest, DockRenderersContext } from './renderers'\n import { connectDevframe } from 'devframe/client'\n+import { DEVFRAME_EVENTS } from 'devframe/constants'\n import { createEventEmitter } from 'devframe/utils/events'\n import { clientScriptFailureHint, resolveClientModuleSpecifier } from '../client-modules'\n import { DEFAULT_CATEGORIES_ORDER, DEFAULT_STATE_USER_SETTINGS, DOCK_RENDERERS_STATE_KEY } from '../constants'"
+          },
+          {
+            "header": "@@ -199,8 +200,10 @@ export async function createDevframeClientRuntime(",
+            "oldStart": 199,
+            "oldLines": 8,
+            "newStart": 200,
+            "newLines": 10,
+            "patch": "   // unknown ids. Chain onto any handler a co-consumer already registered on\n   // this rpc client rather than replacing it.\n   const activateHandler = (activation: { dockId?: string } | undefined): void => {\n+    // `switchEntry` rejects when a lazy client script fails so its cache entry\n+    // stays retryable; the failure is already logged, so swallow it here.\n     if (activation?.dockId)\n-      void switchEntry(activation.dockId)\n+      void switchEntry(activation.dockId).catch(() => {})\n   }\n   const existingActivate = rpc.client.definitions.get(DOCKS_ACTIVATE_EVENT)\n   if (existingActivate) {"
+          },
+          {
+            "header": "@@ -235,15 +238,18 @@ export async function createDevframeClientRuntime(",
+            "oldStart": 235,
+            "oldLines": 15,
+            "newStart": 238,
+            "newLines": 18,
+            "patch": "   }\n   setDevframeClientContext(context)\n \n-  const loadedScripts = new Set<string>()\n+  let disposed = false\n+  const loadedScripts = new Map<string, Promise<void>>()\n   if (loadScriptsEnabled) {\n     loadClientScripts()\n     disposers.push(docksState.on('updated', loadClientScripts))\n+    disposers.push(rpc.events.on(DEVFRAME_EVENTS.client.isTrustedUpdated, loadClientScripts))\n   }\n \n   return {\n     context,\n     dispose() {\n+      disposed = true\n       for (const off of disposers.splice(0)) off()\n       for (const disposeAdapter of frameNavAdapters.values()) disposeAdapter()\n       frameNavAdapters.clear()"
+          },
+          {
+            "header": "@@ -363,7 +369,9 @@ export async function createDevframeClientRuntime(",
+            "oldStart": 363,
+            "oldLines": 7,
+            "newStart": 369,
+            "newLines": 9,
+            "patch": "         return selectedId\n       },\n       set selectedId(id: string | null) {\n-        void switchEntry(id)\n+        // Setter can't surface a rejection; `switchEntry` already logs a failed\n+        // client script and keeps its cache entry retryable.\n+        void switchEntry(id).catch(() => {})\n       },\n       /**\n        * A mirror of the session field, so a persisting host reads and writes the"
+          },
+          {
+            "header": "@@ -417,13 +425,34 @@ export async function createDevframeClientRuntime(",
+            "oldStart": 417,
+            "oldLines": 13,
+            "newStart": 425,
+            "newLines": 34,
+            "patch": "     return ctx\n   }\n \n+  async function preparePageScript(entry: DevframeDockEntry): Promise<boolean> {\n+    if (!rpc.isTrusted)\n+      return false\n+    if (entry.type === 'iframe' && entry.clientScript)\n+      await setupClientScript(entry.id, entry.clientScript)\n+    return !disposed && rpc.isTrusted && entryToStateMap.get(entry.id)?.entryMeta === entry\n+  }\n+\n+  async function runActivationScript(entry: DevframeDockEntry): Promise<void> {\n+    if (entry.type === 'action')\n+      await setupClientScript(entry.id, entry.action, false)\n+    else if (entry.type === 'custom-render')\n+      await setupClientScript(entry.id, entry.renderer)\n+  }\n+\n   async function switchEntry(id?: string | null): Promise<boolean> {\n     const next = id ?? null\n-    if (next === selectedId)\n+    if (next === selectedId && entryToStateMap.get(next ?? '')?.entryMeta.type !== 'action')\n       return false\n     if (next !== null && !entryToStateMap.has(next))\n       return false\n \n+    const entry = entryToStateMap.get(next ?? '')?.entryMeta\n+    if (entry && loadScriptsEnabled && !rpc.isTrusted)\n+      return false\n+    if (entry?.type === 'iframe' && entry.clientScript && loadScriptsEnabled && !await preparePageScript(entry))\n+      return false\n+\n     const previous = selectedId\n     selectedId = next\n     // Mirror onto the session context so a persisting host and the when-clause"
+          },
+          {
+            "header": "@@ -437,6 +466,8 @@ export async function createDevframeClientRuntime(",
+            "oldStart": 437,
+            "oldLines": 6,
+            "newStart": 466,
+            "newLines": 8,
+            "patch": "       entryToStateMap.get(previous)?.events.emit('entry:deactivated')\n     if (next)\n       entryToStateMap.get(next)?.events.emit('entry:activated')\n+    if (entry && loadScriptsEnabled)\n+      await runActivationScript(entry)\n     return true\n   }\n "
+          },
+          {
+            "header": "@@ -524,20 +555,41 @@ export async function createDevframeClientRuntime(",
+            "oldStart": 524,
+            "oldLines": 20,
+            "newStart": 555,
+            "newLines": 41,
+            "patch": " \n   // ── client scripts ───────────────────────────────────────────────────────\n \n-  function clientScriptOf(entry: DevframeDockEntry): ClientScriptEntry | undefined {\n-    return (entry as any).action ?? (entry as any).renderer ?? (entry as any).clientScript\n-  }\n-\n   function loadClientScripts(): void {\n+    if (disposed || !rpc.isTrusted)\n+      return\n+    // A `custom-render` renderer needs its mounted panel, so it stays\n+    // activation-gated; only panel-independent page and action scripts run eagerly.\n     for (const entry of currentEntries()) {\n-      const script = clientScriptOf(entry)\n-      if (!script?.importFrom || loadedScripts.has(entry.id))\n-        continue\n-      loadedScripts.add(entry.id)\n-      void runClientScript(entry.id, script)\n+      if (entry.type === 'iframe')\n+        startEagerScript(entry.id, entry.clientScript)\n+      else if (entry.type === 'action')\n+        startEagerScript(entry.id, entry.action)\n     }\n   }\n \n+  function startEagerScript(entryId: string, script: ClientScriptEntry | undefined): void {\n+    if (script?.eager)\n+      void setupClientScript(entryId, script).catch(() => {})\n+  }\n+\n+  /** Share eager and activation setup; explicit action invocations bypass the cache. */\n+  function setupClientScript(entryId: string, script: ClientScriptEntry, cache = true): Promise<void> {\n+    const key = JSON.stringify([entryId, script.importFrom, script.importName ?? 'default'])\n+    const existing = loadedScripts.get(key)\n+    if (cache && existing)\n+      return existing\n+    const promise = runClientScript(entryId, script)\n+    if (!cache)\n+      return promise\n+    loadedScripts.set(key, promise)\n+    void promise.catch(() => {\n+      if (loadedScripts.get(key) === promise)\n+        loadedScripts.delete(key)\n+    })\n+    return promise\n+  }\n+\n   async function runClientScript(entryId: string, script: ClientScriptEntry): Promise<void> {\n     // A bare specifier resolves through the explicit option, then the\n     // host-advertised template; URL specifiers pass through untouched. (The"
+          },
+          {
+            "header": "@@ -554,22 +606,25 @@ export async function createDevframeClientRuntime(",
+            "oldStart": 554,
+            "oldLines": 22,
+            "newStart": 606,
+            "newLines": 25,
+            "patch": "       const mod = await import(/* @vite-ignore */ /* webpackIgnore: true */ /* turbopackIgnore: true */ specifier)\n       const fn = mod[script.importName ?? 'default']\n       if (typeof fn !== 'function')\n-        return\n+        throw new Error(`[@devframes/hub] \"${specifier}\" exports no callable \"${script.importName ?? 'default'}\"`)\n       const current = entryToStateMap.get(entryId)\n-      if (!current)\n+      if (!current || disposed)\n         return\n+      /** Reject instead of caching skipped setup so re-authentication can retry it. */\n+      if (!rpc.isTrusted)\n+        throw new Error('[@devframes/hub] RPC client is no longer trusted')\n       // Scope the messages client to this entry: its messages default their\n       // `category` to the entry id, so the feed can attribute and group them.\n       const messages = createMessagesClient(rpc, { defaults: { category: entryId } })\n       const scriptContext: DockClientScriptContext = { ...context, current, messages }\n       await fn(scriptContext)\n     }\n     catch (error) {\n-      loadedScripts.delete(entryId)\n       console.error(\n         `[@devframes/hub] failed to load client script for \"${entryId}\" from ${specifier}${clientScriptFailureHint(script.importFrom, specifier)}`,\n         error,\n       )\n+      throw error\n     }\n   }\n }"
+          }
+        ]
+      },
+      {
+        "path": "packages/hub/src/types/docks.ts",
+        "status": "modified",
+        "additions": 6,
+        "deletions": 3,
+        "isBinary": false,
+        "sha": "513a28ed8525de30b2b9bcde67b281069fa07bf6",
+        "hunks": [
+          {
+            "header": "@@ -171,6 +171,11 @@ export interface DevframeDockEntryBase {",
+            "oldStart": 171,
+            "oldLines": 6,
+            "newStart": 171,
+            "newLines": 11,
+            "patch": " }\n \n export interface ClientScriptEntry {\n+  /**\n+   * Initialize after trust without waiting for dock activation.\n+   * @default false\n+   */\n+  eager?: boolean\n   /**\n    * What to import: either a **URL the host serves** (a self-contained ES\n    * module, e.g. `/@fs/<abs path>` under Vite or a statically-mounted bundle"
+          },
+          {
+            "header": "@@ -231,9 +236,7 @@ export interface DevframeViewIframe extends DevframeDockEntryBase {",
+            "oldStart": 231,
+            "oldLines": 9,
+            "newStart": 236,
+            "newLines": 7,
+            "patch": "    * share a `frameId` may live in one group, several groups, or none.\n    */\n   frameId?: string\n-  /**\n-   * Optional client script to import into the iframe\n-   */\n+  /** Optional page script, initialized on activation or after trust when `eager: true`. */\n   clientScript?: ClientScriptEntry\n   /**\n    * Soft-navigation target within a shared frame. Set on a **member** dock"
+          }
+        ]
+      },
+      {
+        "path": "tests/__snapshots__/tsnapi/@devframes/hub/index.snapshot.d.ts",
+        "status": "modified",
+        "additions": 1,
+        "deletions": 0,
+        "isBinary": false,
+        "sha": "c3e70df811247062b05a5676c149293358ffed48",
+        "hunks": [
+          {
+            "header": "@@ -3,6 +3,7 @@",
+            "oldStart": 3,
+            "oldLines": 6,
+            "newStart": 3,
+            "newLines": 7,
+            "patch": "  */\n // #region Interfaces\n export interface ClientScriptEntry {\n+  eager?: boolean;\n   importFrom: string;\n   importName?: string;\n }"
+          }
+        ]
+      },
+      {
+        "path": "tests/__snapshots__/tsnapi/devframe/index.snapshot.d.ts",
+        "status": "modified",
+        "additions": 1,
+        "deletions": 0,
+        "isBinary": false,
+        "sha": "d4e53807e90447dcede7f1ed39b5a60ed3659864",
+        "hunks": [
+          {
+            "header": "@@ -171,6 +171,7 @@ export interface DevframeDockDefaults {",
+            "oldStart": 171,
+            "oldLines": 6,
+            "newStart": 171,
+            "newLines": 7,
+            "patch": "   badge?: string;\n   groupId?: string;\n   clientScript?: {\n+    eager?: boolean;\n     importFrom: string;\n     importName?: string;\n   };"
+          }
+        ]
+      }
+    ]
+  },
+  "grouped": {
+    "groups": [
+      {
+        "key": "docs",
+        "label": "Docs",
+        "summary": "Documentation updates.",
+        "filePaths": [
+          "docs/content/1.guide/17.client-context.md",
+          "docs/content/8.references/6.hub-api.md"
+        ]
+      },
+      {
+        "key": "code",
+        "label": "Code",
+        "summary": "Source changes.",
+        "filePaths": [
+          "examples/custom-hub-next/src/client/devframe/next-devframe-hub.ts",
+          "examples/custom-hub-vite/vite.config.ts",
+          "packages/devframe/src/types/devframe.ts",
+          "packages/hub-ui/src/client/state/context.ts",
+          "packages/hub-ui/src/client/state/setup-script.ts",
+          "packages/hub/src/client/host.ts",
+          "packages/hub/src/types/docks.ts"
+        ]
+      },
+      {
+        "key": "tests",
+        "label": "Tests",
+        "summary": "Test coverage for the change.",
+        "filePaths": [
+          "packages/hub-ui/src/client/state/client-script.integration.test.ts",
+          "packages/hub-ui/src/client/state/context.test.ts",
+          "packages/hub/src/client/__tests__/host.test.ts",
+          "packages/hub/src/client/__tests__/renderers.test.ts",
+          "tests/__snapshots__/tsnapi/@devframes/hub/index.snapshot.d.ts",
+          "tests/__snapshots__/tsnapi/devframe/index.snapshot.d.ts"
+        ]
+      }
+    ],
+    "schemaVersion": 1,
+    "source": "rule-based",
+    "generatedAt": "2026-09-18T00:18:38.251Z"
+  }
+}

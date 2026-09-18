@@ -1,0 +1,43 @@
+{
+  "groups": [
+    {
+      "key": "docs",
+      "label": "Docs",
+      "summary": "Documentation updates.",
+      "filePaths": [
+        "docs/content/1.guide/17.client-context.md",
+        "docs/content/8.references/6.hub-api.md"
+      ]
+    },
+    {
+      "key": "code",
+      "label": "Code",
+      "summary": "Source changes.",
+      "filePaths": [
+        "examples/custom-hub-next/src/client/devframe/next-devframe-hub.ts",
+        "examples/custom-hub-vite/vite.config.ts",
+        "packages/devframe/src/types/devframe.ts",
+        "packages/hub-ui/src/client/state/context.ts",
+        "packages/hub-ui/src/client/state/setup-script.ts",
+        "packages/hub/src/client/host.ts",
+        "packages/hub/src/types/docks.ts"
+      ]
+    },
+    {
+      "key": "tests",
+      "label": "Tests",
+      "summary": "Test coverage for the change.",
+      "filePaths": [
+        "packages/hub-ui/src/client/state/client-script.integration.test.ts",
+        "packages/hub-ui/src/client/state/context.test.ts",
+        "packages/hub/src/client/__tests__/host.test.ts",
+        "packages/hub/src/client/__tests__/renderers.test.ts",
+        "tests/__snapshots__/tsnapi/@devframes/hub/index.snapshot.d.ts",
+        "tests/__snapshots__/tsnapi/devframe/index.snapshot.d.ts"
+      ]
+    }
+  ],
+  "schemaVersion": 1,
+  "source": "rule-based",
+  "generatedAt": "2026-01-01T00:00:00.000Z"
+}

@@ -1,6 +1,6 @@
 // One-off script: captures real GitHub PRs through GithubProvider + ruleBasedAdapter
 // into test/fixtures/real/*.json, for Storybook and manual testing against real data.
-// Run with: pnpm exec vite-node scripts/capture-fixtures.ts
+// Run with: GITHUB_TOKEN=... pnpm exec jiti scripts/capture-fixtures.ts
 import { writeFileSync } from 'node:fs'
 import process from 'node:process'
 import { ruleBasedAdapter } from '../app/analyze/adapters/rule-based'
