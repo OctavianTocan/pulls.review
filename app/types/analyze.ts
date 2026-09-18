@@ -31,7 +31,7 @@ export type DiffCategory = v.InferOutput<typeof DiffCategorySchema>
 export const DiffGroupLeafSchema = v.object({
   key: v.pipe(v.string(), v.description('Stable, short, kebab-case-ish id, e.g. "docs" or "feature-a".')),
   label: v.pipe(v.string(), v.description('Short, human-readable display name for this group.')),
-  summary: v.optional(v.pipe(v.string(), v.description('One or two sentence blurb about this group, rendered as Markdown.'))), // populated only when an llm/web-llm adapter has run
+  summary: v.optional(v.pipe(v.string(), v.description('Concise explanation of the intention of this group (why over what). Rendered as Markdown.'))), // populated only when an llm/web-llm adapter has run
   filePaths: v.pipe(v.array(v.string()), v.description('File paths belonging directly to this group (not to a child). Every file path given to you MUST end up in exactly one group or child - never both, never omitted.')), // references into DiffsPayload.files by path
 })
 export type DiffGroupLeaf = v.InferOutput<typeof DiffGroupLeafSchema>

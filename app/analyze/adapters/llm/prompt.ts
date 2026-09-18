@@ -8,9 +8,14 @@ const isGeneratedPath = picomatch(GENERATED_PATTERNS)
 // length/Markdown, ...) live as `description`s on the response schema itself
 // (see `types/analyze.ts`, `schema.ts`) - the model sees those directly, so this
 // only needs to set the scene and give a shape example.
-const GROUPING_RULES = `You are reviewing a GitHub pull request's diff. Group the changed
-files into logical groups a reviewer would want to see, e.g. "a feature and its tests",
-"docs", "generated/lockfiles", "config".`
+const GROUPING_RULES = `
+You are reviewing a GitHub pull request's diff. 
+Group the changed files into logical groups a reviewer would want to see, 
+e.g. "Feature A", "Feature B", "docs", "config", "tests", "generated/lockfiles".
+
+The goal is to help reviewers quickly understand the changes and their context.
+The order of the groups should reflect the logical structure and importance of the changes.
+`.trim()
 
 export const SINGLE_PASS_SYSTEM_PROMPT = GROUPING_RULES
 

@@ -7,7 +7,7 @@ import { DiffGroupSchema } from '../../../types/analyze'
  * `schemaVersion`, `generatedAt`).
  */
 export const AnalysisSchema = v.object({
-  overallSummary: v.pipe(v.string(), v.description('A short paragraph summarizing the whole PR for a reviewer who hasn\'t read it yet. Rendered as Markdown.')),
+  overallSummary: v.pipe(v.string(), v.description('A short summary of the intention of the PR (why over what) for a reviewer who hasn\'t read it yet. Rendered as Markdown.')),
   groups: v.array(DiffGroupSchema),
 })
 export type Analysis = v.InferOutput<typeof AnalysisSchema>
@@ -18,7 +18,7 @@ export type Analysis = v.InferOutput<typeof AnalysisSchema>
  * instead of a diff-wide `overallSummary`.
  */
 export const ChunkAnalysisSchema = v.object({
-  summary: v.pipe(v.string(), v.description('A short paragraph summarizing just the files in this part of the diff.')),
+  summary: v.pipe(v.string(), v.description('A short summary of the intention of this part of the PR (why over what) for a reviewer who hasn\'t read it yet. Rendered as Markdown.')),
   groups: v.array(DiffGroupSchema),
 })
 export type ChunkAnalysis = v.InferOutput<typeof ChunkAnalysisSchema>
