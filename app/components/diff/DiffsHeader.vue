@@ -84,8 +84,8 @@ function scrollToGroup(key: string) {
           :options="layoutOptions"
           @update:model-value="store.ui.setLayout($event as 'split' | 'unified')"
         />
-        <div v-if="!isEmbedded" class="shrink-0">
-          <NavControls :document="document" />
+        <div class="shrink-0">
+          <NavControls :document="document" :is-embedded="isEmbedded" />
         </div>
       </div>
 

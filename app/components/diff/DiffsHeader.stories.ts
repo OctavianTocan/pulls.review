@@ -31,3 +31,7 @@ export const AiNotConfigured: Story = {
 export const AiReady: Story = {
   args: { store: createMockDiffsStore({ diff: empty.diff as any, grouped: { ...empty.grouped, source: 'llm' } as any, isSetup: true }) },
 }
+
+export const Embedded: Story = {
+  args: { store: createMockDiffsStore({ diff: empty.diff as any, grouped: empty.grouped as any, llm: false, isEmbedded: true }) },
+}

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import ActionIconButton from '@antfu/design/components/Action/ActionIconButton.vue'
 import { watchEffect } from 'vue'
 import { isDark } from '../state/dark'
 
@@ -16,7 +17,8 @@ function toggleDark() {
 </script>
 
 <template>
-  <button class="!outline-none" @click="toggleDark">
-    <div class="i-ph-sun-duotone dark:i-ph-moon-duotone" />
-  </button>
+  <ActionIconButton
+    icon="i-ph-sun-duotone dark:i-ph-moon-duotone"
+    @click="toggleDark"
+  />
 </template>

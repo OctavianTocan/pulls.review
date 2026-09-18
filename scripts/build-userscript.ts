@@ -34,7 +34,7 @@ export async function buildUserscript() {
 // @version      ${version}
 // @description  Adds a Diffs-powered review drawer to GitHub pull request pages
 // @author       antfu
-// @match        https://github.com/*/*/pull/*
+// @match        https://github.com/*
 // @icon         https://github.com/favicon.ico
 // @require      https://diffs.antfu.dev/embed/diffs-embed.js?${sha}
 // @grant        none

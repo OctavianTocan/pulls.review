@@ -155,6 +155,6 @@ onBeforeUnmount(() => {
       />
     </div>
 
-    <SettingsModal v-model:open="settingsModalOpen" :document="document" />
+    <SettingsModal v-model:open="settingsModalOpen" :document="document" is-embedded />
   </div>
 </template>

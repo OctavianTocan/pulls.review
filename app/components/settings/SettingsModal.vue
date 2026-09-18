@@ -8,6 +8,7 @@ import SettingsPanel from './SettingsPanel.vue'
 defineProps<{
   open: boolean
   document?: Document | ShadowRoot
+  isEmbedded?: boolean
 }>()
 
 const emit = defineEmits<{
@@ -34,6 +35,7 @@ const llmModels = useLlmModels()
       :models="llmModels.models.value"
       :models-loading="llmModels.loading.value"
       :models-error="llmModels.error.value"
+      :is-embedded="isEmbedded"
       @save-github-token="githubToken.saveToken($event)"
       @update:llm-settings="settings = { ...settings, llm: $event }"
     />
