@@ -23,6 +23,7 @@
     "@ai-sdk/openai-compatible": "catalog:frontend",
     "@antfu/design": "catalog:frontend",
     "@antfu/utils": "catalog:frontend",
+    "@comark/vue": "catalog:frontend",
     "@pierre/diffs": "catalog:frontend",
     "@tanstack/vue-virtual": "catalog:frontend",
     "@valibot/to-json-schema": "catalog:frontend",

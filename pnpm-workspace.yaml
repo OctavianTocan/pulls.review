@@ -65,6 +65,7 @@ catalogs:
     '@ai-sdk/openai-compatible': ^3.0.51
     '@antfu/design': ^0.5.1
     '@antfu/utils': ^9.3.0
+    '@comark/vue': ^0.7.0
     '@pierre/diffs': ^1.4.2
     '@tanstack/vue-virtual': ^3.13.39
     '@valibot/to-json-schema': ^1.8.0
