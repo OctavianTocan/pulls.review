@@ -47,9 +47,8 @@ const layoutOptions = [
 ]
 
 const analyzeOptions = [
-  { value: 'none', label: 'None' },
   { value: 'rule-based', label: 'Rules' },
-  { value: 'llm', label: 'AI' },
+  { value: 'llm', label: 'AI', icon: 'i-ph-sparkle-duotone' },
 ]
 
 const githubRef = computed(() => props.meta.provider === 'github' ? parseGithubDiffId(props.meta.id) : undefined)
@@ -71,8 +70,11 @@ function scrollToGroup(key: string) {
           {{ meta.title }}
           <a v-if="githubRef" :href="meta.url" target="_blank" rel="noopener" class="text-base font-normal op-fade hover:underline">#{{ githubRef.number }}</a>
         </h1>
-        <ActionIconButton v-if="meta.provider === 'github'" icon="i-ph:arrows-clockwise-duotone" label="Refresh" tooltip="Refresh" class="shrink-0" @click="emit('refresh')" />
-        <div class="text-sm flex shrink-0 gap-1.5 items-center">
+
+        <div
+          v-if="llmAvailable && hasAiResult"
+          class="text-sm flex shrink-0 gap-1.5 items-center"
+        >
           <span class="op-fade">Analyze by</span>
           <ActionToggleGroup
             :model-value="analyzeMode"
@@ -80,6 +82,8 @@ function scrollToGroup(key: string) {
             @update:model-value="emit('update:analyzeMode', $event as GroupSource)"
           />
         </div>
+
+        <ActionIconButton v-if="meta.provider === 'github'" icon="i-ph:arrows-clockwise-duotone" label="Refresh" tooltip="Refresh" class="shrink-0" @click="emit('refresh')" />
         <ActionToggleGroup
           class="shrink-0"
           :model-value="layout"
@@ -129,8 +133,8 @@ function scrollToGroup(key: string) {
             v-for="group in groups"
             :key="group.key"
             type="button"
-            class="px-2 py-0.5 border border-base rounded op-fade hover:bg-active hover:op-100"
-            :class="groupsVisable.includes(group.key) ? 'font-bold op-100 text-primary' : ''"
+            class="px-2 py-0.5 border border-base rounded transition hover:bg-active hover:op-100"
+            :class="groupsVisable.includes(group.key) ? 'op-100 bg-raised shadow translate-y--2px color-base' : 'op-fade'"
             @click="scrollToGroup(group.key)"
           >
             {{ group.label }}
@@ -138,11 +142,25 @@ function scrollToGroup(key: string) {
           </button>
         </div>
 
-        <template v-if="analyzeMode === 'llm'">
-          <ActionButton v-if="!llmAvailable" size="sm" @click="settingsModalOpen = true">
+        <template v-if="!isEmbedded">
+          <ActionButton
+            v-if="!llmAvailable"
+            class="text-xs shadow"
+            size="sm"
+            icon="i-ph:key-duotone"
+            variant="primary"
+            @click="settingsModalOpen = true"
+          >
             Setup API Keys
           </ActionButton>
-          <ActionButton v-else size="sm" :disabled="isAnalyzing" @click="emit('reanalyzeAi')">
+          <ActionButton
+            v-else-if="!hasAiResult || analyzeMode === 'llm'"
+            class="text-xs shadow"
+            :disabled="isAnalyzing"
+            :variant="hasAiResult ? 'action' : 'primary'"
+            :icon="isAnalyzing ? 'i-ph:spinner-duotone animate-spin' : 'i-ph-sparkle-duotone'"
+            @click="emit('reanalyzeAi')"
+          >
             {{ isAnalyzing ? 'Analyzing…' : hasAiResult ? 'Re-analyze with AI' : 'Analyze with AI' }}
           </ActionButton>
         </template>

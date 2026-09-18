@@ -20,7 +20,19 @@ const pending = (() => {
   return JSON.parse(raw) as { text: string, title?: string }
 })()
 
-const { diff, grouped, isLoading, error, analyzeMode, isAnalyzing, llmAvailable, hasAiResult, load, setAnalyzeMode, reanalyzeWithAi } = usePullRequest(
+const {
+  diff,
+  grouped,
+  isLoading,
+  error,
+  analyzeMode,
+  isAnalyzing,
+  llmAvailable,
+  hasAiResult,
+  load,
+  setAnalyzeMode,
+  reanalyzeWithAi,
+} = usePullRequest(
   pending ? { kind: 'patch-text', text: pending.text, title: pending.title } : { kind: 'patch-text', text: '' },
 )
 const { reviewed, load: loadReviewed, toggle } = useReviewedFiles()

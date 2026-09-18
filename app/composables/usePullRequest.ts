@@ -36,7 +36,7 @@ export function usePullRequest(params: FetchDiffParams, opts: { token?: string }
   const isLoading = ref(false)
   const error = ref<Error>()
   const isStale = ref(false)
-  const analyzeMode = ref<GroupSource>('rule-based')
+  const analyzeMode = ref<GroupSource>('llm')
   const isAnalyzing = ref(false)
   const cacheKey = ref<string>()
 
@@ -74,6 +74,7 @@ export function usePullRequest(params: FetchDiffParams, opts: { token?: string }
 
   async function reanalyzeWithAi() {
     await runAnalysis('llm')
+    setAnalyzeMode('llm')
   }
 
   async function analyzeAndStore(key: string, freshDiff: DiffsPayload) {
