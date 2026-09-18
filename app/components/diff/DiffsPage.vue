@@ -4,6 +4,7 @@ import type { DiffsPayload } from '../../types/diff'
 import ActionButton from '@antfu/design/components/Action/ActionButton.vue'
 import FeedbackEmptyState from '@antfu/design/components/Feedback/FeedbackEmptyState.vue'
 import FeedbackLoading from '@antfu/design/components/Feedback/FeedbackLoading.vue'
+import { Markdown } from '@comark/vue'
 import { useEventListener } from '@vueuse/core'
 import { computed, nextTick, ref, watch } from 'vue'
 import DiffGroup from './DiffGroup.vue'
@@ -145,6 +146,10 @@ watch(resolvedGroups, () => nextTick(updateVisibleGroups), { immediate: true })
             </ActionButton>
           </div>
         </slot>
+
+        <Suspense v-if="props.grouped?.overallSummary">
+          <Markdown :value="props.grouped?.overallSummary" class="text-sm pb-2 border-b border-base op-fade" />
+        </Suspense>
 
         <DiffGroup
           v-for="group in resolvedGroups"
