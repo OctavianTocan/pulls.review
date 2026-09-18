@@ -46,12 +46,12 @@ onBeforeUnmount(() => document.removeEventListener('keydown', onKeydown))
 <template>
   <Teleport :to="teleportTarget">
     <div v-if="open" class="p-4 flex items-center inset-0 justify-center fixed">
-      <div class="z-app-modal-backdrop bg-[#ddd]/40 inset-0 fixed backdrop-blur-sm dark:bg-black/40" @click="close" />
+      <div class="bg-[#ddd]/40 inset-0 fixed z-app-modal-backdrop backdrop-blur-sm dark:bg-black/40" @click="close" />
       <div
         role="dialog"
         aria-modal="true"
         :aria-label="title"
-        class="z-app-modal-content outline-none border border-base rounded-lg bg-base flex flex-col max-h-full max-w-lg w-full shadow-xl relative overflow-hidden"
+        class="outline-none border border-base rounded-lg bg-base flex flex-col max-h-full max-w-lg w-full shadow-xl relative z-app-modal-content overflow-hidden"
       >
         <header v-if="title || description || $slots.header" class="px-3 py-2 border-b border-base flex shrink-0 gap-2 items-start justify-between">
           <div class="min-w-0">

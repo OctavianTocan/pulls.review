@@ -20,6 +20,7 @@ export function injectGithubPageStyles(): void {
 /* style injected by diffs.antfu.dev integration */
 #${FILES_TAB_ID} { opacity: 0.6; }
 .${PANEL_OPEN_CLASS} [id="diff-comparison-viewer-container"] { margin-left: 0 !important; }
+.${PANEL_OPEN_CLASS} [data-component="PageHeader"] [data-component="TitleArea"] { margin-left: 0 !important; }
 `
   window.document.head.appendChild(style)
 }
