@@ -6,9 +6,12 @@ import FeedbackEmptyState from '@antfu/design/components/Feedback/FeedbackEmptyS
 import FeedbackLoading from '@antfu/design/components/Feedback/FeedbackLoading.vue'
 import { Markdown } from '@comark/vue'
 import { useEventListener } from '@vueuse/core'
-import { computed, nextTick, ref, watch } from 'vue'
+import { computed, nextTick, provide, ref, watch } from 'vue'
+import { useProvider } from '../../composables/useProvider'
+import { parseGithubDiffId } from '../../providers/github/diff-id'
 import DiffGroup from './DiffGroup.vue'
 import DiffsHeader from './DiffsHeader.vue'
+import { fileContentContextKey } from './file-content-context'
 import { resolveGroups } from './group-utils'
 
 const props = defineProps<{
@@ -43,6 +46,22 @@ const totalAdditions = computed(() => props.diff?.files.reduce((sum, file) => su
 const totalDeletions = computed(() => props.diff?.files.reduce((sum, file) => sum + file.deletions, 0) ?? 0)
 
 const resolvedGroups = computed(() => props.diff && props.grouped ? resolveGroups(props.grouped.groups, props.diff.files) : [])
+
+// `undefined` for any source that can't refetch a file's full content (a pasted patch
+// has no live source, and no base/head refs to fetch at) - `FileDiff.vue` uses this to
+// hide its "load full file" action entirely rather than show a button that would fail.
+const fileContentContext = computed(() => {
+  const diff = props.diff
+  if (!diff || diff.provider !== 'github' || !diff.base || !diff.head)
+    return undefined
+  if (!useProvider('github').capabilities.supportsFullFileContent)
+    return undefined
+  const ref = parseGithubDiffId(diff.id)
+  if (!ref)
+    return undefined
+  return { owner: ref.owner, repo: ref.repo, baseSha: diff.base.sha, headSha: diff.head.sha }
+})
+provide(fileContentContextKey, fileContentContext)
 
 // Each DiffGroup collapses itself (both its tree and its diffs together) - all
 // expanded by default.

@@ -7,6 +7,7 @@ export const PasteProvider: Provider = {
     supportsAuth: false,
     supportsComments: false,
     requiresNetwork: false,
+    supportsFullFileContent: false,
   },
   async fetchDiff(params) {
     if (params.kind !== 'patch-text')

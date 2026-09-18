@@ -8,6 +8,7 @@ export const GithubProvider: Provider = {
     supportsAuth: true,
     supportsComments: false,
     requiresNetwork: true,
+    supportsFullFileContent: true,
   },
   async fetchDiff(params, opts) {
     if (params.kind !== 'github-pr')

@@ -66,3 +66,20 @@ export async function fetchPullRequestDiffText(owner: string, repo: string, numb
   const res = await githubFetch(`${GITHUB_API_BASE}/repos/${owner}/${repo}/pulls/${number}`, token, 'application/vnd.github.diff')
   return res.text()
 }
+
+/**
+ * A file's full raw content at a specific ref (commit sha, branch, tag, ...), via the
+ * Contents API's `raw` media type (returns the file body directly, no base64 decoding).
+ * `undefined` means the file doesn't exist at that ref - expected for the base side of
+ * an added file, or the head side of a removed one - not an error.
+ */
+export async function fetchFileContentAtRef(owner: string, repo: string, path: string, ref: string, token?: string): Promise<string | undefined> {
+  const encodedPath = path.split('/').map(encodeURIComponent).join('/')
+  const url = `${GITHUB_API_BASE}/repos/${owner}/${repo}/contents/${encodedPath}?ref=${encodeURIComponent(ref)}`
+  const res = await fetch(url, { headers: buildHeaders(token, 'application/vnd.github.raw') })
+  if (res.status === 404)
+    return undefined
+  if (!res.ok)
+    throw new Error(`GitHub API request failed (${res.status}): ${url}`)
+  return res.text()
+}

@@ -5,6 +5,7 @@ export const ProviderCapabilitiesSchema = v.object({
   supportsAuth: v.boolean(),
   supportsComments: v.boolean(), // false for both github-now and local; flips true when comments phase lands
   requiresNetwork: v.boolean(),
+  supportsFullFileContent: v.boolean(), // whether a file's full content can be re-fetched at base/head refs (github only - paste has no live source)
 })
 export type ProviderCapabilities = v.InferOutput<typeof ProviderCapabilitiesSchema>
 

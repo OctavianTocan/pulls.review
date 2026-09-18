@@ -102,7 +102,7 @@ call sites — the same swappable-adapter shape as `Provider`/`AnalyzeAdapter`.
 Runtime uses the `indexedDB` driver; tests use the `memory` driver against
 identical code, no separate IndexedDB-mocking dependency needed.
 
-One `unstorage` instance, two logical collections via key prefix (unstorage
+One `unstorage` instance, three logical collections via key prefix (unstorage
 is flat key-value, so there's no native "object store" split):
 
 - `pr:*` — raw diff + per-adapter `GroupedResult`s, keyed by
@@ -120,6 +120,13 @@ is flat key-value, so there's no native "object store" split):
   file's `sha` is unchanged, its reviewed mark MUST survive; only files whose
   `sha` changed lose their mark. Pruned opportunistically whenever `pr:*`
   evicts, by walking the remaining entries' shas.
+- `file-content:*` — a file's full raw content at a specific ref, fetched
+  on demand from `FileDiff.vue`'s "load full file" action (github only -
+  gated behind `ProviderCapabilities.supportsFullFileContent`), keyed by
+  `file-content:{ref sha}:{path}`. `ref` is the PR's base/head **commit**
+  sha, not a per-blob sha - equally content-addressed for caching purposes,
+  without a separate request to look one up. No eviction of its own yet
+  (unlike `pr:*`/`review:*`), a known gap for later.
 
 ## Explicitly out of scope for now
 
