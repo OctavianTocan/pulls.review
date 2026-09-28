@@ -6,7 +6,7 @@ import FeedbackLoading from '@antfu/design/components/Feedback/FeedbackLoading.v
 import { Markdown } from '@comark/vue'
 import { Virtualizer } from '@pierre/diffs'
 import { useEventListener } from '@vueuse/core'
-import { computed, nextTick, onBeforeUnmount, onMounted, provide, ref, useTemplateRef, watch } from 'vue'
+import { computed, defineAsyncComponent, nextTick, onBeforeUnmount, onMounted, provide, ref, useTemplateRef, watch } from 'vue'
 import { useProvider } from '../../composables/useProvider'
 import { parseGithubDiffId } from '../../providers/github/diff-id'
 import { diffVirtualizerKey } from './diff-virtualizer'
@@ -18,6 +18,8 @@ const props = defineProps<{
   document?: Document | ShadowRoot
   store?: DiffsStore
 }>()
+
+const ChatWidget = defineAsyncComponent(() => import('../chat/ChatWidget.vue'))
 
 const diff = computed(() => props.store?.diff)
 const grouped = computed(() => props.store?.grouped)
@@ -162,6 +164,8 @@ watch(groups, () => nextTick(updateVisibleGroups), { immediate: true })
             You have reached the end of the diff.
           </div>
         </div>
+
+        <ChatWidget v-if="store?.llm?.hasAiResult" :store="store" />
       </template>
       <template v-else>
         <div class="mxa px-4 py-12 max-w-500 w-full">

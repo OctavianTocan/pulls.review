@@ -11,6 +11,7 @@ import DiffGroup from './DiffGroup.vue'
 import DiffStats from './DiffStats.vue'
 import FileDiff from './FileDiff.vue'
 import FileTree from './FileTree.vue'
+import { countGroupFiles } from './group-utils'
 
 const props = defineProps<{
   store: DiffsStore
@@ -23,7 +24,7 @@ const emit = defineEmits<{
   toggle: []
 }>()
 
-const totalFiles = computed(() => props.group.files.length + props.group.children.reduce((n, c) => n + c.files.length, 0))
+const totalFiles = computed(() => countGroupFiles(props.group))
 const totalAdded = computed(() => props.group.added + props.group.children.reduce((n, c) => n + c.added, 0))
 const totalDeleted = computed(() => props.group.deleted + props.group.children.reduce((n, c) => n + c.deleted, 0))
 const reviewedCount = computed(() => {
