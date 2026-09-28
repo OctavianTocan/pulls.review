@@ -93,7 +93,7 @@ onMounted(load)
           Review pull requests, <span class="color-primary-500">without the noise</span>
         </h1>
         <p class="text-base op-fade max-w-lg sm:text-lg">
-          Diffs groups changed files, summarizes what matters, and remembers what you've
+          pulls.review groups changed files, summarizes what matters, and remembers what you've
           already reviewed - for any GitHub pull request, or a diff you just paste in.
         </p>
       </div>
@@ -155,17 +155,17 @@ onMounted(load)
               Use it directly on github.com
             </h2>
             <p class="text-sm op-fade">
-              Install the userscript and a "Diffs" drawer appears on every pull request page.
+              Install the userscript and a "pulls.review" drawer appears on every pull request page.
             </p>
           </div>
         </div>
         <ol class="text-sm pl-5 list-decimal op-fade">
           <li>Install <a href="https://www.tampermonkey.net/" target="_blank" rel="noopener" class="color-base hover:underline">Tampermonkey</a> or <a href="https://violentmonkey.github.io/" target="_blank" rel="noopener" class="color-base hover:underline">Violentmonkey</a>.</li>
           <li>Open the userscript below and confirm the install in your extension.</li>
-          <li>Visit any pull request - click the "Diffs" tab on the right edge to open the drawer.</li>
+          <li>Visit any pull request - click the "pulls.review" tab on the right edge to open the drawer.</li>
         </ol>
         <div class="flex flex-wrap gap-2">
-          <ActionButton href="https://diffs.antfu.dev/diffs-github.user.js" icon="i-ph:download-duotone">
+          <ActionButton href="https://pulls.review/pulls-review-github.user.js" icon="i-ph:download-duotone">
             Install userscript
           </ActionButton>
         </div>
@@ -173,7 +173,7 @@ onMounted(load)
     </main>
 
     <footer class="text-sm px-4 py-6 op-fade flex items-center justify-center">
-      <a href="https://github.com/antfu/diffs" target="_blank" rel="noopener" class="flex gap-1.5 transition items-center hover:color-base">
+      <a href="https://github.com/antfu/pulls.review" target="_blank" rel="noopener" class="flex gap-1.5 transition items-center hover:color-base">
         <span class="i-ph:github-logo-duotone text-base" aria-hidden="true" />
         GitHub Repo
       </a>

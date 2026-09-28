@@ -1,9 +1,14 @@
 // Stamps `userscript/diffs-github.user.js` (the checked-in template) with a
 // build-specific version and a cache-busted `@require` URL, writing the result to
-// `public/diffs-github.user.js` (gitignored, like `public/embed/` - see
+// `public/pulls-review-github.user.js` (gitignored, like `public/embed/` - see
 // scripts/build-embed-css.ts) so Vite's publicDir copy serves it at
-// https://diffs.antfu.dev/diffs-github.user.js. `@updateURL`/`@downloadURL` in the
+// https://pulls.review/pulls-review-github.user.js. `@updateURL`/`@downloadURL` in the
 // template already point userscript managers at that same URL for auto-updates.
+//
+// The same source is also written to the legacy `public/diffs-github.user.js` path
+// (the script's name before the site's rename to pulls.review), so userscript
+// managers that installed it from that URL keep receiving updates rather than going
+// stale. Drop this once telemetry/support requests show nobody's still on it.
 import { execSync } from 'node:child_process'
 import fs from 'node:fs/promises'
 import { join } from 'node:path'
@@ -29,30 +34,31 @@ export async function buildUserscript() {
 
   const source = `
 // ==UserScript==
-// @name         Diffs for GitHub Pull Requests
-// @namespace    https://diffs.antfu.dev
+// @name         pulls.review for GitHub Pull Requests
+// @namespace    https://pulls.review
 // @version      ${version}
-// @description  Adds a Diffs-powered review drawer to GitHub pull request pages
+// @description  Adds a pulls.review-powered review drawer to GitHub pull request pages
 // @author       antfu
 // @match        https://github.com/*
 // @icon         https://github.com/favicon.ico
-// @require      https://diffs.antfu.dev/embed/diffs-embed.js?${sha}
+// @require      https://pulls.review/embed/diffs-embed.js?${sha}
 // @grant        none
 // @run-at       document-idle
-// @updateURL    https://diffs.antfu.dev/diffs-github.user.js
-// @downloadURL  https://diffs.antfu.dev/diffs-github.user.js
-// @supportURL   https://github.com/antfu/diffs/issues
-// @homepageURL  https://diffs.antfu.dev
+// @updateURL    https://pulls.review/pulls-review-github.user.js
+// @downloadURL  https://pulls.review/pulls-review-github.user.js
+// @supportURL   https://github.com/antfu/pulls.review/issues
+// @homepageURL  https://pulls.review
 // ==/UserScript==
 
 ;(() => {
-  // Mount the Diffs embed panel Web Component from diffs.antfu.dev
+  // Mount the pulls.review embed panel Web Component from pulls.review
   if (!document.querySelector('diffs-embed-panel'))
     document.body.appendChild(document.createElement('diffs-embed-panel'))
 })()
 `
 
-  const outFile = join(root, 'public/diffs-github.user.js')
-  await fs.writeFile(outFile, source)
+  await fs.writeFile(join(root, 'public/pulls-review-github.user.js'), source)
+  // Legacy alias - see the module comment above.
+  await fs.writeFile(join(root, 'public/diffs-github.user.js'), source)
   process.stdout.write(`✓ userscript built (version ${version})\n`)
 }

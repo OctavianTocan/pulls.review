@@ -1,6 +1,6 @@
 # Architecture & design decisions
 
-Diffs is a SPA (deployed at diffs.antfu.dev) that renders a GitHub PR's diff at
+pulls.review is a SPA (deployed at pulls.review) that renders a GitHub PR's diff at
 `/gh/{owner}/{repo}/{number}` — or an arbitrary pasted/uploaded unified diff at
 `/upload` — grouped and summarized for easier review, with a rule-based
 fallback grouping when no LLM is configured. See `plans/` for the
@@ -170,7 +170,7 @@ land later without a rewrite:
   built yet - the app MUST NOT gain anything that forecloses it, no
   restrictive `X-Frame-Options`/`frame-ancestors`.
 - A VS Code extension ("devframe", à la the official GitHub Pull Requests and
-  Issues extension) surfacing Diffs inside the editor for the local
+  Issues extension) surfacing pulls.review inside the editor for the local
   working-tree diff or the PR matching the checked-out branch. Depends on
   the `local` provider; not built yet.
 
@@ -182,7 +182,7 @@ land later without a rewrite:
   pages. `AppHeader` itself only renders on `pages/index.vue` (the `/gh/...`
   and `/upload` reading views stay header-free; their own sticky
   `DiffsHeader` is the only scroll nav there).
-- A userscript (`userscript/diffs-github.user.js`) embeds a Diffs drawer
+- A userscript (`userscript/diffs-github.user.js`) embeds a pulls.review drawer
   directly into `github.com` pull request pages via an iframe pointing at
   the matching `/gh/owner/repo/number?embed` - styled with inline styles
   only, since it can't ship a stylesheet into someone else's page.

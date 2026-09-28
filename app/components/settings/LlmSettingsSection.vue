@@ -195,7 +195,7 @@ const model = computed({
       </p>
       <p class="text-xs color-faint max-w-72">
         github.com's strict Content Security Policy blocks the requests AI features need here.
-        <a href="https://diffs.antfu.dev" target="_blank" rel="noopener" class="color-base hover:underline">Go to the website</a> to use them.
+        <a href="https://pulls.review" target="_blank" rel="noopener" class="color-base hover:underline">Go to the website</a> to use them.
       </p>
     </div>
   </div>

@@ -126,7 +126,7 @@ onBeforeUnmount(() => {
       :style="{ right: open ? `${width}px` : '0' }"
       @click="toggleOpen"
     >
-      Diffs
+      pulls.review
     </button>
 
     <div
@@ -140,9 +140,9 @@ onBeforeUnmount(() => {
       />
       <header class="text-sm font-semibold px-3 py-2 border-b border-base flex shrink-0 gap-2 items-center">
         <div class="flex-auto">
-          diffs.antfu.dev
+          pulls.review
         </div>
-        <a v-if="pr" target="_blank" :href="`https://diffs.antfu.dev/gh/${pr.owner}/${pr.repo}/${pr.number}`" rel="noopener noreferrer" aria-label="Open in Diffs" class="op-fade hover:op-100">
+        <a v-if="pr" target="_blank" :href="`https://pulls.review/gh/${pr.owner}/${pr.repo}/${pr.number}`" rel="noopener noreferrer" aria-label="Open in pulls.review" class="op-fade hover:op-100">
           <div class="i-ph-arrow-square-out-duotone" />
         </a>
         <button type="button" aria-label="Close" class="op-fade hover:op-100" @click="toggleOpen">

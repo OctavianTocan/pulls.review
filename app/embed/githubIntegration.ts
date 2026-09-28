@@ -17,7 +17,7 @@ export function injectGithubPageStyles(): void {
   const style = window.document.createElement('style')
   style.id = STYLE_ID
   style.textContent = `
-/* style injected by diffs.antfu.dev integration */
+/* style injected by pulls.review integration */
 #${FILES_TAB_ID} { opacity: 0.6; }
 .${PANEL_OPEN_CLASS} [id="diff-comparison-viewer-container"] { margin-left: 0 !important; }
 .${PANEL_OPEN_CLASS} [data-component="PageHeader"] [data-component="TitleArea"] { margin-left: 0 !important; }
@@ -44,7 +44,7 @@ export function setupFilesTabToggle(onToggle: () => void): void {
   // Copies the real tab's own classes, so it matches GitHub's current styling
   // (colors, spacing, hover state) without hardcoding any of it here.
   button.className = filesTab.className
-  button.textContent = 'Diffs'
+  button.textContent = 'pulls.review'
   button.addEventListener('click', onToggle)
 
   const filesTabListItem = filesTab.closest('li')

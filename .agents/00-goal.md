@@ -1,6 +1,6 @@
 # Goal
 
-Diffs (diffs.antfu.dev) is a better way to review a GitHub pull request's
+pulls.review is a better way to review a GitHub pull request's
 diff: grouped, summarized, and fast, instead of GitHub's flat file-by-file
 list. It renders any PR at `/gh/{owner}/{repo}/{number}`, and any raw
 `.diff`/`.patch` text pasted or uploaded at `/upload`.
@@ -13,7 +13,7 @@ a generated lockfile, or a docs update, and there's no narrative tying
 related files together. [Linear's PR review
 guides](https://linear.app/docs/diffs#guides) show what's possible instead —
 breaking a large PR into explained, grouped sections before a reviewer goes
-file-by-file. Diffs aims at that same experience, but as a standalone,
+file-by-file. pulls.review aims at that same experience, but as a standalone,
 zero-backend tool usable on any public or private PR, not tied to a project
 management product.
 
@@ -38,25 +38,25 @@ management product.
 - LLM-powered analysis (richer summaries) as an opt-in alongside the
   always-available rule-based fallback, plus a fully in-browser (`web-llm`)
   option requiring no API key at all.
-- Reviewing PRs interactively from within Diffs (built): inline review
+- Reviewing PRs interactively from within pulls.review (built): inline review
   comment threads, replies, and GitHub-style review submission
   (approve/request changes/comment), degrading to read-only when the token
   can't write.
 - Sources beyond GitHub: pasted/uploaded raw patches (built early, since
   it's essentially free once a patch parser exists), and eventually a local
   CLI-driven provider for diffing a working tree.
-- A userscript that embeds Diffs as a sidepanel directly inside GitHub's own
-  PR page, next to the real comment thread — reviewing with Diffs' grouping
+- A userscript that embeds pulls.review as a sidepanel directly inside GitHub's own
+  PR page, next to the real comment thread — reviewing with pulls.review's grouping
   without leaving github.com.
-- A VS Code extension ("devframe") that surfaces Diffs inside the editor —
+- A VS Code extension ("devframe") that surfaces pulls.review inside the editor —
   visualizing the local working-tree diff or the PR matching the currently
   checked-out branch, similar in spirit to the official GitHub Pull Requests
-  and Issues extension, but with Diffs' grouping/summarization. Builds on
+  and Issues extension, but with pulls.review's grouping/summarization. Builds on
   the `local` provider once that exists.
 
 ## Explicit non-goals
 
 - Being a general git hosting/PR management product (no merging, no CI
   integration, no issue tracking).
-- A dashboard or account system. Diffs is deep-links plus local
+- A dashboard or account system. pulls.review is deep-links plus local
   (per-browser) history, not a hosted product with accounts.

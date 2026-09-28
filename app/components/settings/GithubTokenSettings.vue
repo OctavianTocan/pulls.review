@@ -74,7 +74,7 @@ function remove() {
       Reviews need the <code>repo</code> scope (classic token) or "Pull requests: Read and write" (fine-grained token);
       read-only tokens still work with reviewing disabled. Stored only in this browser.
       <a
-        href="https://github.com/settings/tokens/new?description=Diffs%20%28diffs.antfu.dev%29&scopes=repo"
+        href="https://github.com/settings/tokens/new?description=pulls.review&scopes=repo"
         target="_blank"
         rel="noopener"
         class="hover:underline"
