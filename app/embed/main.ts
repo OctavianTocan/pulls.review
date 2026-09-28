@@ -14,4 +14,7 @@ import EmbedApp from './EmbedApp.ce.vue'
 EmbedApp.styles ??= []
 EmbedApp.styles.push(diffsEmbedCss)
 
+customElements.define('pulls-review-embed-panel', defineCustomElement(EmbedApp))
+
+// Backward compatibility, remove this later
 customElements.define('diffs-embed-panel', defineCustomElement(EmbedApp))

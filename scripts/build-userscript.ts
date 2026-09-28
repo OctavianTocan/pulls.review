@@ -52,8 +52,8 @@ export async function buildUserscript() {
 
 ;(() => {
   // Mount the pulls.review embed panel Web Component from pulls.review
-  if (!document.querySelector('diffs-embed-panel'))
-    document.body.appendChild(document.createElement('diffs-embed-panel'))
+  if (!document.querySelector('pulls-review-embed-panel'))
+    document.body.appendChild(document.createElement('pulls-review-embed-panel'))
 })()
 `
 

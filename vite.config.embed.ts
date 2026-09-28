@@ -8,7 +8,7 @@ const jiti = createJiti(import.meta.url)
 
 /**
  * Separate build target from `vite.config.ts`: a single self-contained IIFE bundle
- * defining the `<diffs-embed-panel>` custom element, for the userscript to `@require`.
+ * defining the `<pulls-review-embed-panel>` custom element, for the userscript to `@require`.
  * See `app/embed/main.ts`. No `unocss/vite` plugin - its CSS is a pre-generated,
  * shadow-root-safe file instead (`build:embed:css`, see scripts/build-embed-css.ts).
  *

@@ -8,7 +8,7 @@
       /*
        * Everything here is deliberately plain, hand-written CSS - this page stands in
        * for github.com's own page, which the real embed never gets to style. Nothing
-       * here reaches the <diffs-embed-panel> shadow root either way.
+       * here reaches the <pulls-review-embed-panel> shadow root either way.
        */
       body {
         margin: 0;
@@ -79,7 +79,7 @@
 
       function mountPanel() {
         panelEl?.remove()
-        panelEl = document.createElement('diffs-embed-panel')
+        panelEl = document.createElement('pulls-review-embed-panel')
         document.body.appendChild(panelEl)
       }
 

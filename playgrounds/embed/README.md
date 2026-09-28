@@ -1,6 +1,6 @@
 # Embedded playground
 
-Loads the built `<diffs-embed-panel>` custom element directly (no GitHub page, no
+Loads the built `<pulls-review-embed-panel>` custom element directly (no GitHub page, no
 userscript manager) for quick manual testing of the embed build.
 
 ```bash
