@@ -1,18 +1,18 @@
 <script setup lang="ts">
 import type { DiffsStore } from '../../stores/types'
 import type { GroupSource } from '../../types/analyze'
-import ActionButton from '@antfu/design/components/Action/ActionButton.vue'
 import ActionIconButton from '@antfu/design/components/Action/ActionIconButton.vue'
 import ActionToggleGroup from '@antfu/design/components/Action/ActionToggleGroup.vue'
 import DisplayDonut from '@antfu/design/components/Display/DisplayDonut.vue'
-import DisplayNumberBadge from '@antfu/design/components/Display/DisplayNumberBadge.vue'
 import { computed, ref } from 'vue'
 import { parseGithubDiffId } from '../../providers/github/diff-id'
-import { settingsModalOpen } from '../../state/settingsModal'
 import GithubAvatar from '../GithubAvatar.vue'
 import NavControls from '../NavControls.vue'
+import DiffAnalyzeButton from './DiffAnalyzeButton.vue'
+import DiffGroupNav from './DiffGroupNav.vue'
+import DiffReviewButton from './DiffReviewButton.vue'
+import DiffReviewThreadsToggle from './DiffReviewThreadsToggle.vue'
 import DiffStats from './DiffStats.vue'
-import { countGroupFiles } from './group-utils'
 import PrStatusIcon from './PrStatusIcon.vue'
 import ReviewSubmitModal from './ReviewSubmitModal.vue'
 
@@ -33,17 +33,8 @@ const additions = computed(() => meta.value.files.reduce((sum, file) => sum + fi
 const deletions = computed(() => meta.value.files.reduce((sum, file) => sum + file.deletions, 0))
 const progress = computed(() => totalFiles.value === 0 ? 1 : reviewedCount.value / totalFiles.value)
 
-const llmIsSetup = computed(() => props.store.llm?.isSetup ?? false)
-const llmIsAnalyzing = computed(() => props.store.llm?.isAnalyzing ?? false)
 const llmHasAiResult = computed(() => props.store.llm?.hasAiResult ?? false)
 const llmAnalyzeMode = computed(() => props.store.llm?.analyzeMode ?? 'rule-based')
-const llmProgress = computed(() => props.store.llm?.progress)
-const llmError = computed(() => props.store.llm?.error)
-
-const layoutOptions = [
-  { value: 'unified', label: 'Unified', icon: 'i-ph:rows-duotone' },
-  { value: 'split', label: 'Split', icon: 'i-ph:columns-duotone' },
-]
 
 const analyzeOptions = [
   { value: 'rule-based', label: 'Rules' },
@@ -68,9 +59,15 @@ function scrollToGroup(key: string) {
     <div class="mxa max-w-500 w-full">
       <div class="flex flex-wrap gap-2 items-start">
         <PrStatusIcon v-if="meta.pullRequest?.state" :state="meta.pullRequest.state" class="mt-1" />
-        <h1 class="text-lg font-semibold flex-auto break-words">
+        <h1 class="text-lg font-semibold flex flex-auto gap-2 break-words items-center">
           {{ meta.title }}
           <a v-if="githubRef" :href="meta.url" target="_blank" rel="noopener" class="text-base font-normal op-fade hover:underline">#{{ githubRef.number }}</a>
+          <ActionIconButton
+            v-if="meta.provider === 'github'"
+            icon="i-ph:arrows-clockwise-duotone"
+            label="Refresh" tooltip="Refresh"
+            class="text-sm shrink-0" @click="store.refresh()"
+          />
         </h1>
 
         <div
@@ -85,72 +82,31 @@ function scrollToGroup(key: string) {
           />
         </div>
 
-        <template v-if="store.llm">
-          <ActionButton
-            v-if="!llmIsSetup"
-            class="text-xs shrink-0 shadow"
-            size="sm"
-            icon="i-ph:key-duotone"
-            variant="primary"
-            @click="settingsModalOpen = true"
-          >
-            Setup API Keys
-          </ActionButton>
-          <ActionButton
-            v-else-if="!llmHasAiResult || llmAnalyzeMode === 'llm'"
-            class="text-xs shrink-0 shadow"
-            :disabled="llmIsAnalyzing"
-            :variant="llmHasAiResult ? 'action' : 'primary'"
-            :icon="llmIsAnalyzing ? 'i-ph:spinner-duotone animate-spin' : 'i-ph-sparkle-duotone'"
-            @click="store.llm.reanalyze()"
-          >
-            {{ llmIsAnalyzing ? 'Analyzing…' : llmHasAiResult ? 'Re-analyze with AI' : 'Analyze with AI' }}
-          </ActionButton>
-          <span v-if="llmIsAnalyzing && llmProgress" class="text-xs op-mute max-w-64 truncate self-center" :title="llmProgress.message">{{ llmProgress.message }}</span>
-          <span v-else-if="llmError" class="text-xs text-red-500 max-w-80 truncate self-center" :title="`AI analysis failed: ${llmError.message}`">AI analysis failed: {{ llmError.message }}</span>
-        </template>
-
-        <template v-if="reviews">
-          <div v-if="reviews.canWrite" class="shrink-0 relative">
-            <ActionButton size="sm" variant="action" icon="i-ph:chat-centered-text-duotone" @click="reviewModalOpen = true">
-              Review changes
-            </ActionButton>
-            <DisplayNumberBadge v-if="reviews.pendingCommentCount > 0" :value="reviews.pendingCommentCount" class="right--2 top--2 absolute" />
-          </div>
-          <ActionIconButton
-            class="shrink-0"
-            :class="reviews.showThreads ? '' : 'op-fade'"
-            :icon="reviews.showThreads ? 'i-ph:chats-duotone' : 'i-ph:chats'"
-            :label="reviews.showThreads ? 'Hide review comments' : 'Show review comments'"
-            :tooltip="reviews.showThreads ? 'Hide review comments' : 'Show review comments'"
-            @click="reviews.setShowThreads(!reviews.showThreads)"
-          />
-        </template>
-        <ActionIconButton v-if="meta.provider === 'github'" icon="i-ph:arrows-clockwise-duotone" label="Refresh" tooltip="Refresh" class="shrink-0" @click="store.refresh()" />
-        <ActionToggleGroup
-          class="shrink-0"
-          :model-value="store.ui.layout"
-          :options="layoutOptions"
-          @update:model-value="store.ui.setLayout($event as 'split' | 'unified')"
+        <DiffReviewThreadsToggle
+          v-if="reviews"
+          :show-threads="reviews.showThreads"
+          @update:show-threads="reviews.setShowThreads($event)"
         />
         <div class="shrink-0">
           <NavControls :document="document" :is-embedded="isEmbedded" />
         </div>
       </div>
 
-      <div class="text-sm op-fade flex flex-wrap gap-x-3 gap-y-1 items-center">
-        <div v-if="githubRef && !isEmbedded" class="text-sm mb-1 op-fade flex gap-1.5 items-center">
+      <div class="text-sm text-sm op-fade flex flex-wrap gap-x-3 gap-y-1 items-center">
+        <a v-if="githubRef && !isEmbedded" :href="meta.url" target="_blank" rel="noopener" class="op-fade flex gap-1.5 items-center">
           <span>{{ githubRef.owner }}/{{ githubRef.repo }}</span>
-        </div>
+        </a>
         <span v-if="meta.pullRequest?.author" class="flex gap-1.5 items-center">
+          by
           <GithubAvatar :login="meta.pullRequest.author" :size="16" />
-          by {{ meta.pullRequest.author }}
+          {{ meta.pullRequest.author }}
         </span>
         <span v-if="meta.base && meta.head && !isEmbedded" class="font-mono flex gap-1 items-center">
-          <span class="font-mono px-2 py-0.5 border border-base rounded bg-code">{{ meta.base.ref }}</span>
+          <span class="text-xs font-mono px-2 py-0.5 border border-base rounded bg-code">{{ meta.base.ref }}</span>
           ←
-          <span class="font-mono px-2 py-0.5 border border-base rounded bg-code">{{ meta.head.ref }}</span>
+          <span class="text-xs font-mono px-2 py-0.5 border border-base rounded bg-code">{{ meta.head.ref }}</span>
         </span>
+        <DiffAnalyzeButton v-if="store.llm" :llm="store.llm" />
       </div>
       <!-- <template v-if="meta.description">
       <button
@@ -168,28 +124,23 @@ function scrollToGroup(key: string) {
     </template> -->
 
       <div class="text-sm pt-2 flex gap-2 items-center">
-        <div
-          v-if="groups.length > 1"
-          class="text-sm flex flex-1 flex-wrap gap-1.5 min-w-0 items-center relative"
-        >
-          <button
-            v-for="group in groups"
-            :key="group.key"
-            type="button"
-            class="px-2 py-0.5 border border-base rounded transition hover:bg-active hover:op-100"
-            :class="groupsVisable.includes(group.key) ? 'op-100 bg-raised shadow translate-y--2px color-base' : 'op-fade'"
-            @click="scrollToGroup(group.key)"
-          >
-            {{ group.label }}
-            <span class="font-mono op-mute">{{ countGroupFiles(group) }}</span>
-          </button>
-        </div>
+        <DiffGroupNav
+          :groups="groups"
+          :groups-visable="groupsVisable"
+          :reviewed="store.reviewed"
+          @select="scrollToGroup"
+        />
 
         <div class="flex-auto" />
 
         <DiffStats :additions="additions" :deletions="deletions" />
         <DisplayDonut :value="progress" :size="18" :thickness="3" />
         <span class="shrink-0 whitespace-nowrap">{{ reviewedCount }} <span class="text-xs opacity-50">/ {{ totalFiles }} reviewed</span></span>
+        <DiffReviewButton
+          v-if="reviews?.canWrite"
+          :pending-comment-count="reviews.pendingCommentCount"
+          @review="reviewModalOpen = true"
+        />
       </div>
     </div>
 

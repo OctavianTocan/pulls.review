@@ -38,3 +38,11 @@ export function resolveGroups(groups: DiffGroup[], files: FileChange[]): Resolve
 export function countGroupFiles(group: ResolvedGroupWithChildren): number {
   return group.files.length + group.children.reduce((n, child) => n + child.files.length, 0)
 }
+
+/** Totals a group's own +/- counts with its children's, for display alongside `countGroupFiles`. */
+export function countGroupStats(group: ResolvedGroupWithChildren): { added: number, deleted: number } {
+  return {
+    added: group.added + group.children.reduce((n, child) => n + child.added, 0),
+    deleted: group.deleted + group.children.reduce((n, child) => n + child.deleted, 0),
+  }
+}

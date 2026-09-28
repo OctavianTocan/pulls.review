@@ -88,7 +88,7 @@ const model = computed({
 </script>
 
 <template>
-  <div class="pt-4 border-t border-base relative">
+  <div class="relative">
     <div
       class="flex flex-col gap-4 transition"
       :class="isEmbedded ? 'pointer-events-none opacity-40 blur-[2px] select-none' : ''"

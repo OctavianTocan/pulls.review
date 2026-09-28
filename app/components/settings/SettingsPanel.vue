@@ -3,6 +3,7 @@ import type { ModelOption } from '../../analyze/adapters/llm/list-models'
 import type { StoredGithubTokenMeta } from '../../composables/useGithubTokenMeta'
 import type { LlmSettings } from '../../state/settings'
 import GithubTokenSettings from './GithubTokenSettings.vue'
+import LayoutSettingsSection from './LayoutSettingsSection.vue'
 import LlmSettingsSection from './LlmSettingsSection.vue'
 
 defineProps<{
@@ -25,7 +26,11 @@ defineEmits<{
 </script>
 
 <template>
-  <div class="flex flex-col gap-6">
+  <div class="flex flex-col gap-4">
+    <LayoutSettingsSection />
+
+    <div class="border-t border-base" />
+
     <GithubTokenSettings
       :token-set="githubTokenSet"
       :meta="githubTokenMeta"
@@ -33,6 +38,8 @@ defineEmits<{
       :error="githubTokenError"
       @save="$emit('saveGithubToken', $event)"
     />
+
+    <div class="border-t border-base" />
 
     <LlmSettingsSection
       :llm-settings="llmSettings"
