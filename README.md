@@ -1,11 +1,11 @@
-# pulls.review
+# [pulls.review](https://pulls.review)
 
-[pulls.review](https://pulls.review)
+![Og Image](./public/og.png)
 
 > [!WARNING]
-> Heavily work in progress. Expect breaking changes, missing polish, and things that don't work yet.
+> Heavily work in progress.
 
-Review pull request with grouped, summarized, and beautiful diffs to be more focused and efficient.
+Pull request review made simple. Groups changed files, summarizes what matters, and reviews them one scope at a time.
 
 ## Credits
 
