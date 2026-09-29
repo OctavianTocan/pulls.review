@@ -62,7 +62,7 @@ function saveEdit() {
       </div>
     </div>
     <Suspense v-else>
-      <Markdown :value="comment.body" class="text-sm" />
+      <Markdown :value="comment.body" class="review-comment-markdown text-sm" />
     </Suspense>
   </article>
 </template>
