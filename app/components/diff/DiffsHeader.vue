@@ -5,6 +5,7 @@ import ActionIconButton from '@antfu/design/components/Action/ActionIconButton.v
 import ActionToggleGroup from '@antfu/design/components/Action/ActionToggleGroup.vue'
 import DisplayDonut from '@antfu/design/components/Display/DisplayDonut.vue'
 import { computed, ref } from 'vue'
+import { RouterLink } from 'vue-router'
 import { parseGithubDiffId } from '../../providers/github/diff-id'
 import GithubAvatar from '../GithubAvatar.vue'
 import NavControls from '../NavControls.vue'
@@ -60,8 +61,11 @@ function scrollToGroup(key: string) {
     :class="scrollY > 20 ? 'border-base shadow-md' : 'border-transparent' "
   >
     <div class="mxa max-w-500 w-full">
-      <div class="flex flex-wrap gap-2 items-start">
-        <PrStatusIcon v-if="meta.pullRequest?.state" :state="meta.pullRequest.state" class="mt-1" />
+      <div class="flex flex-wrap gap-2 items-center">
+        <component :is="isEmbedded ? 'div' : RouterLink" to="/" class="flex">
+          <PrStatusIcon v-if="meta.pullRequest?.state" :state="meta.pullRequest.state" />
+          <div v-else class="i-ph-house-line-duotone" />
+        </component>
         <h1 class="text-lg font-semibold flex flex-auto gap-2 break-words items-center">
           {{ meta.title }}
           <a v-if="githubRef" :href="meta.url" target="_blank" rel="noopener" class="text-base font-normal op-fade hover:underline">#{{ githubRef.number }}</a>
