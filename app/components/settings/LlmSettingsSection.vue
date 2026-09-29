@@ -3,6 +3,7 @@ import type { ModelOption } from '../../analyze/adapters/llm/list-models'
 import type { LlmProvider, LlmSettings } from '../../state/settings'
 import ActionButton from '@antfu/design/components/Action/ActionButton.vue'
 import ActionIconButton from '@antfu/design/components/Action/ActionIconButton.vue'
+import ActionToggleGroup from '@antfu/design/components/Action/ActionToggleGroup.vue'
 import FormField from '@antfu/design/components/Form/FormField.vue'
 import FormSegmentedControl from '@antfu/design/components/Form/FormSegmentedControl.vue'
 import FormTextInput from '@antfu/design/components/Form/FormTextInput.vue'
@@ -36,9 +37,9 @@ const providerConfigs: Record<LlmProvider, ProviderConfig> = {
 }
 
 const providerOptions = [
-  { value: 'gateway', label: 'AI Gateway' },
-  { value: 'anthropic', label: 'Anthropic' },
-  { value: 'openai-compatible', label: 'OpenAI-compatible' },
+  { value: 'gateway', label: 'AI Gateway', icon: 'i-simple-icons-vercel' },
+  { value: 'anthropic', label: 'Anthropic', icon: 'i-simple-icons-claude' },
+  { value: 'openai-compatible', label: 'OpenAI-compatible', icon: 'i-simple-icons-openai' },
 ]
 
 const config = computed(() => providerConfigs[props.llmSettings.provider])
@@ -105,9 +106,9 @@ const model = computed({
       </div>
 
       <FormField label="Provider">
-        <FormSegmentedControl
-          :options="providerOptions"
+        <ActionToggleGroup
           :model-value="llmSettings.provider"
+          :options="providerOptions"
           @update:model-value="update({ provider: $event as LlmProvider })"
         />
       </FormField>

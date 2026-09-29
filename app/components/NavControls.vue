@@ -18,6 +18,7 @@ defineProps<{
 
 <template>
   <div class="flex shrink-0 gap-1 items-center">
+    <slot />
     <ActionIconButton icon="i-ph:gear-duotone" label="Settings" tooltip="Settings" @click="settingsModalOpen = true" />
     <DarkToggle v-if="!isEmbedded" />
   </div>
