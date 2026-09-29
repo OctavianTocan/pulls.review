@@ -1,6 +1,6 @@
-# [pulls.review](https://pulls.review)
+[![Og Image](./public/og.png)](https://pulls.review)
 
-![Og Image](./public/og.png)
+# [pulls.review](https://pulls.review)
 
 > [!WARNING]
 > Heavily work in progress.
