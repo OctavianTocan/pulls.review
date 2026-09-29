@@ -2,9 +2,9 @@
 import type { DiffsStoreReviews } from '../../stores/types'
 import type { ReviewVerdict } from '../../types/comment-threads'
 import ActionButton from '@antfu/design/components/Action/ActionButton.vue'
-import FormRadioGroup from '@antfu/design/components/Form/FormRadioGroup.vue'
+import ActionToggleGroup from '@antfu/design/components/Action/ActionToggleGroup.vue'
 import FormTextarea from '@antfu/design/components/Form/FormTextarea.vue'
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 import AppModal from '../AppModal.vue'
 
 const props = defineProps<{
@@ -22,11 +22,11 @@ const verdict = ref<ReviewVerdict>('COMMENT')
 const busy = ref(false)
 const error = ref<string>()
 
-const verdictOptions = [
-  { value: 'COMMENT', label: 'Comment' },
-  { value: 'APPROVE', label: 'Approve' },
-  { value: 'REQUEST_CHANGES', label: 'Request changes' },
-]
+const verdictOptions = computed(() => [
+  { value: 'COMMENT', label: 'Comment', icon: 'i-octicon-comment-16' },
+  { value: 'APPROVE', label: 'Approve', icon: 'i-octicon-check-circle-16' },
+  { value: 'REQUEST_CHANGES', label: 'Request changes', icon: 'i-octicon-code-review-16' },
+])
 
 async function run(action: () => Promise<void>) {
   busy.value = true
@@ -53,7 +53,7 @@ async function run(action: () => Promise<void>) {
     :document="document"
     @update:open="emit('update:open', $event)"
   >
-    <div class="p-3 flex flex-col gap-3 w-full sm:w-100">
+    <div class="p-3 flex flex-col gap-3 w-full">
       <p v-if="reviews.pendingCommentCount > 0" class="text-sm op-fade">
         Submitting includes your {{ reviews.pendingCommentCount }} pending comment{{ reviews.pendingCommentCount === 1 ? '' : 's' }}.
       </p>
@@ -64,11 +64,16 @@ async function run(action: () => Promise<void>) {
         :disabled="busy"
         :invalid="!!error"
       />
-      <FormRadioGroup v-model="verdict" :options="verdictOptions" />
+
       <p v-if="error" class="text-sm text-red-600 dark:text-red-400">
         {{ error }}
       </p>
-      <div class="flex gap-2 items-center justify-end">
+      <div class="flex flex-wrap gap-2 items-center justify-end">
+        <ActionToggleGroup
+          v-model="verdict"
+          :options="verdictOptions"
+        />
+        <div class="flex-auto" />
         <ActionButton
           v-if="reviews.pendingReview"
           variant="text"
@@ -81,11 +86,12 @@ async function run(action: () => Promise<void>) {
         <div class="flex-auto" />
         <ActionButton
           variant="primary"
+          class="px3"
           :loading="busy"
           :disabled="verdict !== 'APPROVE' && !body.trim() && reviews.pendingCommentCount === 0"
           @click="run(() => props.reviews.submitReview(verdict, body))"
         >
-          Submit review
+          Submit
         </ActionButton>
       </div>
     </div>

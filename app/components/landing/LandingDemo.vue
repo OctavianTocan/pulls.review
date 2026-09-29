@@ -152,6 +152,7 @@ useIntersectionObserver(root, ([entry]) => {
 
 <template>
   <div ref="root" class="text-xs p4 rounded-lg select-none lt-md:border lt-md:border-base" aria-hidden="true">
+    <!-- TODO: the text should be dynamically "// before" / "// after" along the animation -->
     <h2 class="text-xs font-mono mb2 op-fade">
       // demo
     </h2>
