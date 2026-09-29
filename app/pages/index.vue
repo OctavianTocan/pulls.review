@@ -7,6 +7,7 @@ import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import AppHeader from '../components/AppHeader.vue'
 import LandingDemo from '../components/landing/LandingDemo.vue'
+import LandingHero from '../components/landing/LandingHero.vue'
 import LoadDiffModal from '../components/load/LoadDiffModal.vue'
 import PullRequestPill from '../components/PullRequestPill.vue'
 import { UPLOAD_SESSION_STORAGE_KEY } from '../composables/uploadSession'
@@ -96,12 +97,7 @@ useDocumentTitle(() => undefined)
     <main class="mxa px-6 py-16 flex flex-1 flex-col gap-20 max-w-6xl w-full sm:py-20">
       <section class="gap-12 grid items-center lg:gap-16 lg:grid-cols-[minmax(0,1fr)_minmax(0,27rem)]">
         <div class="flex flex-col gap-8">
-          <h1 class="text-[clamp(2.25rem,4.6vw,4rem)] leading-[1.05] tracking-tight font-medium font-mono">
-            <span class="block"><span class="color-accent-orange" aria-hidden="true">@@</span> pull</span>
-            <span class="block">reviews<span class="color-accent-magenta" aria-hidden="true">:</span></span>
-            <span class="block"><span class="color-accent-teal" aria-hidden="true">+</span> made<span class="color-accent-orange" aria-hidden="true">{}</span></span>
-            <span class="block"><span class="color-accent-magenta" aria-hidden="true">>>> </span>easy<span class="i-ph-check-bold text-[0.8em] color-accent-teal inline-block translate-y-2" aria-hidden="true" /></span>
-          </h1>
+          <LandingHero />
           <p class="text-sm leading-relaxed op-fade max-w-md">
             Groups changed files, summarizes what matters, review them one scope at a time.
           </p>

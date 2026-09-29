@@ -31,7 +31,7 @@ export const DEMO_PR = {
 export const DEMO_GROUPS: DemoGroup[] = [
   { label: 'Shared analysis store & comment contract', additions: 363, deletions: 3, files: 8, expanded: true },
   { label: 'Share result UI', additions: 331, deletions: 31, files: 11, expanded: true },
-  { label: 'Store refactor: aiResult to root', additions: 182, deletions: 77, files: 9 },
+  { label: 'Store refactor: result to root', additions: 182, deletions: 77, files: 9 },
   { label: 'Tests', additions: 353, deletions: 1, files: 4 },
   { label: 'Docs & deps', additions: 129, deletions: 44, files: 5 },
 ]

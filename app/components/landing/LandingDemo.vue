@@ -10,10 +10,17 @@ import PrStatusIcon from '../diff/PrStatusIcon.vue'
 import { DEMO_FILES, DEMO_GROUPS, DEMO_PR } from './demo-data'
 import { buildSchedule, findBeat } from './demo-schedule'
 
-const props = defineProps<{
-  /** Skip the loop and show the settled end state (everything grouped and reviewed). */
-  still?: boolean
-}>()
+const props = withDefaults(
+  defineProps<{
+    /** Skip the loop and show the settled end state (everything grouped and reviewed). */
+    still?: boolean
+    showHeader?: boolean
+  }>(),
+  {
+    still: false,
+    showHeader: true,
+  },
+)
 
 const reducedMotion = usePreferredReducedMotion()
 const settled = computed(() => props.still || reducedMotion.value === 'reduce')
@@ -153,7 +160,7 @@ useIntersectionObserver(root, ([entry]) => {
 <template>
   <div ref="root" class="text-xs p4 rounded-lg select-none lt-md:border lt-md:border-base" aria-hidden="true">
     <!-- TODO: the text should be dynamically "// before" / "// after" along the animation -->
-    <h2 class="text-xs font-mono mb2 op-fade">
+    <h2 v-if="showHeader" class="text-xs font-mono mb2 op-fade">
       // demo
     </h2>
 
