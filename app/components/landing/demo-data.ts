@@ -1,0 +1,57 @@
+/**
+ * The pull request the landing-page animation walks through: antfu/pulls.review#9
+ * with its real title and stats, its files bucketed into five groups whose stats
+ * add up to the PR total.
+ */
+
+export interface DemoGroup {
+  label: string
+  additions: number
+  deletions: number
+  files: number
+  /** Show this group's files once grouped; the others stay a single header row. */
+  expanded?: boolean
+}
+
+export interface DemoFile {
+  path: string
+  /** Index into {@link DEMO_GROUPS}: where the row flies to. */
+  group: number
+}
+
+export const DEMO_PR = {
+  number: 9,
+  title: 'feat: share an AI analysis as a PR comment and load shared results',
+  summary: 'One reviewer with an API key posts their analysis to the PR; everyone else, including the github.com embed, loads it without a token.',
+  additions: 1358,
+  deletions: 156,
+  files: 37,
+}
+
+export const DEMO_GROUPS: DemoGroup[] = [
+  { label: 'Shared analysis store & comment contract', additions: 363, deletions: 3, files: 8, expanded: true },
+  { label: 'Share result UI', additions: 331, deletions: 31, files: 11, expanded: true },
+  { label: 'Store refactor: aiResult to root', additions: 182, deletions: 77, files: 9 },
+  { label: 'Tests', additions: 353, deletions: 1, files: 4 },
+  { label: 'Docs & deps', additions: 129, deletions: 44, files: 5 },
+]
+
+/** The rows shown in the flat state; the rest hide behind "N more files". */
+export const DEMO_FILES: DemoFile[] = [
+  { path: 'app/stores/shared-analysis-store.ts', group: 0 },
+  { path: 'app/components/diff/ShareResultModal.vue', group: 1 },
+  { path: '.agents/01-architecture.md', group: 4 },
+  { path: 'app/providers/github/shared-analysis-comment.ts', group: 0 },
+  { path: 'app/stores/diffs-store.ts', group: 2 },
+  { path: 'app/components/diff/SharedAnalysisBanner.vue', group: 1 },
+  { path: 'app/stores/shared-analysis-store.test.ts', group: 3 },
+  { path: 'app/types/shared-analysis.ts', group: 0 },
+  { path: 'pnpm-lock.yaml', group: 4 },
+  { path: 'app/components/diff/DiffsHeader.vue', group: 1 },
+  { path: 'app/cache/pr-cache.ts', group: 0 },
+  { path: 'test/fixtures/shared-analysis/comment.json', group: 3 },
+  { path: 'app/stores/reviews-store.ts', group: 2 },
+  { path: 'app/components/diff/share-result.css', group: 1 },
+  { path: 'plans/07-share-result.md', group: 4 },
+  { path: 'app/stores/github-write-access.ts', group: 0 },
+]

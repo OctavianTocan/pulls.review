@@ -54,6 +54,7 @@
     "@vitejs/plugin-vue": "catalog:build",
     "@vue/test-utils": "catalog:testing",
     "@vueuse/core": "catalog:frontend",
+    "animejs": "catalog:frontend",
     "colorjs.io": "catalog:frontend",
     "eslint": "catalog:dev",
     "eslint-plugin-format": "catalog:dev",
