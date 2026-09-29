@@ -24,7 +24,10 @@ const props = defineProps<{
   store?: DiffsStore
 }>()
 
-const ChatWidget = defineAsyncComponent(() => import('../chat/ChatWidget.vue'))
+// Compile-time: with LLM support off `store.llm` is never set, so the widget is dead code.
+const ChatWidget = import.meta.env.PR_LLM
+  ? defineAsyncComponent(() => import('../chat/ChatWidget.vue'))
+  : undefined
 
 const diff = computed(() => props.store?.diff)
 const grouped = computed(() => props.store?.grouped)
@@ -208,7 +211,7 @@ function refreshFromBanner() {
           </div>
         </div>
 
-        <ChatWidget v-if="store?.llm && store.aiResult" :store="store" />
+        <ChatWidget v-if="ChatWidget && store?.llm && store.aiResult" :store="store" />
       </template>
       <template v-else>
         <div class="mxa px-4 py-12 max-w-500 w-full">
