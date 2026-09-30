@@ -41,14 +41,14 @@ function onFileInput(event: Event) {
         v-model="text"
         rows="10"
         placeholder="diff --git a/foo b/foo…"
-        class="text-sm font-mono p-2 outline-none border border-base rounded bg-raised w-full resize-y focus-visible:ring-2 focus-visible:ring-primary-500/40"
+        class="w-full resize-y border border-base rounded bg-raised p-2 text-sm font-mono outline-none focus-visible:ring-2 focus-visible:ring-primary-500/40"
         :class="{ 'border-primary-500 ring-2 ring-primary-500/40': isDragging }"
         @dragover.prevent="isDragging = true"
         @dragleave.prevent="isDragging = false"
         @drop.prevent="onDrop"
       />
     </FormField>
-    <label class="text-sm color-muted cursor-pointer">
+    <label class="cursor-pointer text-sm color-muted">
       Or choose a .diff/.patch file
       <input type="file" accept=".diff,.patch,text/plain" class="hidden" @change="onFileInput">
     </label>

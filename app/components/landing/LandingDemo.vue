@@ -158,76 +158,76 @@ useIntersectionObserver(root, ([entry]) => {
 </script>
 
 <template>
-  <div ref="root" class="text-xs p4 rounded-lg select-none lt-md:border lt-md:border-base" aria-hidden="true">
+  <div ref="root" class="select-none rounded-lg p4 text-xs lt-md:border lt-md:border-base" aria-hidden="true">
     <!-- TODO: the text should be dynamically "// before" / "// after" along the animation -->
-    <h2 v-if="showHeader" class="text-xs font-mono mb2 op-fade">
+    <h2 v-if="showHeader" class="mb2 text-xs font-mono op-fade">
       // demo
     </h2>
 
-    <div class="flex gap-2 items-start">
+    <div class="flex items-start gap-2">
       <PrStatusIcon state="open" class="mt-0.5" />
-      <div class="flex-1 min-w-0">
-        <div class="flex gap-3 items-start">
-          <div class="text-sm leading-snug font-medium flex-1 min-w-0">
+      <div class="min-w-0 flex-1">
+        <div class="flex items-start gap-3">
+          <div class="min-w-0 flex-1 text-sm font-medium leading-snug">
             {{ DEMO_PR.title }} <span class="op-fade">#{{ DEMO_PR.number }}</span>
           </div>
         </div>
-        <div class="mt-1.5 grid grid-cols-1">
-          <span data-total class="flex gap-2 col-start-1 row-start-1 items-center self-start" :class="{ 'op-0': settled }">
+        <div class="grid grid-cols-1 mt-1.5">
+          <span data-total class="col-start-1 row-start-1 flex items-center self-start gap-2" :class="{ 'op-0': settled }">
             <DiffStats :additions="DEMO_PR.additions" :deletions="DEMO_PR.deletions" />
-            <span class="op-fade whitespace-nowrap">{{ DEMO_PR.files }} files</span>
+            <span class="whitespace-nowrap op-fade">{{ DEMO_PR.files }} files</span>
           </span>
-          <span data-summary class="flex gap-1.5 col-start-1 row-start-1 items-start" :class="{ 'op-0': !settled }">
-            <span class="i-ph-sparkle-duotone color-accent-magenta mt-0.5 shrink-0" />
+          <span data-summary class="col-start-1 row-start-1 flex items-start gap-1.5" :class="{ 'op-0': !settled }">
+            <span class="i-ph-sparkle-duotone mt-0.5 shrink-0 color-accent-magenta" />
             <span class="op-fade">{{ DEMO_PR.summary }}</span>
           </span>
         </div>
       </div>
     </div>
 
-    <div ref="body" class="mt-4 pl-6 grid grid-cols-1">
-      <ul class="mt--5 pl2 flex flex-col col-start-1 row-start-1" :class="{ 'op-0': settled }">
+    <div ref="body" class="grid grid-cols-1 mt-4 pl-6">
+      <ul class="col-start-1 row-start-1 mt--5 flex flex-col pl2" :class="{ 'op-0': settled }">
         <li
           v-for="file in files"
           :key="file.path"
           data-row
-          class="flex gap-1 h-6 origin-left items-center"
+          class="h-6 flex origin-left items-center gap-1"
         >
           <DisplayFileIcon :path="file.path" class="shrink-0" />
           <span class="min-w-0 truncate"><span class="op-fade">{{ file.dir }}</span>{{ file.base }}</span>
         </li>
-        <li data-tail class="op-fade flex h-8 items-center">
+        <li data-tail class="h-8 flex items-center op-fade">
           ... {{ hiddenFiles }} more files
         </li>
       </ul>
 
-      <div data-grouped class="flex flex-col gap-2 col-start-1 row-start-1" :class="{ 'op-0': !settled }">
+      <div data-grouped class="col-start-1 row-start-1 flex flex-col gap-2" :class="{ 'op-0': !settled }">
         <div v-for="(group, i) in groups" :key="group.label" class="flex flex-col">
-          <div data-card class="ml--5 py-1 flex gap-2 items-center" :class="{ 'op-0': !settled }">
-            <span class="op-fade shrink-0" :class="group.expanded ? 'i-ph-caret-down-bold' : 'i-ph-caret-right-bold'" />
-            <span data-label class="text-sm font-medium min-w-0 truncate">{{ group.label }}</span>
+          <div data-card class="ml--5 flex items-center gap-2 py-1" :class="{ 'op-0': !settled }">
+            <span class="shrink-0 op-fade" :class="group.expanded ? 'i-ph-caret-down-bold' : 'i-ph-caret-right-bold'" />
+            <span data-label class="min-w-0 truncate text-sm font-medium">{{ group.label }}</span>
             <span class="flex-1" />
             <DiffStats :additions="group.additions" :deletions="group.deletions" />
-            <span class="op-fade whitespace-nowrap">{{ group.files }} files</span>
-            <span class="color-accent-teal shrink-0 grid size-4 place-items-center">
-              <span data-donut class="flex col-start-1 row-start-1" :class="{ 'op-0': settled }">
+            <span class="whitespace-nowrap op-fade">{{ group.files }} files</span>
+            <span class="grid size-4 shrink-0 place-items-center color-accent-teal">
+              <span data-donut class="col-start-1 row-start-1 flex" :class="{ 'op-0': settled }">
                 <DisplayDonut :value="settled ? 1 : progress[i]!.value" :size="14" :thickness="2.5" color="currentColor" />
               </span>
-              <span data-check class="i-ph-check-circle-duotone text-base m--0.5 col-start-1 row-start-1" :class="{ 'op-0': !settled }" />
+              <span data-check class="i-ph-check-circle-duotone col-start-1 row-start-1 m--0.5 text-base" :class="{ 'op-0': !settled }" />
             </span>
           </div>
-          <ul v-if="group.shown.length" class="pl-5 flex flex-col">
+          <ul v-if="group.shown.length" class="flex flex-col pl-5">
             <li
               v-for="file in group.shown"
               :key="file.path"
               :data-target="file.path"
-              class="flex gap-1 h-6 items-center"
+              class="h-6 flex items-center gap-1"
               :class="{ 'op-0': !settled }"
             >
               <DisplayFileIcon :path="file.path" class="shrink-0" />
               <span class="min-w-0 truncate"><span class="op-fade">{{ file.dir }}</span>{{ file.base }}</span>
             </li>
-            <li v-if="group.hidden" data-detail class="flex h-6 items-center" :class="{ 'op-0': !settled }">
+            <li v-if="group.hidden" data-detail class="h-6 flex items-center" :class="{ 'op-0': !settled }">
               <span class="op-fade">... {{ group.hidden }} more files</span>
             </li>
           </ul>

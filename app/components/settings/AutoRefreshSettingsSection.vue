@@ -8,7 +8,7 @@ import { autoRefresh } from '../../state/auto-refresh'
 
 <template>
   <div>
-    <h3 class="text-sm color-base font-medium mb-2">
+    <h3 class="mb-2 text-sm color-base font-medium">
       Cached pull requests
     </h3>
     <FormCheckbox v-model="autoRefresh" label="Auto refresh when new commits are found" />

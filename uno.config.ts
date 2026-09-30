@@ -1,4 +1,3 @@
-import type { Preset } from 'unocss'
 import { presetAnthonyDesign } from '@antfu/design/unocss'
 import {
   defineConfig,

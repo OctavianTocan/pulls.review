@@ -333,13 +333,13 @@ defineExpose({
 </script>
 
 <template>
-  <div :id="`file-${file.sha}`" class="border border-base rounded-lg overflow-hidden">
+  <div :id="`file-${file.sha}`" class="overflow-hidden border border-base rounded-lg">
     <header
-      class="z-[20] px-2 py-1.5 flex gap-2 items-center justify-between"
+      class="z-[20] flex items-center justify-between gap-2 px-2 py-1.5"
       role="button"
       @click.self="collapsed = !collapsed"
     >
-      <div class="text-sm flex gap-2 min-w-0 items-center">
+      <div class="min-w-0 flex items-center gap-2 text-sm">
         <FormCheckbox
           :model-value="isReviewed"
           aria-label="Mark as reviewed"
@@ -347,7 +347,7 @@ defineExpose({
         />
         <DisplayFilePath :path="file.path" class="min-w-0" />
       </div>
-      <div class="flex shrink-0 gap-2 items-center">
+      <div class="flex shrink-0 items-center gap-2">
         <span v-if="resolvedCount" class="text-xs op-fade">{{ resolvedCount }} resolved</span>
         <DiffStats v-if="!file.isBinary" :additions="file.additions" :deletions="file.deletions" />
         <span v-else class="text-xs op-fade">Binary file</span>
@@ -370,7 +370,7 @@ defineExpose({
         />
       </div>
     </header>
-    <div v-if="file.isBinary" class="text-sm p-4 op-fade">
+    <div v-if="file.isBinary" class="p-4 text-sm op-fade">
       Binary file not shown.
     </div>
     <div v-else-if="!collapsed" ref="container">
@@ -387,7 +387,7 @@ defineExpose({
         :key="`${group.side}-${group.line}`"
         :slot="`annotation-${group.side}-${group.line}`"
         data-annotation-slot
-        class="font-sans px-2 text-left whitespace-normal"
+        class="whitespace-normal px-2 text-left font-sans"
       >
         <ReviewThreadCard
           v-for="thread in group.threads"
@@ -395,7 +395,7 @@ defineExpose({
           :thread="thread"
           :reviews="store.reviews!"
         />
-        <div v-if="group.hasDraft" class="my-1 border border-base rounded-lg bg-base max-w-200 overflow-hidden">
+        <div v-if="group.hasDraft" class="my-1 max-w-200 overflow-hidden border border-base rounded-lg bg-base">
           <CommentComposer
             :has-pending-review="!!store.reviews!.pendingReview"
             :busy="draftBusy"

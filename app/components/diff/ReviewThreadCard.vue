@@ -48,8 +48,8 @@ async function sendReply() {
 </script>
 
 <template>
-  <div class="font-sans my-1 text-left border border-base rounded-lg bg-base max-w-200 overflow-hidden">
-    <div class="divide-#9992 divide-y">
+  <div class="my-1 max-w-200 overflow-hidden border border-base rounded-lg bg-base text-left font-sans">
+    <div class="divide-y divide-#9992">
       <ReviewCommentCard
         v-for="comment in thread.comments"
         :key="comment.id"
@@ -60,10 +60,10 @@ async function sendReply() {
         @delete="run(() => reviews.deleteComment(comment.id))"
       />
     </div>
-    <p v-if="error" class="text-xs text-red-600 px-3 pb-1 dark:text-red-400">
+    <p v-if="error" class="px-3 pb-1 text-xs text-red-600 dark:text-red-400">
       {{ error }}
     </p>
-    <footer v-if="canWrite" class="px-2 py-1.5 border-t border-base bg-raised flex flex-col gap-2">
+    <footer v-if="canWrite" class="flex flex-col gap-2 border-t border-base bg-raised px-2 py-1.5">
       <template v-if="replying">
         <FormTextarea
           v-model="replyBody"
@@ -73,7 +73,7 @@ async function sendReply() {
           @keydown.enter.meta="sendReply"
           @keydown.enter.ctrl="sendReply"
         />
-        <div class="flex gap-2 justify-end">
+        <div class="flex justify-end gap-2">
           <ActionButton size="sm" variant="text" :disabled="busy" @click="replying = false">
             Cancel
           </ActionButton>
@@ -82,11 +82,11 @@ async function sendReply() {
           </ActionButton>
         </div>
       </template>
-      <div v-else class="flex gap-2 items-center">
+      <div v-else class="flex items-center gap-2">
         <button
           v-if="!thread.pending"
           type="button"
-          class="text-sm color-base px-2 py-1 text-left border border-base rounded bg-base op-fade flex-1 hover:op-100"
+          class="flex-1 border border-base rounded bg-base px-2 py-1 text-left text-sm color-base op-fade hover:op-100"
           @click="replying = true"
         >
           Reply…

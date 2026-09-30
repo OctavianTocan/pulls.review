@@ -16,7 +16,7 @@ const confirmOpen = ref(false)
 
 <template>
   <ActionButton
-    class="text-xs shrink-0"
+    class="shrink-0 text-xs"
     variant="text"
     :disabled="shared.isSharing || !shared.canShare"
     :title="shared.canShare ? 'Post this analysis as a comment on the pull request so others can load it' : 'A GitHub token with write access is required to share'"
@@ -32,7 +32,7 @@ const confirmOpen = ref(false)
     rel="noopener"
     class="text-xs op-fade self-center hover:underline"
   >View comment</a> -->
-  <span v-if="shared.error && !confirmOpen" class="text-xs text-red-500 max-w-80 truncate self-center" :title="`Sharing failed: ${shared.error.message}`">Sharing failed: {{ shared.error.message }}</span>
+  <span v-if="shared.error && !confirmOpen" class="max-w-80 self-center truncate text-xs text-red-500" :title="`Sharing failed: ${shared.error.message}`">Sharing failed: {{ shared.error.message }}</span>
 
   <ShareResultModal v-model:open="confirmOpen" :store="store" :document="document" />
 </template>

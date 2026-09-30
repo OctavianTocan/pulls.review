@@ -12,10 +12,10 @@ defineEmits<{
 </script>
 
 <template>
-  <div class="shrink-0 relative">
+  <div class="relative shrink-0">
     <ActionButton size="sm" variant="action" icon="i-ph:chat-centered-text-duotone" @click="$emit('review')">
       Add Review
     </ActionButton>
-    <DisplayNumberBadge v-if="pendingCommentCount > 0" :value="pendingCommentCount" class="right--2 top--2 absolute" />
+    <DisplayNumberBadge v-if="pendingCommentCount > 0" :value="pendingCommentCount" class="absolute right--2 top--2" />
   </div>
 </template>

@@ -24,7 +24,7 @@ const COLOR_CLASS: Record<FileChangeStatus, string> = {
 
 <template>
   <span
-    class="text-xs font-mono rounded inline-flex shrink-0 w-4 items-center justify-center"
+    class="w-4 inline-flex shrink-0 items-center justify-center rounded text-xs font-mono"
     :class="COLOR_CLASS[status]"
     :title="status"
   >{{ LETTER[status] }}</span>

@@ -92,11 +92,11 @@ function navigateToFile(sha: string) {
 
 <template>
   <section :id="`group-${group.key}`" class="scroll-mt-[var(--diffs-header-height)]">
-    <header v-if="isChapter" class="p-3 border-b border-base flex flex-col gap-2">
-      <div class="flex w-full items-center">
+    <header v-if="isChapter" class="flex flex-col gap-2 border-b border-base p-3">
+      <div class="w-full flex items-center">
         <button
           type="button"
-          class="px-2 py-1 text-left flex flex-1 min-w-0 items-start"
+          class="min-w-0 flex flex-1 items-start px-2 py-1 text-left"
           :aria-expanded="!collapsed"
           @click="emit('toggle')"
         >
@@ -107,9 +107,9 @@ function navigateToFile(sha: string) {
             label="Toggle group"
             as="span"
           />
-          <div class="flex flex-1 flex-col gap-1.5 min-w-0">
-            <span class="text-2xl leading-1em font-medium truncate" :title="group.label">{{ group.label }}</span>
-            <div class="leading-1em flex gap-2 items-center">
+          <div class="min-w-0 flex flex-1 flex-col gap-1.5">
+            <span class="truncate text-2xl font-medium leading-1em" :title="group.label">{{ group.label }}</span>
+            <div class="flex items-center gap-2 leading-1em">
               <DiffStats :additions="totalAdded" :deletions="totalDeleted" />
               <span class="text-xs op-fade">{{ totalFiles }} file{{ totalFiles === 1 ? '' : 's' }}</span>
               <span class="text-xs op-fade">{{ group.children.length }} subgroup{{ group.children.length === 1 ? '' : 's' }}</span>
@@ -117,13 +117,13 @@ function navigateToFile(sha: string) {
             </div>
           </div>
         </button>
-        <div v-if="$slots.actions" class="px-2 flex shrink-0 gap-1 items-center">
+        <div v-if="$slots.actions" class="flex shrink-0 items-center gap-1 px-2">
           <slot name="actions" />
         </div>
       </div>
       <template v-if="!collapsed">
         <Suspense v-if="group.summary">
-          <Markdown :value="group.summary" class="text-sm px-2 op-fade max-w-200" />
+          <Markdown :value="group.summary" class="max-w-200 px-2 text-sm op-fade" />
         </Suspense>
         <DiffGroupNav
           class="px-2"
@@ -135,23 +135,23 @@ function navigateToFile(sha: string) {
       </template>
     </header>
 
-    <div v-if="!isChapter || (!collapsed && group.files.length)" class="p-3 flex flex-col gap-4 lg:grid lg:grid-cols-[1fr_4fr]">
+    <div v-if="!isChapter || (!collapsed && group.files.length)" class="flex flex-col gap-4 p-3 lg:grid lg:grid-cols-[1fr_4fr]">
       <!-- --diffs-header-height is the page's real, measured sticky DiffsHeader height
            (set on the DiffsPage root), so the aside sticks just below it, not under it. -->
-      <aside class="flex shrink-0 flex-col gap-3 min-w-70 top-[var(--diffs-header-height)] lg:self-start lg:sticky">
-        <header v-if="!isChapter" class="bg-base flex flex-col w-full">
+      <aside class="top-[var(--diffs-header-height)] min-w-70 flex shrink-0 flex-col gap-3 lg:sticky lg:self-start">
+        <header v-if="!isChapter" class="w-full flex flex-col bg-base">
           <button
             v-if="parentLabel"
             type="button"
-            class="text-xs leading-1em pb1 pl2 op-fade truncate self-start hover:op-100"
+            class="self-start truncate pb1 pl2 text-xs leading-1em op-fade hover:op-100"
             @click="navigateToParent"
           >
             {{ parentLabel }} ›
           </button>
-          <div class="flex w-full items-center">
+          <div class="w-full flex items-center">
             <button
               type="button"
-              class="text-sm px-2 py-1 text-left flex flex-1 min-w-0 items-start"
+              class="min-w-0 flex flex-1 items-start px-2 py-1 text-left text-sm"
               :aria-expanded="!collapsed"
               @click="emit('toggle')"
             >
@@ -162,11 +162,11 @@ function navigateToFile(sha: string) {
                 label="Toggle group"
                 as="span"
               />
-              <div class="flex-1 min-w-0">
-                <div class="leading-1em flex gap-2 items-center">
+              <div class="min-w-0 flex-1">
+                <div class="flex items-center gap-2 leading-1em">
                   <span
                     ref="labelBox"
-                    class="text-xl font-medium flex-1 min-w-0 truncate"
+                    class="min-w-0 flex-1 truncate text-xl font-medium"
                     :style="{ fontSize: `${labelFontSize}px` }"
                     :title="group.label"
                   >
@@ -174,21 +174,21 @@ function navigateToFile(sha: string) {
                   </span>
                   <div class="flex shrink-0 items-center" :title="`${reviewedCount} / ${totalFiles} files reviewed`" />
                 </div>
-                <div class="leading-1em flex gap-2 items-center">
+                <div class="flex items-center gap-2 leading-1em">
                   <DiffStats :additions="totalAdded" :deletions="totalDeleted" />
                   <span class="text-xs op-fade">{{ totalFiles }} file{{ totalFiles === 1 ? '' : 's' }}</span>
                   <DisplayDonut :value="progress" :size="12" :thickness="2.5" />
                 </div>
               </div>
             </button>
-            <div v-if="$slots.actions" class="px-2 flex shrink-0 gap-1 items-center">
+            <div v-if="$slots.actions" class="flex shrink-0 items-center gap-1 px-2">
               <slot name="actions" />
             </div>
           </div>
         </header>
         <template v-if="!collapsed">
           <Suspense v-if="group.summary && !isChapter">
-            <Markdown :value="group.summary" class="text-sm pb-2 pl2 border-b border-base op-fade" />
+            <Markdown :value="group.summary" class="border-b border-base pb-2 pl2 text-sm op-fade" />
           </Suspense>
           <FileTree
             :store="store"
@@ -199,7 +199,7 @@ function navigateToFile(sha: string) {
         </template>
       </aside>
 
-      <div class="flex flex-col gap-3 min-w-0">
+      <div class="min-w-0 flex flex-col gap-3">
         <template v-if="!collapsed">
           <FileDiff
             v-for="file of group.files"

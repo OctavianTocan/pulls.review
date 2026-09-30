@@ -82,27 +82,27 @@ function priceTitle(model: ModelOption): string | undefined {
     placeholder="model id"
   />
 
-  <div v-else class="border border-base rounded bg-raised flex flex-col">
+  <div v-else class="flex flex-col border border-base rounded bg-raised">
     <button
       type="button"
-      class="text-sm px-2.5 outline-none inline-flex gap-2 h-9 transition items-center justify-between focus-visible:ring-2 focus-visible:ring-primary-500/40"
+      class="h-9 inline-flex items-center justify-between gap-2 px-2.5 text-sm outline-none transition focus-visible:ring-2 focus-visible:ring-primary-500/40"
       :aria-expanded="open"
       @click="open = !open"
     >
-      <span v-if="loading" class="op-fade flex gap-2 items-center">
+      <span v-if="loading" class="flex items-center gap-2 op-fade">
         <span class="i-ph:circle-notch animate-spin" aria-hidden="true" />
         Loading models…
       </span>
-      <span v-else class="color-base flex gap-2 min-w-0 items-center">
+      <span v-else class="min-w-0 flex items-center gap-2 color-base">
         <span class="truncate">{{ current?.name ?? modelId }}</span>
-        <span v-if="current && priceLabel(current)" class="text-xs op-mute shrink-0 tabular-nums" :title="priceTitle(current)">
+        <span v-if="current && priceLabel(current)" class="shrink-0 text-xs tabular-nums op-mute" :title="priceTitle(current)">
           {{ priceLabel(current) }}
         </span>
       </span>
-      <span :class="open ? 'i-ph:caret-up' : 'i-ph:caret-down'" class="op-fade shrink-0" aria-hidden="true" />
+      <span :class="open ? 'i-ph:caret-up' : 'i-ph:caret-down'" class="shrink-0 op-fade" aria-hidden="true" />
     </button>
 
-    <div v-if="open" ref="listEl" class="border-t border-base flex flex-col">
+    <div v-if="open" ref="listEl" class="flex flex-col border-t border-base">
       <div class="p-1.5">
         <FormTextInput
           v-model="query"
@@ -113,11 +113,11 @@ function priceTitle(model: ModelOption): string | undefined {
           class="w-full"
         />
       </div>
-      <div class="pb-1 max-h-56 of-y-auto" role="listbox">
-        <div v-if="loading" class="text-sm px-3 py-4 text-center op-mute">
+      <div class="max-h-56 of-y-auto pb-1" role="listbox">
+        <div v-if="loading" class="px-3 py-4 text-center text-sm op-mute">
           Loading models…
         </div>
-        <div v-else-if="!filtered.length && !customCandidate" class="text-sm px-3 py-4 text-center op-mute">
+        <div v-else-if="!filtered.length && !customCandidate" class="px-3 py-4 text-center text-sm op-mute">
           No matching model
         </div>
         <button
@@ -126,27 +126,27 @@ function priceTitle(model: ModelOption): string | undefined {
           type="button"
           role="option"
           :aria-selected="model.id === modelId"
-          class="text-sm px-3 py-1.5 text-left outline-none flex gap-2 w-full transition items-center focus-visible:bg-hover"
+          class="w-full flex items-center gap-2 px-3 py-1.5 text-left text-sm outline-none transition focus-visible:bg-hover"
           :class="model.id === modelId ? 'color-active bg-active' : 'op-fade hover:op100 hover:bg-hover'"
           @click="pick(model.id)"
         >
-          <span class="flex-1 min-w-0 truncate">{{ model.name }}</span>
+          <span class="min-w-0 flex-1 truncate">{{ model.name }}</span>
           <span
             v-if="priceLabel(model)"
-            class="text-xs shrink-0 tabular-nums"
+            class="shrink-0 text-xs tabular-nums"
             :class="priceLabel(model) === 'Free' ? 'color-active' : 'op-mute'"
             :title="priceTitle(model)"
           >{{ priceLabel(model) }}</span>
-          <span v-if="model.id === modelId" class="i-ph:check text-xs shrink-0" aria-hidden="true" />
+          <span v-if="model.id === modelId" class="i-ph:check shrink-0 text-xs" aria-hidden="true" />
         </button>
         <button
           v-if="customCandidate"
           type="button"
-          class="text-sm px-3 py-1.5 text-left outline-none op-fade flex gap-2 w-full transition items-center focus-visible:bg-hover hover:bg-hover hover:op100"
+          class="w-full flex items-center gap-2 px-3 py-1.5 text-left text-sm op-fade outline-none transition focus-visible:bg-hover hover:bg-hover hover:op100"
           @click="pick(customCandidate)"
         >
-          <span class="i-ph:plus text-xs shrink-0" aria-hidden="true" />
-          <span class="flex-1 min-w-0 truncate">Use “{{ customCandidate }}”</span>
+          <span class="i-ph:plus shrink-0 text-xs" aria-hidden="true" />
+          <span class="min-w-0 flex-1 truncate">Use “{{ customCandidate }}”</span>
         </button>
       </div>
     </div>

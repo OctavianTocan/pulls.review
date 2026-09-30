@@ -132,19 +132,19 @@ function refreshFromBanner() {
 <template>
   <div
     ref="root"
-    class="diffs-page color-base bg-base"
+    class="diffs-page bg-base color-base"
     :style="styles"
   >
     <div>
       <template v-if="isLoading && !diff">
-        <div class="mxa px-4 py-12 max-w-500 w-full">
+        <div class="mxa max-w-500 w-full px-4 py-12">
           <slot name="loading">
             <FeedbackLoading text="Loading…" />
           </slot>
         </div>
       </template>
       <template v-else-if="error">
-        <div class="mxa px-4 py-12 flex flex-col gap-8 max-w-500 w-full">
+        <div class="mxa max-w-500 w-full flex flex-col gap-8 px-4 py-12">
           <slot name="error" :error="error" :retry="() => store?.load()">
             <FeedbackEmptyState icon="i-ph:warning-duotone" title="Something went wrong">
               <template #hint>
@@ -159,7 +159,7 @@ function refreshFromBanner() {
           </slot>
           <GithubTokenRecovery
             v-if="isGithub"
-            class="mxa p4 border border-base border-rounded max-w-200"
+            class="mxa max-w-200 border border-base border-rounded p4"
             @saved="store?.load()"
           />
         </div>
@@ -173,11 +173,11 @@ function refreshFromBanner() {
           :scroll-y="scrollY"
         />
 
-        <div class="mxa flex flex-col gap-4 max-w-500 w-full">
+        <div class="mxa max-w-500 w-full flex flex-col gap-4">
           <slot name="stale" :refresh="() => store?.refresh()">
-            <div v-if="isStale" class="text-sm text-amber-700 mb-4 px-3 py-2 border border-amber:20 rounded-lg bg-amber:10 bg-raised flex flex-wrap gap-3 items-center justify-between dark:text-amber-400">
+            <div v-if="isStale" class="mb-4 flex flex-wrap items-center justify-between gap-3 border border-amber:20 rounded-lg bg-amber:10 bg-raised px-3 py-2 text-sm text-amber-700 dark:text-amber-400">
               <span>This pull request has new commits since it was cached.</span>
-              <div class="flex gap-3 items-center">
+              <div class="flex items-center gap-3">
                 <FormCheckbox v-model="autoRefreshNextTime" label="Auto refresh next time" />
                 <ActionButton size="sm" @click="refreshFromBanner">
                   Refresh
@@ -191,7 +191,7 @@ function refreshFromBanner() {
           <ReviewSummaries v-if="store?.reviews" :summaries="store.reviews.summaries" />
 
           <Suspense v-if="grouped?.overallSummary">
-            <Markdown :value="grouped?.overallSummary" class="text-sm px-4 pb-2 border-b border-base op-fade" />
+            <Markdown :value="grouped?.overallSummary" class="border-b border-base px-4 pb-2 text-sm op-fade" />
           </Suspense>
 
           <DiffGroup
@@ -204,7 +204,7 @@ function refreshFromBanner() {
           />
 
           <!-- To leave some space at the end of the diff -->
-          <div class="text-xs mt-200 p2 text-center op50 italic">
+          <div class="mt-200 p2 text-center text-xs italic op50">
             You have reached the end of the diff.
           </div>
         </div>
@@ -212,7 +212,7 @@ function refreshFromBanner() {
         <ChatWidget v-if="ChatWidget && store?.llm && store.aiResult" :store="store" />
       </template>
       <template v-else>
-        <div class="mxa px-4 py-12 max-w-500 w-full">
+        <div class="mxa max-w-500 w-full px-4 py-12">
           <slot name="empty" />
         </div>
       </template>

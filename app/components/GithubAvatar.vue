@@ -20,9 +20,9 @@ watch(src, () => {
     role="img"
     :aria-label="`${login}'s avatar`"
     :style="{ width: `${size}px`, height: `${size}px` }"
-    class="rounded-full bg-raised inline-flex shrink-0 items-center justify-center overflow-hidden"
+    class="inline-flex shrink-0 items-center justify-center overflow-hidden rounded-full bg-raised"
   >
     <img v-if="!failed" :src="src" alt="" class="h-full w-full object-cover" @error="failed = true">
-    <span v-else aria-hidden="true" class="text-xs leading-none font-medium op-fade">{{ login.charAt(0).toUpperCase() || '?' }}</span>
+    <span v-else aria-hidden="true" class="text-xs font-medium leading-none op-fade">{{ login.charAt(0).toUpperCase() || '?' }}</span>
   </span>
 </template>

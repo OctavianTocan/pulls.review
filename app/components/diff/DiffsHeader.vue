@@ -57,29 +57,29 @@ function scrollToGroup(key: string) {
 
 <template>
   <header
-    class="px4 py2 border-b bg-base flex flex-col gap-2 transition-all left-0 right-0 top-0 sticky z-nav"
+    class="sticky left-0 right-0 top-0 z-nav flex flex-col gap-2 border-b bg-base px4 py2 transition-all"
     :class="scrollY > 20 ? 'border-base shadow-md' : 'border-transparent' "
   >
     <div class="mxa max-w-500 w-full">
-      <div class="flex flex-wrap gap-2 items-center">
+      <div class="flex flex-wrap items-center gap-2">
         <component :is="isEmbedded ? 'div' : RouterLink" to="/" class="flex">
           <PrStatusIcon v-if="meta.pullRequest?.state" :state="meta.pullRequest.state" />
           <div v-else class="i-ph-house-line-duotone" />
         </component>
-        <h1 class="text-lg font-semibold flex flex-auto gap-2 break-words items-center">
+        <h1 class="flex flex-auto items-center gap-2 break-words text-lg font-semibold">
           {{ meta.title }}
           <a v-if="githubRef" :href="meta.url" target="_blank" rel="noopener" class="text-base font-normal op-fade hover:underline">#{{ githubRef.number }}</a>
           <ActionIconButton
             v-if="meta.provider === 'github'"
             icon="i-ph:arrows-clockwise-duotone"
             label="Refresh" tooltip="Refresh"
-            class="text-sm shrink-0" @click="store.refresh()"
+            class="shrink-0 text-sm" @click="store.refresh()"
           />
         </h1>
 
         <div
           v-if="aiResult"
-          class="text-sm flex shrink-0 gap-1.5 items-center"
+          class="flex shrink-0 items-center gap-1.5 text-sm"
         >
           <span class="op-fade">Analyze by</span>
           <ActionToggleGroup
@@ -99,21 +99,21 @@ function scrollToGroup(key: string) {
         </div>
       </div>
 
-      <div class="text-sm text-sm flex flex-wrap gap-x-3 gap-y-1 items-center">
-        <a v-if="githubRef && !isEmbedded" :href="meta.url" target="_blank" rel="noopener" class="op-fade flex gap-1.5 items-center">
+      <div class="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-sm">
+        <a v-if="githubRef && !isEmbedded" :href="meta.url" target="_blank" rel="noopener" class="flex items-center gap-1.5 op-fade">
           <span>{{ githubRef.owner }}/{{ githubRef.repo }}</span>
         </a>
-        <span v-if="meta.pullRequest?.author" class="flex gap-1.5 items-center">
+        <span v-if="meta.pullRequest?.author" class="flex items-center gap-1.5">
           <span class="op-fade">by</span>
           <GithubAvatar :login="meta.pullRequest.author" :size="16" />
           <span class="op-fade">{{ meta.pullRequest.author }}</span>
         </span>
-        <span v-if="meta.base && meta.head && !isEmbedded" class="font-mono flex gap-1 items-center">
-          <span class="text-xs font-mono px-2 py-0.5 border border-base rounded bg-code">{{ meta.base.ref }}</span>
+        <span v-if="meta.base && meta.head && !isEmbedded" class="flex items-center gap-1 font-mono">
+          <span class="border border-base rounded bg-code px-2 py-0.5 text-xs font-mono">{{ meta.base.ref }}</span>
           ←
-          <span class="text-xs font-mono px-2 py-0.5 border border-base rounded bg-code">{{ meta.head.ref }}</span>
+          <span class="border border-base rounded bg-code px-2 py-0.5 text-xs font-mono">{{ meta.head.ref }}</span>
         </span>
-        <span v-if="aiResult?.sharedBy && store.analyzeMode !== 'rule-based'" class="px2 border border-base rounded flex gap-1.5 items-center" :title="aiResult.model">
+        <span v-if="aiResult?.sharedBy && store.analyzeMode !== 'rule-based'" class="flex items-center gap-1.5 border border-base rounded px2" :title="aiResult.model">
           Viewing AI analysis shared by
           <GithubAvatar :login="aiResult.sharedBy" :size="16" />
           {{ aiResult.sharedBy }}
@@ -136,7 +136,7 @@ function scrollToGroup(key: string) {
       </p>
     </template> -->
 
-      <div class="text-sm pt-2 flex gap-2 items-center">
+      <div class="flex items-center gap-2 pt-2 text-sm">
         <DiffGroupNav
           class="flex-auto"
           :groups="groups"
@@ -145,7 +145,7 @@ function scrollToGroup(key: string) {
           @select="scrollToGroup"
         />
 
-        <div class="text-sm pt-2 flex gap-2 items-center self-end">
+        <div class="flex items-center self-end gap-2 pt-2 text-sm">
           <DiffStats :additions="additions" :deletions="deletions" />
           <DisplayDonut :value="progress" :size="18" :thickness="3" />
           <span class="shrink-0 whitespace-nowrap">{{ reviewedCount }} <span class="text-xs opacity-50">/ {{ totalFiles }} reviewed</span></span>

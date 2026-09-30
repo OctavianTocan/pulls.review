@@ -17,9 +17,9 @@ const replacesLocal = computed(() => props.store.aiResult !== undefined && props
 <template>
   <div
     v-if="shared.candidates.length || shared.notice"
-    class="text-sm px-3 py-2 border border-base rounded-lg bg-raised flex flex-wrap gap-x-3 gap-y-2 items-center"
+    class="flex flex-wrap items-center gap-x-3 gap-y-2 border border-base rounded-lg bg-raised px-3 py-2 text-sm"
   >
-    <span class="i-ph-sparkle-duotone op-fade shrink-0" aria-hidden="true" />
+    <span class="i-ph-sparkle-duotone shrink-0 op-fade" aria-hidden="true" />
     <template v-if="shared.candidates.length">
       <span>
         <template v-if="replacesLocal">Load a shared AI analysis? It replaces yours:</template>

@@ -97,7 +97,7 @@ const model = computed({
       :inert="isEmbedded"
     >
       <div>
-        <div class="text-sm color-base font-medium mb1 flex gap-1 items-center">
+        <div class="mb1 flex items-center gap-1 text-sm color-base font-medium">
           <div class="i-ph-sparkle-duotone text-lg" />
           AI Analysis
         </div>
@@ -123,7 +123,7 @@ const model = computed({
         </FormField>
 
         <FormField label="API key">
-          <div class="flex gap-2 items-center">
+          <div class="flex items-center gap-2">
             <FormTextInput
               v-model="draftToken"
               type="password"
@@ -158,11 +158,11 @@ const model = computed({
 
       <template v-else>
         <FormField label="API key">
-          <div class="text-sm px-3 border border-base rounded bg-raised flex gap-2 h-9 items-center">
-            <span class="i-ph:check-circle-duotone color-active shrink-0" aria-hidden="true" />
+          <div class="h-9 flex items-center gap-2 border border-base rounded bg-raised px-3 text-sm">
+            <span class="i-ph:check-circle-duotone shrink-0 color-active" aria-hidden="true" />
             <span class="color-base">Configured</span>
             <span class="font-mono op-mute">••••{{ token.slice(-4) }}</span>
-            <span v-if="isOpenAi" class="text-xs op-mute flex-1 truncate">{{ llmSettings.openaiBaseUrl }}</span>
+            <span v-if="isOpenAi" class="flex-1 truncate text-xs op-mute">{{ llmSettings.openaiBaseUrl }}</span>
             <span v-else class="flex-1" />
             <ActionIconButton
               icon="i-ph:pencil-simple-duotone"
@@ -191,13 +191,13 @@ const model = computed({
 
     <div
       v-if="isEmbedded"
-      class="px-4 text-center flex flex-col gap-1 items-center inset-0 justify-center absolute"
+      class="absolute inset-0 flex flex-col items-center justify-center gap-1 px-4 text-center"
     >
       <span class="i-ph:shield-warning-duotone text-2xl op-fade" aria-hidden="true" />
       <p class="text-sm color-base font-medium">
         AI features aren't available in embedded mode
       </p>
-      <p class="text-xs color-faint max-w-72">
+      <p class="max-w-72 text-xs color-faint">
         github.com's strict Content Security Policy blocks the requests AI features need here.
         <a href="https://pulls.review" target="_blank" rel="noopener" class="color-base hover:underline">Go to the website</a> to use them.
       </p>

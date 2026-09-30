@@ -53,12 +53,12 @@ function remove() {
     :error="error"
   >
     <template #label>
-      <div class="pb1 flex gap-1 items-center">
+      <div class="flex items-center gap-1 pb1">
         <div class="i-carbon-logo-github text-lg" />
         GitHub Personal Access Token
       </div>
     </template>
-    <div class="flex gap-2 items-center">
+    <div class="flex items-center gap-2">
       <FormTextInput
         v-model="draft"
         type="password"
@@ -81,7 +81,7 @@ function remove() {
     </div>
     <template #description>
       Optional for public repos; required for private repos, or leaving reviews.<br>
-      Reviews need the <code class="font-medium px1 rounded bg-sunken">repo</code> scope (classic token) or <code class="font-medium px1 rounded bg-sunken">Pull requests: Read and write</code> (fine-grained token)<br>
+      Reviews need the <code class="rounded bg-sunken px1 font-medium">repo</code> scope (classic token) or <code class="rounded bg-sunken px1 font-medium">Pull requests: Read and write</code> (fine-grained token)<br>
       Stored only in this browser.
       <br><a
         href="https://github.com/settings/tokens/new?description=pulls.review&scopes=repo"
@@ -94,20 +94,20 @@ function remove() {
 
   <FormField v-else>
     <template #label>
-      <div class="flex gap-1 items-center">
+      <div class="flex items-center gap-1">
         <div class="i-carbon-logo-github text-lg" />
         GitHub Personal Access Token
       </div>
     </template>
-    <div class="p-3 border border-base rounded bg-raised flex flex-col gap-2">
-      <div v-if="meta" class="flex gap-3 items-start">
+    <div class="flex flex-col gap-2 border border-base rounded bg-raised p-3">
+      <div v-if="meta" class="flex items-start gap-3">
         <DisplayAvatar :src="meta.avatarUrl" :name="meta.login" :size="36" />
-        <div class="flex flex-1 flex-col gap-1.5 min-w-0">
-          <div class="flex gap-2 items-baseline">
-            <span class="text-sm color-base font-medium truncate">{{ meta.login }}</span>
-            <span v-if="meta.name" class="text-xs color-faint truncate">{{ meta.name }}</span>
+        <div class="min-w-0 flex flex-1 flex-col gap-1.5">
+          <div class="flex items-baseline gap-2">
+            <span class="truncate text-sm color-base font-medium">{{ meta.login }}</span>
+            <span v-if="meta.name" class="truncate text-xs color-faint">{{ meta.name }}</span>
           </div>
-          <div class="flex flex-wrap gap-1 items-center">
+          <div class="flex flex-wrap items-center gap-1">
             <DisplayBadge
               v-for="scope in meta.scopes"
               :key="scope"
@@ -116,7 +116,7 @@ function remove() {
             />
             <span v-if="!meta.scopes.length" class="text-xs color-faint">Fine-grained token (no classic scopes)</span>
           </div>
-          <div class="text-xs color-faint flex flex-wrap gap-x-3 gap-y-1 items-center">
+          <div class="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs color-faint">
             <span>
               Updated <DisplayDate :date="meta.setAt" />
             </span>
@@ -135,13 +135,13 @@ function remove() {
         />
       </div>
 
-      <div v-else class="text-sm color-faint flex gap-2 items-center">
+      <div v-else class="flex items-center gap-2 text-sm color-faint">
         <template v-if="busy">
           <span class="i-ph:circle-notch animate-spin" aria-hidden="true" />
           Checking token…
         </template>
         <template v-else>
-          <span class="text-red-600 flex-1 dark:text-red-400">{{ error ?? 'Could not verify this token.' }}</span>
+          <span class="flex-1 text-red-600 dark:text-red-400">{{ error ?? 'Could not verify this token.' }}</span>
           <ActionIconButton
             icon="i-ph:pencil-simple-duotone"
             label="Change token"

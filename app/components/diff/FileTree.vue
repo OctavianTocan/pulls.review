@@ -125,7 +125,7 @@ const virtualizer = useVirtualizer(computed(() => ({
       <div
         v-for="row in virtualizer.getVirtualItems().map(item => ({ item, row: rows[item.index]! }))"
         :key="row.row.key"
-        class="text-sm flex gap-1.5 items-center"
+        class="flex items-center gap-1.5 text-sm"
         :style="{
           position: 'absolute',
           top: 0,
@@ -138,17 +138,17 @@ const virtualizer = useVirtualizer(computed(() => ({
       >
         <template v-if="row.row.type === 'folder'">
           <CheckboxRoot
-            class="outline-none border border-base rounded bg-raised flex shrink-0 h-4 w-4 transition items-center justify-center data-[state=checked]:border-primary-500 data-[state=indeterminate]:border-primary-500 data-[state=checked]:bg-primary-500 data-[state=indeterminate]:bg-primary-500 focus-visible:ring-2 focus-visible:ring-primary-500/40"
+            class="h-4 w-4 flex shrink-0 items-center justify-center border border-base rounded bg-raised outline-none transition data-[state=checked]:border-primary-500 data-[state=indeterminate]:border-primary-500 data-[state=checked]:bg-primary-500 data-[state=indeterminate]:bg-primary-500 focus-visible:ring-2 focus-visible:ring-primary-500/40"
             :model-value="folderState(row.row.files!)"
             :aria-label="`Mark all files in ${row.row.name} as reviewed`"
             @update:model-value="value => toggleFolder(row.row.files!, value === true)"
           >
             <CheckboxIndicator class="text-white">
-              <div :class="folderState(row.row.files!) === 'indeterminate' ? 'i-ph:minus-bold' : 'i-ph:check-bold'" class="text-micro mt--1px" aria-hidden="true" />
+              <div :class="folderState(row.row.files!) === 'indeterminate' ? 'i-ph:minus-bold' : 'i-ph:check-bold'" class="mt--1px text-micro" aria-hidden="true" />
             </CheckboxIndicator>
           </CheckboxRoot>
           <DisplayFileIcon directory :path="row.row.name" class="op-fade" />
-          <span class="op-fade truncate">{{ row.row.name }}</span>
+          <span class="truncate op-fade">{{ row.row.name }}</span>
         </template>
         <template v-else-if="row.row.file">
           <FormCheckbox
@@ -157,19 +157,19 @@ const virtualizer = useVirtualizer(computed(() => ({
           />
           <button
             type="button"
-            class="text-left flex flex-1 gap-1.5 min-w-0 items-center"
+            class="min-w-0 flex flex-1 items-center gap-1.5 text-left"
             @click="emit('navigate', row.row.file.sha)"
           >
-            <DisplayFilePath :path="row.row.name" :dim="false" class="flex-1 min-w-0" />
+            <DisplayFilePath :path="row.row.name" :dim="false" class="min-w-0 flex-1" />
             <DiffStats :additions="row.row.file.additions" :deletions="row.row.file.deletions" />
             <FileStatus :status="row.row.file.status" />
           </button>
         </template>
         <template v-else-if="row.row.type === 'missing'">
-          <span class="shrink-0 w-4" aria-hidden="true" />
-          <span class="op-50 flex flex-1 gap-1.5 min-w-0 items-center" title="No longer in this diff">
-            <DisplayFilePath :path="row.row.name" :dim="false" class="line-through flex-1 min-w-0" />
-            <span class="text-xs shrink-0">removed</span>
+          <span class="w-4 shrink-0" aria-hidden="true" />
+          <span class="min-w-0 flex flex-1 items-center gap-1.5 op-50" title="No longer in this diff">
+            <DisplayFilePath :path="row.row.name" :dim="false" class="min-w-0 flex-1 line-through" />
+            <span class="shrink-0 text-xs">removed</span>
           </span>
         </template>
       </div>

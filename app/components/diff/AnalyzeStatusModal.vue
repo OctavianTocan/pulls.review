@@ -51,18 +51,18 @@ function rerun() {
     :document="document"
     @update:open="emit('update:open', $event)"
   >
-    <div class="flex flex-col gap-3 max-h-[60vh] min-h-40">
-      <div ref="listEl" class="overscroll-contain flex-auto min-w-0 overflow-y-auto" @scroll="onScroll">
+    <div class="max-h-[60vh] min-h-40 flex flex-col gap-3">
+      <div ref="listEl" class="min-w-0 flex-auto overflow-y-auto overscroll-contain" @scroll="onScroll">
         <div ref="contentEl" class="flex flex-col gap-3">
           <ChatMessage v-for="(message, index) in messages" :key="index" :message="message" />
-          <div v-if="llm.isAnalyzing" class="text-xs op-mute flex gap-1.5 items-center" role="status">
+          <div v-if="llm.isAnalyzing" class="flex items-center gap-1.5 text-xs op-mute" role="status">
             <span class="i-ph:spinner-duotone animate-spin" aria-hidden="true" />
             {{ llm.progress?.message ?? 'Starting…' }}
           </div>
         </div>
       </div>
 
-      <p v-if="llm.error" class="text-sm text-red-600 break-words dark:text-red-400">
+      <p v-if="llm.error" class="break-words text-sm text-red-600 dark:text-red-400">
         {{ llm.error.message }}
       </p>
     </div>

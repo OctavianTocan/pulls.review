@@ -26,7 +26,7 @@ defineEmits<{
 </script>
 
 <template>
-  <div class="p2 flex flex-col gap-4">
+  <div class="flex flex-col gap-4 p2">
     <LayoutSettingsSection />
 
     <div class="border-t border-base" />

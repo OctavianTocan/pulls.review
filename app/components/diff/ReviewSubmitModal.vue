@@ -53,7 +53,7 @@ async function run(action: () => Promise<void>) {
     :document="document"
     @update:open="emit('update:open', $event)"
   >
-    <div class="p-3 flex flex-col gap-3 w-full">
+    <div class="w-full flex flex-col gap-3 p-3">
       <p v-if="reviews.pendingCommentCount > 0" class="text-sm op-fade">
         Submitting includes your {{ reviews.pendingCommentCount }} pending comment{{ reviews.pendingCommentCount === 1 ? '' : 's' }}.
       </p>
@@ -68,7 +68,7 @@ async function run(action: () => Promise<void>) {
       <p v-if="error" class="text-sm text-red-600 dark:text-red-400">
         {{ error }}
       </p>
-      <div class="flex flex-wrap gap-2 items-center justify-end">
+      <div class="flex flex-wrap items-center justify-end gap-2">
         <ActionToggleGroup
           v-model="verdict"
           :options="verdictOptions"

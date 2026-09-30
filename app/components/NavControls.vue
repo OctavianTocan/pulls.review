@@ -18,7 +18,7 @@ const isEmbedded = import.meta.env.PR_EMBED
 </script>
 
 <template>
-  <div class="flex shrink-0 gap-1 items-center">
+  <div class="flex shrink-0 items-center gap-1">
     <slot />
     <ActionIconButton icon="i-ph:gear-duotone" label="Settings" tooltip="Settings" @click="settingsModalOpen = true" />
     <DarkToggle v-if="!isEmbedded" />

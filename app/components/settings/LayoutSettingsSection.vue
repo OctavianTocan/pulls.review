@@ -13,7 +13,7 @@ const layoutOptions = [
 
 <template>
   <div>
-    <h3 class="text-sm color-base font-medium mb-2">
+    <h3 class="mb-2 text-sm color-base font-medium">
       Diff layout
     </h3>
     <ActionToggleGroup

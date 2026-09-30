@@ -52,7 +52,7 @@ function onClick() {
 <template>
   <ActionButton
     v-if="!llm.isSetup"
-    class="text-xs shrink-0 shadow"
+    class="shrink-0 text-xs shadow"
     size="sm"
     icon="i-ph:key-duotone"
     variant="primary"
@@ -62,7 +62,7 @@ function onClick() {
   </ActionButton>
   <ActionButton
     v-else-if="!hasAiResult || hasStatus || store.analyzeMode !== 'rule-based'"
-    class="text-xs shrink-0"
+    class="shrink-0 text-xs"
     :variant="hasAiResult ? 'text' : 'primary'"
     :icon="icon"
     :title="title"

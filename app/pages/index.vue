@@ -79,7 +79,7 @@ useDocumentTitle(() => undefined)
 
 <template>
   <div
-    class="flex flex-col min-h-screen relative"
+    class="relative min-h-screen flex flex-col"
     @dragenter.prevent="onDragEnter"
     @dragleave.prevent="onDragLeave"
     @dragover.prevent
@@ -89,20 +89,20 @@ useDocumentTitle(() => undefined)
 
     <div
       v-if="isDragging"
-      class="text-lg color-accent-teal font-medium border-4 border-accent-teal-400 rounded-2xl border-dashed bg-accent-teal-400/10 flex pointer-events-none items-center inset-4 justify-center fixed z-toast backdrop-blur-sm"
+      class="pointer-events-none fixed inset-4 z-toast flex items-center justify-center border-4 border-accent-teal-400 rounded-2xl border-dashed bg-accent-teal-400/10 text-lg color-accent-teal font-medium backdrop-blur-sm"
     >
       Drop to load your diff / .patch file
     </div>
 
-    <main class="mxa px-6 py-16 flex flex-1 flex-col gap-20 max-w-6xl w-full sm:py-20">
-      <section class="gap-12 grid items-center lg:gap-16 lg:grid-cols-[minmax(0,1fr)_minmax(0,27rem)]">
+    <main class="mxa max-w-6xl w-full flex flex-1 flex-col gap-20 px-6 py-16 sm:py-20">
+      <section class="grid items-center gap-12 lg:grid-cols-[minmax(0,1fr)_minmax(0,27rem)] lg:gap-16">
         <div class="flex flex-col gap-8">
           <LandingHero />
-          <p class="text-sm leading-relaxed op-fade max-w-md">
+          <p class="max-w-md text-sm leading-relaxed op-fade">
             Groups changed files, summarizes what matters, review them one scope at a time. Everything works locally in your browser.
           </p>
-          <div class="flex flex-col gap-2 max-w-md">
-            <form class="flex gap-2 items-stretch" @submit.prevent="go">
+          <div class="max-w-md flex flex-col gap-2">
+            <form class="flex items-stretch gap-2" @submit.prevent="go">
               <FormTextInput v-model="url" icon="i-ph:link-simple-duotone" placeholder="https://github.com/owner/repo/pull/123" class="flex-1" />
               <ActionButton
                 type="submit"
@@ -137,7 +137,7 @@ useDocumentTitle(() => undefined)
             :state="pr.state"
             :title="pr.title"
           >
-            <span class="color-accent-teal flex">
+            <span class="flex color-accent-teal">
               <DisplayDonut :value="pr.totalFiles ? pr.reviewedCount / pr.totalFiles : 0" :size="14" :thickness="2.5" color="currentColor" />
             </span>
             <span class="text-xs op-fade">{{ formatTimeAgo(new Date(pr.lastViewedAt)) }}</span>
@@ -159,21 +159,21 @@ useDocumentTitle(() => undefined)
             :state="pr.state"
             :title="pr.title"
           >
-            <span class="text-xs op-fade max-w-56 truncate">{{ pr.title }}</span>
+            <span class="max-w-56 truncate text-xs op-fade">{{ pr.title }}</span>
           </PullRequestPill>
         </div>
       </section>
 
-      <section class="gap-4 grid sm:grid-cols-2">
-        <div class="p-5 border border-base rounded-lg flex flex-col gap-4">
-          <div class="flex gap-3 items-start">
-            <span class="i-ph:upload-simple-duotone text-xl color-accent-teal mt-0.5 shrink-0" aria-hidden="true" />
+      <section class="grid gap-4 sm:grid-cols-2">
+        <div class="flex flex-col gap-4 border border-base rounded-lg p-5">
+          <div class="flex items-start gap-3">
+            <span class="i-ph:upload-simple-duotone mt-0.5 shrink-0 text-xl color-accent-teal" aria-hidden="true" />
             <div class="flex-1">
               <h2 class="font-semibold">
                 Review a diff without a PR
               </h2>
               <p class="text-sm op-fade">
-                Upload or paste a unified diff, or drop a <code class="px-1 rounded bg-code">.diff</code> / <code class="px-1 rounded bg-code">.patch</code> file anywhere on this page.
+                Upload or paste a unified diff, or drop a <code class="rounded bg-code px-1">.diff</code> / <code class="rounded bg-code px-1">.patch</code> file anywhere on this page.
               </p>
             </div>
           </div>
@@ -184,9 +184,9 @@ useDocumentTitle(() => undefined)
           </div>
         </div>
 
-        <div class="p-5 border border-base rounded-lg flex flex-col gap-4">
-          <div class="flex gap-3 items-start">
-            <span class="i-ph:puzzle-piece-duotone text-xl color-accent-magenta mt-0.5 shrink-0" aria-hidden="true" />
+        <div class="flex flex-col gap-4 border border-base rounded-lg p-5">
+          <div class="flex items-start gap-3">
+            <span class="i-ph:puzzle-piece-duotone mt-0.5 shrink-0 text-xl color-accent-magenta" aria-hidden="true" />
             <div class="flex-1">
               <h2 class="font-semibold">
                 Use it directly on github.com
@@ -205,7 +205,7 @@ useDocumentTitle(() => undefined)
       </section>
     </main>
 
-    <footer class="text-xs px-6 py-6 op-fade flex gap-2 items-center justify-center">
+    <footer class="flex items-center justify-center gap-2 px-6 py-6 text-xs op-fade">
       <span>MIT</span>
       <span>·</span>
       <a href="https://github.com/antfu/pulls.review" target="_blank" rel="noopener" class="transition hover:color-base hover:op100">GitHub</a>

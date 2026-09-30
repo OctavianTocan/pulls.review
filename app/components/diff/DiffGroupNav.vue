@@ -32,8 +32,8 @@ function onSelectSubgroup(key: string) {
 </script>
 
 <template>
-  <div class="flex flex-1 flex-col gap-1.5 min-w-0">
-    <div class="flex flex-wrap gap-1.5 items-center">
+  <div class="min-w-0 flex flex-1 flex-col gap-1.5">
+    <div class="flex flex-wrap items-center gap-1.5">
       <DiffGroupNavItem
         v-for="group in groups"
         :key="group.key"
@@ -46,14 +46,14 @@ function onSelectSubgroup(key: string) {
       />
     </div>
     <template v-if="subgroups.length">
-      <div class="flex gap-1 items-center">
+      <div class="flex items-center gap-1">
         <div class="i-ph-folder-notch-open-duotone op-fade" />
         <div class="text-sm">
           <span class="op-fade">subgroups of </span><span>{{ props.groups.find(g => g.key === expandedKey)?.label }}</span>
         </div>
-        <div class="border-t border-base flex-auto" />
+        <div class="flex-auto border-t border-base" />
       </div>
-      <div class="flex flex-wrap gap-1.5 items-center">
+      <div class="flex flex-wrap items-center gap-1.5">
         <DiffGroupNavItem
           v-for="sub in subgroups"
           :key="sub.key"

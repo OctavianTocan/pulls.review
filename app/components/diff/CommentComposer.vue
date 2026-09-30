@@ -25,7 +25,7 @@ function submit(mode: 'single' | 'review') {
 </script>
 
 <template>
-  <div class="p-2 flex flex-col gap-2">
+  <div class="flex flex-col gap-2 p-2">
     <FormTextarea
       v-model="body"
       :rows="3"
@@ -38,7 +38,7 @@ function submit(mode: 'single' | 'review') {
     <p v-if="error" class="text-xs text-red-600 dark:text-red-400">
       {{ error }}
     </p>
-    <div class="flex flex-wrap gap-2 justify-end">
+    <div class="flex flex-wrap justify-end gap-2">
       <ActionButton size="sm" variant="text" :disabled="busy" @click="emit('cancel')">
         Cancel
       </ActionButton>

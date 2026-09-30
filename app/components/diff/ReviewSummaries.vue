@@ -23,7 +23,7 @@ const STATE_DISPLAY = {
   <section v-if="summaries.length" class="border border-base rounded-lg">
     <button
       type="button"
-      class="text-sm px-3 py-2 flex gap-1.5 w-full items-center"
+      class="w-full flex items-center gap-1.5 px-3 py-2 text-sm"
       :aria-expanded="open"
       @click="open = !open"
     >
@@ -31,9 +31,9 @@ const STATE_DISPLAY = {
       <span class="font-medium">Reviews</span>
       <span class="font-mono op-mute">{{ summaries.length }}</span>
     </button>
-    <ul v-if="open" class="border-t border-base divide-#9992 divide-y">
-      <li v-for="summary in summaries" :key="summary.id" class="text-sm px-3 py-2 flex flex-col gap-1">
-        <div class="flex gap-2 items-center">
+    <ul v-if="open" class="border-t border-base divide-y divide-#9992">
+      <li v-for="summary in summaries" :key="summary.id" class="flex flex-col gap-1 px-3 py-2 text-sm">
+        <div class="flex items-center gap-2">
           <span :class="STATE_DISPLAY[summary.state].icon" aria-hidden="true" />
           <GithubAvatar v-if="summary.author" :login="summary.author.login" :avatar-url="summary.author.avatarUrl" :size="16" />
           <span class="font-medium">{{ summary.author?.login ?? 'ghost' }}</span>
@@ -41,7 +41,7 @@ const STATE_DISPLAY = {
           <DisplayDate v-if="summary.submittedAt" :date="summary.submittedAt" class="text-xs op-fade" />
         </div>
         <Suspense v-if="summary.body">
-          <Markdown :value="summary.body" class="text-sm pl-6 op-fade" />
+          <Markdown :value="summary.body" class="pl-6 text-sm op-fade" />
         </Suspense>
       </li>
     </ul>

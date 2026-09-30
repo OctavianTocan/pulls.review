@@ -122,7 +122,7 @@ onBeforeUnmount(() => {
     <button
       v-if="pr"
       type="button"
-      class="z-[2147483000] text-xs color-base font-semibold px-2 py-2.5 border border-base border-r-0 rounded-l-lg bg-base shadow-lg [writing-mode:vertical-rl] right-0 top-1/2 fixed -translate-y-1/2"
+      class="z-[2147483000] [writing-mode:vertical-rl] fixed right-0 top-1/2 border border-r-0 border-base rounded-l-lg bg-base px-2 py-2.5 text-xs color-base font-semibold shadow-lg -translate-y-1/2"
       :style="{ right: open ? `${width}px` : '0' }"
       @click="toggleOpen"
     >
@@ -131,14 +131,14 @@ onBeforeUnmount(() => {
 
     <div
       v-if="pr"
-      class="z-[2147483001] color-base border-l border-base bg-base flex flex-col h-full shadow-2xl transition-transform right-0 top-0 fixed"
+      class="z-[2147483001] fixed right-0 top-0 h-full flex flex-col border-l border-base bg-base color-base shadow-2xl transition-transform"
       :style="{ width: `${width}px`, maxWidth: '92vw', transform: open ? 'translateX(0)' : 'translateX(100%)' }"
     >
       <div
-        class="z-1 h-full w-2 cursor-ew-resize left-0 top-0 absolute -translate-x-1/2"
+        class="z-1 absolute left-0 top-0 h-full w-2 cursor-ew-resize -translate-x-1/2"
         @pointerdown="onResizeDown"
       />
-      <header class="text-sm font-semibold px-3 py-2 border-b border-base flex shrink-0 gap-2 items-center">
+      <header class="flex shrink-0 items-center gap-2 border-b border-base px-3 py-2 text-sm font-semibold">
         <div class="flex-auto">
           pulls.review
         </div>
@@ -151,7 +151,7 @@ onBeforeUnmount(() => {
       </header>
       <EmbedPrView
         v-if="pr"
-        :key="prKey" :owner="pr.owner" :repo="pr.repo" :number="pr.number" :document="document" class="flex-1 min-h-0 overflow-auto"
+        :key="prKey" :owner="pr.owner" :repo="pr.repo" :number="pr.number" :document="document" class="min-h-0 flex-1 overflow-auto"
       />
     </div>
 

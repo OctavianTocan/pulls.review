@@ -38,8 +38,8 @@ function saveEdit() {
 </script>
 
 <template>
-  <article class="text-sm px-3 py-2 flex flex-col gap-1.5">
-    <header class="flex gap-2 items-center">
+  <article class="flex flex-col gap-1.5 px-3 py-2 text-sm">
+    <header class="flex items-center gap-2">
       <GithubAvatar v-if="comment.author" :login="comment.author.login" :avatar-url="comment.author.avatarUrl" :size="18" />
       <span class="font-medium">{{ comment.author?.login ?? 'ghost' }}</span>
       <DisplayDate :date="comment.createdAt" class="text-xs op-fade" />
@@ -52,7 +52,7 @@ function saveEdit() {
     </header>
     <div v-if="editing" class="flex flex-col gap-2">
       <FormTextarea v-model="draft" :rows="3" :disabled="busy" @keydown.enter.meta="saveEdit" @keydown.enter.ctrl="saveEdit" />
-      <div class="flex gap-2 justify-end">
+      <div class="flex justify-end gap-2">
         <ActionButton size="sm" variant="text" :disabled="busy" @click="editing = false">
           Cancel
         </ActionButton>

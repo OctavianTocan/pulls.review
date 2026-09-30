@@ -46,36 +46,36 @@ function toolCallLabel(call: ToolCall) {
 
 <template>
   <div v-if="message.role === 'user'" class="flex justify-end">
-    <div class="text-sm px-3 py-2 rounded-lg bg-active max-w-[85%] whitespace-pre-wrap break-words">
+    <div class="max-w-[85%] whitespace-pre-wrap break-words rounded-lg bg-active px-3 py-2 text-sm">
       {{ userText }}
     </div>
   </div>
 
-  <div v-else-if="message.role === 'assistant'" class="flex flex-col gap-1.5 max-w-full items-start">
+  <div v-else-if="message.role === 'assistant'" class="max-w-full flex flex-col items-start gap-1.5">
     <template v-for="(part, index) in message.content" :key="index">
       <Suspense v-if="part.type === 'text' && part.text.trim()">
         <Markdown :value="part.text" :streaming="message.stopReason === 'pending'" class="chat-md min-w-0 self-stretch" />
       </Suspense>
-      <div v-else-if="part.type === 'toolCall'" class="text-xs op-mute flex gap-1.5 items-center">
+      <div v-else-if="part.type === 'toolCall'" class="flex items-center gap-1.5 text-xs op-mute">
         <span class="i-ph:wrench-duotone" aria-hidden="true" />
         {{ toolCallLabel(part) }}
       </div>
     </template>
-    <div v-if="message.stopReason === 'error'" class="text-sm text-red-500 flex flex-wrap gap-2 items-center">
+    <div v-if="message.stopReason === 'error'" class="flex flex-wrap items-center gap-2 text-sm text-red-500">
       <span class="break-words">{{ message.errorMessage ?? 'Request failed' }}</span>
       <ActionButton v-if="retryable" size="sm" icon="i-ph:arrow-clockwise-duotone" @click="$emit('retry')">
         Retry
       </ActionButton>
     </div>
-    <span v-else-if="message.stopReason === 'aborted'" class="text-xs px-1.5 border border-base rounded op-mute">stopped</span>
+    <span v-else-if="message.stopReason === 'aborted'" class="border border-base rounded px-1.5 text-xs op-mute">stopped</span>
   </div>
 
-  <div v-else-if="groupingNotice" class="text-xs op-mute flex gap-1.5 items-center">
+  <div v-else-if="groupingNotice" class="flex items-center gap-1.5 text-xs op-mute">
     <span class="i-ph:tree-structure-duotone" aria-hidden="true" />
     {{ groupingNotice }}
   </div>
 
-  <div v-else-if="toolError" class="text-xs op-mute flex gap-1.5 items-start">
+  <div v-else-if="toolError" class="flex items-start gap-1.5 text-xs op-mute">
     <span class="i-ph:warning-duotone mt-0.5 shrink-0" aria-hidden="true" />
     <span class="whitespace-pre-wrap break-words">{{ toolError }}</span>
   </div>
