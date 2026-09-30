@@ -28,6 +28,7 @@
     "open": "Open",
     "pasteHint": "Paste any GitHub pull request URL, or pick a demo below.",
     "recentlyViewed": "// recently viewed",
+    "recentRepositories": "// recently viewed repositories",
     "tryDemos": "// try some demos",
     "demoBefore": "// before",
     "demoAfter": "// after",
@@ -74,6 +75,43 @@
     "sharedBy": "Viewing AI analysis shared by",
     "reviewedOf": "/ {total} reviewed",
     "openInSite": "Open in pulls.review"
+  },
+  "pulls": {
+    "loading": "Loading pull requests…",
+    "loadFailed": "Couldn't load pull requests",
+    "open": "{n} open",
+    "search": "Filter pull requests",
+    "empty": "There aren't any open pull requests",
+    "noMatches": "No pull requests match your search",
+    "searchingAll": "Searching all {n} open pull requests…",
+    "loadingMore": "Loading more…",
+    "openedBy": "opened {time} by {author}",
+    "milestone": "Milestone",
+    "comments": "{n} comment | {n} comments",
+    "linkedIssues": "{n} linked issue | {n} linked issues",
+    "assignedTo": "Assigned to {login}",
+    "groups": "{n} group | {n} groups",
+    "viewedHint": "Viewed in this browser",
+    "aiAvailable": "AI analysis available",
+    "sort": {
+      "label": "Sort",
+      "recently-updated": "Recently updated",
+      "least-recently-updated": "Least recently updated",
+      "newest": "Newest",
+      "oldest": "Oldest",
+      "most-commented": "Most commented",
+      "least-commented": "Least commented"
+    },
+    "review": {
+      "approved": "Approved",
+      "changes_requested": "Changes requested",
+      "review_required": "Review required"
+    },
+    "checks": {
+      "success": "All checks have passed",
+      "failure": "Some checks were not successful",
+      "pending": "Some checks haven't completed yet"
+    }
   },
   "analyze": {
     "setupKeys": "Setup API Keys",

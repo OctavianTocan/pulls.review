@@ -10,9 +10,11 @@ import LandingDemo from '../components/landing/LandingDemo.vue'
 import LandingHero from '../components/landing/LandingHero.vue'
 import LoadDiffModal from '../components/load/LoadDiffModal.vue'
 import PullRequestPill from '../components/PullRequestPill.vue'
+import RepositoryPill from '../components/RepositoryPill.vue'
 import { UPLOAD_SESSION_STORAGE_KEY } from '../composables/uploadSession'
 import { useDocumentTitle } from '../composables/useDocumentTitle'
 import { useRecentPullRequests } from '../composables/useRecentPullRequests'
+import { useRecentRepositories } from '../composables/useRecentRepositories'
 import { formatTimeAgo } from '../i18n/time-ago'
 
 const DEMO_PRS = [
@@ -27,18 +29,18 @@ const { locale } = useI18n()
 const url = ref('')
 const loadDiffOpen = ref(false)
 
+// A PR URL opens the diff view; a bare repo URL (or its `/pulls` page) opens the PR list.
 const parsed = computed(() => {
-  const match = url.value.trim().match(/github\.com\/([^/]+)\/([^/]+)\/pull\/(\d+)/)
+  const match = url.value.trim().match(/github\.com\/([^/\s]+)\/([^/\s#?]+)(?:\/pull\/(\d+)|\/pulls\/?)?(?:[/?#]|$)/)
   if (!match)
     return undefined
   const [, owner, repo, number] = match
-  return { owner, repo, number }
+  return number ? `/gh/${owner}/${repo}/${number}` : `/gh/${owner}/${repo}`
 })
 
 function go() {
-  if (!parsed.value)
-    return
-  router.push(`/gh/${parsed.value.owner}/${parsed.value.repo}/${parsed.value.number}`)
+  if (parsed.value)
+    router.push(parsed.value)
 }
 
 async function loadFile(file: File) {
@@ -73,7 +75,11 @@ function onDragLeave() {
 }
 
 const { recent, load } = useRecentPullRequests()
-onMounted(load)
+const { recent: recentRepos, load: loadRepos } = useRecentRepositories()
+onMounted(() => {
+  load()
+  loadRepos()
+})
 
 // No subject: resets the tab to the plain app name after returning from a PR/upload view.
 useDocumentTitle(() => undefined)
@@ -144,6 +150,23 @@ useDocumentTitle(() => undefined)
             </span>
             <span class="text-xs op-fade">{{ formatTimeAgo(new Date(pr.lastViewedAt), locale) }}</span>
           </PullRequestPill>
+        </div>
+      </section>
+
+      <section v-if="recentRepos.length" class="flex flex-col gap-3">
+        <h2 class="text-xs font-mono op-fade">
+          {{ $t('landing.recentRepositories') }}
+        </h2>
+        <div class="flex flex-wrap gap-2">
+          <RepositoryPill
+            v-for="item in recentRepos"
+            :key="`${item.owner}/${item.repo}`"
+            :owner="item.owner"
+            :repo="item.repo"
+          >
+            <span class="text-xs op-fade">{{ $t('pulls.open', { n: item.openCount }) }}</span>
+            <span class="text-xs op-fade">{{ formatTimeAgo(new Date(item.lastViewedAt), locale) }}</span>
+          </RepositoryPill>
         </div>
       </section>
 
