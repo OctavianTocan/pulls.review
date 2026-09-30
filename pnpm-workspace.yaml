@@ -40,6 +40,9 @@ catalog:
   '@shikijs/engine-javascript': ^4.4.3
 
 catalogs:
+  agentic:
+    '@antfu/skills': ^0.1.0
+    skills-npm: ^4.0.0
   build:
     '@unocss/core': ^66.10.5
     '@unocss/eslint-config': ^66.10.5
@@ -103,6 +106,3 @@ catalogs:
     fake-indexeddb: ^6.2.5
     happy-dom: ^20.14.5
     vitest: ^5.0.2
-  agentic:
-    '@antfu/skills': ^0.1.0
-    skills-npm: ^4.0.0
