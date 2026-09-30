@@ -4,7 +4,7 @@ import DisplayDonut from '@antfu/design/components/Display/DisplayDonut.vue'
 import DisplayFileIcon from '@antfu/design/components/Display/DisplayFileIcon.vue'
 import { useDebounceFn, useIntersectionObserver, usePreferredReducedMotion, useResizeObserver } from '@vueuse/core'
 import { createTimeline, stagger } from 'animejs'
-import { computed, onBeforeUnmount, onMounted, reactive, useTemplateRef, watch } from 'vue'
+import { computed, onBeforeUnmount, onMounted, reactive, ref, useTemplateRef, watch } from 'vue'
 import DiffStats from '../diff/DiffStats.vue'
 import GroupCategoryIcon from '../diff/GroupCategoryIcon.vue'
 import PrStatusIcon from '../diff/PrStatusIcon.vue'
@@ -30,6 +30,8 @@ const root = useTemplateRef('root')
 const body = useTemplateRef('body')
 
 const progress = DEMO_GROUPS.map(() => reactive({ value: 0 }))
+// Which side of the morph the loop is on; the header reads "// before" / "// after".
+const grouped = ref(false)
 
 function splitPath(path: string) {
   const idx = path.lastIndexOf('/')
@@ -80,6 +82,8 @@ function build() {
     tl.add(tail, { opacity: 0, duration: 300 }, morph.at)
 
   const cardsAt = morph.at + morph.duration * 0.3
+  tl.call(() => grouped.value = true, cardsAt)
+  tl.call(() => grouped.value = false, reset.at)
   if (groupedLayer)
     tl.set(groupedLayer, { opacity: 1 }, cardsAt)
   tl.add(cards, { opacity: [0, 1], y: [12, 0], duration: 500, delay: stagger(60) }, cardsAt)
@@ -123,6 +127,7 @@ function build() {
 function teardown() {
   timeline?.revert()
   timeline = undefined
+  grouped.value = false
 }
 
 function rebuild() {
@@ -160,9 +165,8 @@ useIntersectionObserver(root, ([entry]) => {
 
 <template>
   <div ref="root" class="select-none rounded-lg p4 text-xs lt-md:border lt-md:border-base" aria-hidden="true">
-    <!-- TODO: the text should be dynamically "// before" / "// after" along the animation -->
     <h2 v-if="showHeader" class="mb2 text-xs font-mono op-fade">
-      // demo
+      {{ $t(settled || grouped ? 'landing.demoAfter' : 'landing.demoBefore') }}
     </h2>
 
     <div class="flex items-start gap-2">
@@ -176,11 +180,11 @@ useIntersectionObserver(root, ([entry]) => {
         <div class="grid grid-cols-1 mt-1.5">
           <span data-total class="col-start-1 row-start-1 flex items-center self-start gap-2" :class="{ 'op-0': settled }">
             <DiffStats :additions="DEMO_PR.additions" :deletions="DEMO_PR.deletions" />
-            <span class="whitespace-nowrap op-fade">{{ DEMO_PR.files }} files</span>
+            <span class="whitespace-nowrap op-fade">{{ $t('common.files', { n: DEMO_PR.files }, DEMO_PR.files) }}</span>
           </span>
           <span data-summary class="col-start-1 row-start-1 flex items-start gap-1.5" :class="{ 'op-0': !settled }">
             <span class="i-ph-sparkle-duotone mt-0.5 shrink-0 color-accent-magenta" />
-            <span class="op-fade">{{ DEMO_PR.summary }}</span>
+            <span class="op-fade">{{ $t('landing.demoSummary') }}</span>
           </span>
         </div>
       </div>
@@ -198,19 +202,19 @@ useIntersectionObserver(root, ([entry]) => {
           <span class="min-w-0 truncate"><span class="op-fade">{{ file.dir }}</span>{{ file.base }}</span>
         </li>
         <li data-tail class="h-8 flex items-center op-fade">
-          ... {{ hiddenFiles }} more files
+          {{ $t('landing.moreFiles', { n: hiddenFiles }) }}
         </li>
       </ul>
 
       <div data-grouped class="col-start-1 row-start-1 flex flex-col gap-2" :class="{ 'op-0': !settled }">
-        <div v-for="(group, i) in groups" :key="group.label" class="flex flex-col">
+        <div v-for="(group, i) in groups" :key="group.key" class="flex flex-col">
           <div data-card class="ml--5 flex items-center gap-2 py-1" :class="{ 'op-0': !settled }">
             <span class="shrink-0 op-fade" :class="group.expanded ? 'i-ph-caret-down-bold' : 'i-ph-caret-right-bold'" />
             <GroupCategoryIcon :category="group.category" class="text-sm" />
-            <span data-label class="min-w-0 truncate text-sm font-medium">{{ group.label }}</span>
+            <span data-label class="min-w-0 truncate text-sm font-medium">{{ $t(`landing.demoGroups.${group.key}`) }}</span>
             <span class="flex-1" />
             <DiffStats :additions="group.additions" :deletions="group.deletions" />
-            <span class="whitespace-nowrap op-fade">{{ group.files }} files</span>
+            <span class="whitespace-nowrap op-fade">{{ $t('common.files', { n: group.files }, group.files) }}</span>
             <span class="grid size-4 shrink-0 place-items-center color-accent-teal">
               <span data-donut class="col-start-1 row-start-1 flex" :class="{ 'op-0': settled }">
                 <DisplayDonut :value="settled ? 1 : progress[i]!.value" :size="14" :thickness="2.5" color="currentColor" />
@@ -230,7 +234,7 @@ useIntersectionObserver(root, ([entry]) => {
               <span class="min-w-0 truncate"><span class="op-fade">{{ file.dir }}</span>{{ file.base }}</span>
             </li>
             <li v-if="group.hidden" data-detail class="h-6 flex items-center" :class="{ 'op-0': !settled }">
-              <span class="op-fade">... {{ group.hidden }} more files</span>
+              <span class="op-fade">{{ $t('landing.moreFiles', { n: group.hidden }) }}</span>
             </li>
           </ul>
         </div>
