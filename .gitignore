@@ -9,3 +9,4 @@ public/embed
 public/pulls-review-github.user.js
 public/diffs-github.user.js
 app/embed/.generated
+.agents/skills

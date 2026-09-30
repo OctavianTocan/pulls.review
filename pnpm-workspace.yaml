@@ -5,6 +5,7 @@ trustPolicy: no-downgrade
 trustPolicyExclude:
   - '@pierre/theme@2.0.0'
   - why-is-node-running@3.2.2
+  - '@vercel/detect-agent@1.2.5'
 
 update:
   ignoreDeps:
@@ -86,6 +87,7 @@ catalogs:
     vue-afloat: ^0.1.1
     vue-i18n: ^11.4.12
     vue-router: ^4.6.4
+    zod: ^4.6.5
   icons:
     '@iconify-json/carbon': ^1.2.28
     '@iconify-json/catppuccin': ^1.2.17
@@ -101,3 +103,6 @@ catalogs:
     fake-indexeddb: ^6.2.5
     happy-dom: ^20.14.5
     vitest: ^5.0.2
+  agentic:
+    '@antfu/skills': ^0.1.0
+    skills-npm: ^4.0.0
