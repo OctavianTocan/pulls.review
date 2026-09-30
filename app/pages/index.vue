@@ -97,7 +97,7 @@ useDocumentTitle(() => undefined)
     </div>
 
     <main class="mxa max-w-6xl w-full flex flex-1 flex-col gap-20 px-6 py-16 sm:py-20">
-      <section class="grid items-center gap-12 lg:grid-cols-[minmax(0,1fr)_minmax(0,27rem)] lg:gap-16">
+      <section class="grid items-center gap-12 lg:grid-cols-[minmax(0,1fr)_minmax(0,30rem)] lg:gap-16">
         <div class="flex flex-col gap-8">
           <LandingHero />
           <p class="max-w-md text-sm leading-relaxed op-fade">
