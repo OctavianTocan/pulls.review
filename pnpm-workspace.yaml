@@ -68,7 +68,7 @@ catalogs:
     vue-tsc: ^3.3.11
   frontend:
     '@ai-sdk/gateway': ^4.0.96
-    '@antfu/design': ^0.5.3
+    '@antfu/design': ^0.6.0
     '@antfu/utils': ^9.3.0
     '@comark/vue': ^0.7.0
     '@earendil-works/pi-agent-core': ^0.87.1
