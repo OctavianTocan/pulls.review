@@ -2,11 +2,7 @@ import { createApp } from 'vue'
 import App from './App.vue'
 import { i18n } from './i18n'
 import { router } from './router'
-import '@unocss/reset/tailwind.css'
-import '@antfu/design/styles.css'
-import 'vue-afloat/style.css'
-import './main.css'
-import 'virtual:uno.css'
+import './styles'
 
 createApp(App)
   .use(router)

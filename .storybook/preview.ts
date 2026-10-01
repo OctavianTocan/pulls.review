@@ -1,11 +1,7 @@
 import type { Preview } from '@storybook/vue3-vite'
 import { setup } from '@storybook/vue3-vite'
 import { i18n } from '../app/i18n'
-import '@unocss/reset/tailwind.css'
-import '@antfu/design/styles.css'
-import 'vue-afloat/style.css'
-import '../app/main.css'
-import 'virtual:uno.css'
+import '../app/styles'
 
 // `<RouterLink>` needs a real vue-router instance; stub it as a plain `<a>` so
 // components that use it (AppHeader) render outside a router context.
