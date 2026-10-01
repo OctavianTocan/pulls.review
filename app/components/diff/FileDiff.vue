@@ -315,8 +315,12 @@ watch(
 )
 
 // Plain clones, not the reactive proxies - pierre compares/caches these objects.
+// `VirtualizedFileDiff.setLineAnnotations` only flags a forced render; nothing schedules
+// it until the virtualizer next ticks (a scroll), so the new annotation slot - and the
+// composer inside it - would stay missing. `rerender()` asks the virtualizer for that pass.
 watch(lineAnnotations, (annotations) => {
   instance?.setLineAnnotations(annotations.map(annotation => ({ ...annotation })))
+  instance?.rerender()
 })
 
 watch(isReviewed, (value) => {
