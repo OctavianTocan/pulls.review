@@ -7,7 +7,7 @@ import ActionIconButton from '@antfu/design/components/Action/ActionIconButton.v
 import DisplayFilePath from '@antfu/design/components/Display/DisplayFilePath.vue'
 import FormCheckbox from '@antfu/design/components/Form/FormCheckbox.vue'
 import { FileDiff as PierreFileDiff, processFile, VirtualizedFileDiff } from '@pierre/diffs'
-import { computed, inject, onBeforeUnmount, onMounted, ref, useTemplateRef, watch } from 'vue'
+import { computed, inject, nextTick, onBeforeUnmount, onMounted, ref, useTemplateRef, watch } from 'vue'
 import { getCachedFileContent, setCachedFileContent } from '../../cache/file-content-cache'
 import { getDefaultCacheStorage } from '../../cache/storage'
 import { fetchFileContentAtRef } from '../../providers/github/api'
@@ -105,6 +105,40 @@ async function loadFullFile() {
   finally {
     isLoadingFullFile.value = false
   }
+}
+
+// Pierre can only expand "N unmodified lines" when it has the full file contents, which a
+// bare patch lacks - so the first click on one of its expand controls fetches the file, then
+// replays that click's expansion on the re-rendered diff (pierre keeps no state for it).
+interface PendingExpand { index: number, direction: 'up' | 'down' | 'both' }
+
+function readExpandTarget(event: Event): PendingExpand | undefined {
+  for (const node of event.composedPath()) {
+    if (!(node instanceof HTMLElement))
+      continue
+    if (!node.hasAttribute('data-expand-button') && !node.hasAttribute('data-unmodified-lines'))
+      continue
+    const index = Number(node.getAttribute('data-expand-index'))
+    if (Number.isNaN(index))
+      return
+    const direction = node.hasAttribute('data-expand-up')
+      ? 'up'
+      : node.hasAttribute('data-expand-down') ? 'down' : 'both'
+    return { index, direction: node.hasAttribute('data-expand-all-button') || (event as MouseEvent).shiftKey ? 'both' : direction }
+  }
+}
+
+async function onExpandClick(event: Event) {
+  if (!canLoadFullFile.value)
+    return
+  const target = readExpandTarget(event)
+  if (!target)
+    return
+  await loadFullFile()
+  if (!fullFileLoaded.value)
+    return
+  await nextTick()
+  instance?.expandHunk(target.index, target.direction, target.direction === 'both' ? Number.POSITIVE_INFINITY : undefined)
 }
 
 const fileDiff = computed(() => {
@@ -267,7 +301,9 @@ function mount() {
   if (!containerRef.value || props.file.isBinary || collapsed.value || !fileDiff.value)
     return
 
-  ensurePierreDiffsShadowRoot(containerRef.value)
+  const shadowRoot = ensurePierreDiffsShadowRoot(containerRef.value)
+  // Idempotent: the same listener function is only ever registered once per shadow root.
+  shadowRoot.addEventListener('click', onExpandClick)
   // `disableFileHeader`: we render our own header (filename, status, +/-, reviewed
   // checkbox) above the diff body, so pierre's own file-header row would be redundant.
   // `themeType`: defaults to `'system'` (OS-level `prefers-color-scheme`) otherwise,
