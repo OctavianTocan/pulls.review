@@ -115,7 +115,7 @@ watch([groups, headerHeight], () => nextTick(updateVisibleGroups), { immediate: 
 
 const styles = computed(() => {
   return {
-    '--diffs-header-height': headerHeight.value ? `${headerHeight.value + 10}px` : undefined,
+    '--diffs-header-height': headerHeight.value ? `${headerHeight.value}px` : undefined,
   }
 })
 

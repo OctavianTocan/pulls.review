@@ -33,10 +33,12 @@ export function createUnoConfig() {
       // Overrides
       {
         'bg-active': 'bg-[#8881]',
+        'op-mute': 'op50',
       },
       // Named z-index layers used by @antfu/design's overlay components (OverlayModal, etc.)
       // The preset ships no z-index scale and blocks plain `z-<number>` on purpose.
       {
+        'z-file-diff-header': 'z-[10]',
         'z-nav': 'z-[30]',
         'z-dropdown': 'z-[40]',
         'z-tooltip': 'z-[45]',

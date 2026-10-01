@@ -337,47 +337,49 @@ defineExpose({
 </script>
 
 <template>
-  <div :id="`file-${file.sha}`" class="overflow-hidden border border-base rounded-lg">
-    <header
-      class="z-[20] flex items-center justify-between gap-2 px-2 py-1.5"
-      role="button"
-      @click.self="collapsed = !collapsed"
-    >
-      <div class="min-w-0 flex items-center gap-2 text-sm">
-        <FormCheckbox
-          :model-value="isReviewed"
-          :aria-label="$t('file.markReviewed')"
-          @update:model-value="store.toggleReviewed(file.sha, $event)"
-        />
-        <DisplayFilePath :path="file.path" class="min-w-0" />
-      </div>
-      <div class="flex shrink-0 items-center gap-2">
-        <span v-if="resolvedCount" class="text-xs op-fade">{{ $t('file.resolved', { n: resolvedCount }) }}</span>
-        <DiffStats v-if="!file.isBinary" :additions="file.additions" :deletions="file.deletions" />
-        <span v-else class="text-xs op-fade">{{ $t('file.binary') }}</span>
-        <FileStatus :status="file.status" />
-        <span v-if="fullFileError" class="text-xs text-red-500" :title="fullFileError.message">{{ $t('file.loadFailed') }}</span>
-        <ActionIconButton
-          v-if="canLoadFullFile || isLoadingFullFile"
-          compact
-          :icon="isLoadingFullFile ? 'i-ph:spinner-duotone animate-spin' : 'i-ph:file-text-duotone'"
-          :disabled="isLoadingFullFile"
-          :label="$t('file.loadFull')"
-          :tooltip="$t('file.loadFull')"
-          @click="loadFullFile"
-        />
-        <ActionIconButton
-          compact
-          :icon="collapsed ? 'i-ph:caret-right' : 'i-ph:caret-down'"
-          :label="$t(collapsed ? 'file.expand' : 'file.collapse')"
-          @click="collapsed = !collapsed"
-        />
-      </div>
-    </header>
+  <header
+    :id="`file-${file.sha}`"
+    class="relative sticky top-[calc(var(--diffs-header-height)-1px)] z-file-diff-header mt-2 flex items-center justify-between gap-2 overflow-hidden border border-base bg-base px-2 py-1.5"
+    role="button"
+    :class="collapsed ? 'rounded-lg' : 'rounded-t-lg'"
+    @click.self="collapsed = !collapsed"
+  >
+    <div class="min-w-0 flex items-center gap-2 text-sm">
+      <FormCheckbox
+        :model-value="isReviewed"
+        :aria-label="$t('file.markReviewed')"
+        @update:model-value="store.toggleReviewed(file.sha, $event)"
+      />
+      <DisplayFilePath :path="file.path" class="min-w-0" />
+    </div>
+    <div class="flex shrink-0 items-center gap-2">
+      <span v-if="resolvedCount" class="text-xs op-fade">{{ $t('file.resolved', { n: resolvedCount }) }}</span>
+      <DiffStats v-if="!file.isBinary" :additions="file.additions" :deletions="file.deletions" />
+      <span v-else class="text-xs op-fade">{{ $t('file.binary') }}</span>
+      <FileStatus :status="file.status" />
+      <span v-if="fullFileError" class="text-xs text-red-500" :title="fullFileError.message">{{ $t('file.loadFailed') }}</span>
+      <ActionIconButton
+        v-if="canLoadFullFile || isLoadingFullFile"
+        compact
+        :icon="isLoadingFullFile ? 'i-ph:spinner-duotone animate-spin' : 'i-ph:file-text-duotone'"
+        :disabled="isLoadingFullFile"
+        :label="$t('file.loadFull')"
+        :tooltip="$t('file.loadFull')"
+        @click="loadFullFile"
+      />
+      <ActionIconButton
+        compact
+        :icon="collapsed ? 'i-ph:caret-right' : 'i-ph:caret-down'"
+        :label="$t(collapsed ? 'file.expand' : 'file.collapse')"
+        @click="collapsed = !collapsed"
+      />
+    </div>
+  </header>
+  <div v-if="!collapsed" class="overflow-hidden border-x border-b border-base rounded-b-xl">
     <div v-if="file.isBinary" class="p-4 text-sm op-fade">
       {{ $t('file.binaryNotShown') }}
     </div>
-    <div v-else-if="!collapsed" ref="container">
+    <div v-else ref="container" class="my--2">
       <!--
         Light-DOM children projected into pierre's shadow-DOM annotation rows via
         named slots (`annotation-<side>-<line>`), mirroring the library's own
@@ -409,7 +411,7 @@ defineExpose({
           />
         </div>
       </div>
-      <!-- eslint-enable vue/no-deprecated-slot-attribute -->
+    <!-- eslint-enable vue/no-deprecated-slot-attribute -->
     </div>
   </div>
 </template>

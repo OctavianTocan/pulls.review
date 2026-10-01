@@ -61,7 +61,7 @@ function scrollToGroup(key: string) {
 <template>
   <header
     class="sticky left-0 right-0 top-0 z-nav flex flex-col gap-2 border-b bg-base px4 py2 transition-all"
-    :class="scrollY > 20 ? 'border-base shadow-md' : 'border-transparent' "
+    :class="scrollY > 20 ? 'border-base shadow-sm' : 'border-transparent' "
   >
     <div class="mxa max-w-500 w-full">
       <div class="flex flex-wrap items-center gap-2">
