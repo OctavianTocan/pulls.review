@@ -1,4 +1,5 @@
 import type { AgentMessage } from '@earendil-works/pi-agent-core'
+import type { AiActivity, AiPrContext } from '../../../local-rpc'
 import type { Locale } from '../../../locales'
 import type { GroupedResult } from '../../../types/analyze'
 import type { DiffsPayload } from '../../../types/diff'
@@ -77,9 +78,13 @@ export interface ChatSessionOptions {
   locale: Locale
   messages: AgentMessage[]
   onGroupingUpdate: (result: GroupedResult) => void | Promise<void>
+  /** Live work-log entries from a Claude Code or Codex reply; entries repeat as they update, merge by `id`. */
+  onActivity?: (activities: AiActivity[]) => void
+  /** Lets a CLI engine read the PR's diffs and source through tools while it answers. */
+  context?: AiPrContext
 }
 
-export function createChatSession({ diff, resolved, locale, messages, onGroupingUpdate }: ChatSessionOptions): Agent {
+export function createChatSession({ diff, resolved, locale, messages, onGroupingUpdate, onActivity, context }: ChatSessionOptions): Agent {
   const ledger = createLedger()
   return new Agent({
     initialState: {
@@ -90,7 +95,7 @@ export function createChatSession({ diff, resolved, locale, messages, onGrouping
       ],
       messages: withChatInstructions(messages),
     },
-    streamFn: createStreamFn(resolved),
+    streamFn: createStreamFn(resolved, { onActivity, context, label: `Ask about ${serializeRef(diff.ref)}` }),
     getApiKey: () => resolved.apiKey,
     sessionId: serializeRef(diff.ref),
     convertToLlm: toLlmMessages,

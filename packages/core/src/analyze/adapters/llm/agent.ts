@@ -1,7 +1,7 @@
 import type { AgentContext, AgentEvent, AgentLoopConfig, AgentMessage } from '@earendil-works/pi-agent-core'
 import type { AssistantMessage, Message } from '@earendil-works/pi-ai'
-import type { Locale } from '../../../locales'
 import type { AiActivity, AiPrContext } from '../../../local-rpc'
+import type { Locale } from '../../../locales'
 import type { AnalyzeOptions } from '../../../types/analyze'
 import type { DiffsPayload } from '../../../types/diff'
 import type { ResolvedModel } from './model'
@@ -34,6 +34,10 @@ export interface LlmAnalyzeOptions extends AnalyzeOptions {
   onActivity?: (activities: AiActivity[]) => void
   /** Lets a CLI engine read the PR's diffs and source through tools while it works. */
   context?: AiPrContext
+  /** Names the CLI job in job lists; defaults to `Analyze <ref>`. */
+  label?: string
+  /** Identifies the CLI job, so a run still going on the server is picked up instead of started twice. */
+  key?: string
 }
 
 export async function runAgent(diff: DiffsPayload, resolved: ResolvedModel, locale: Locale, options?: LlmAnalyzeOptions): Promise<{ analysis: Analysis, transcript: AgentMessage[] }> {
@@ -99,7 +103,13 @@ export async function runAgent(diff: DiffsPayload, resolved: ResolvedModel, loca
     }
   }
 
-  const newMessages = await runAgentLoop([prompt], context, config, emit, options?.signal, createStreamFn(resolved, { onActivity: options?.onActivity, context: options?.context, label: `Analyze ${serializeRef(diff.ref)}` }))
+  const hooks = {
+    onActivity: options?.onActivity,
+    context: options?.context,
+    label: options?.label ?? `Analyze ${serializeRef(diff.ref)}`,
+    key: options?.key,
+  }
+  const newMessages = await runAgentLoop([prompt], context, config, emit, options?.signal, createStreamFn(resolved, hooks))
   const transcript = [...context.messages, ...newMessages]
 
   const last = newMessages.findLast((message): message is AssistantMessage => message.role === 'assistant')

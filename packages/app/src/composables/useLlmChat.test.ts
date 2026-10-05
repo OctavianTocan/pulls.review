@@ -8,14 +8,14 @@ import { t } from '../i18n'
 import { useLlmChat } from './useLlmChat'
 
 const mocks = vi.hoisted(() => ({
-  resolveModel: vi.fn(),
+  resolveAskModel: vi.fn(),
   reply: undefined as AgentMessage | undefined,
   createChatSession: vi.fn(),
 }))
 
 vi.mock('@pulls.review/core/analyze', async importOriginal => ({
   ...await importOriginal<typeof import('@pulls.review/core/analyze')>(),
-  resolveModel: mocks.resolveModel,
+  resolveAskModel: mocks.resolveAskModel,
 }))
 
 vi.mock('@pulls.review/core/llm', () => ({ createChatSession: mocks.createChatSession }))
@@ -49,7 +49,7 @@ function setup() {
 }
 
 beforeEach(() => {
-  mocks.resolveModel.mockReset().mockReturnValue({ model: {}, apiKey: 'key' })
+  mocks.resolveAskModel.mockReset().mockReturnValue({ model: {}, apiKey: 'key' })
   mocks.createChatSession.mockReset().mockImplementation(fakeAgent)
   mocks.reply = fauxAssistantMessage('Because.')
 })
@@ -84,7 +84,7 @@ describe('useLlmChat', () => {
   })
 
   it('sets error when no model is configured', async () => {
-    mocks.resolveModel.mockReturnValue(undefined)
+    mocks.resolveAskModel.mockReturnValue(undefined)
     const { chat } = setup()
 
     await chat.send('why?')
@@ -140,6 +140,25 @@ describe('useLlmChat', () => {
     expect(mocks.createChatSession).not.toHaveBeenCalled()
     expect(onSessionChange).not.toHaveBeenCalled()
     expect(chat.isStreaming.value).toBe(false)
+  })
+
+  it('collects the reply\'s work log by id while it runs', async () => {
+    const { chat } = setup()
+    let shownMidRun: unknown[] = []
+    mocks.createChatSession.mockImplementation((options: { messages: AgentMessage[], onActivity: (activities: unknown[]) => void }) => {
+      const agent = fakeAgent(options)
+      agent.prompt = async () => {
+        options.onActivity([{ id: 'a', kind: 'tool', title: 'Reading a.ts', status: 'running', startedAt: 0, rev: 1 }])
+        options.onActivity([{ id: 'a', kind: 'tool', title: 'Read a.ts', status: 'done', startedAt: 0, rev: 2 }])
+        shownMidRun = chat.activities.value
+      }
+      return agent
+    })
+
+    await chat.send('why?')
+
+    expect(shownMidRun).toMatchObject([{ id: 'a', title: 'Read a.ts', status: 'done' }])
+    expect(chat.startedAt.value).toBeTypeOf('number')
   })
 
   it('clear() truncates the session back to chatStartIndex', async () => {

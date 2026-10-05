@@ -1,5 +1,7 @@
 import type { AgentMessage } from '@earendil-works/pi-agent-core'
+import type { AiUsage } from '@pulls.review/core/local-rpc'
 import type { CommentThread, DiffsPayload, FileChange, GroupedResult, GroupSource, PendingReview, ReviewDraftTarget, ReviewSummary, ReviewVerdict } from '@pulls.review/core/types'
+import type { TrackedActivity } from '../components/ai/ai-activity'
 import type { ResolvedGroupWithChildren } from '../components/diff/group-utils'
 
 /** A step of the running analysis, already worded in the UI language. */
@@ -16,13 +18,27 @@ export interface LlmProgress { step: number, message: string }
  * store - fields read directly (`store.llm.isSetup`), no `.value`.
  */
 export interface DiffsStoreLlm {
-  /** Whether a gateway token or vendor API key is configured (was `llmAvailable`). */
+  /** Whether the selected provider can run: a CLI engine, or an API provider with its key. */
   readonly isSetup: boolean
   readonly isAnalyzing: boolean
   readonly progress: LlmProgress | undefined
   /** The current (or last failed) run's messages, streamed live; `[]` before the first run. */
   readonly transcript: AgentMessage[]
   readonly error: Error | undefined
+  /** The current (or last) run's work log, oldest first; for API providers it is read off `transcript`. */
+  readonly activities: TrackedActivity[]
+  /** The engine of the current (or last) run, e.g. `claude-code`; unset before the first run. */
+  readonly engine: string | undefined
+  /** When the current (or last) run started, ms since the epoch. */
+  readonly startedAt: number | undefined
+  /** When the last run settled, ms since the epoch; unset while it runs. */
+  readonly endedAt: number | undefined
+  /** What the last run consumed, as its engine reported it. */
+  readonly usage: AiUsage | undefined
+  /** Whether the last run was stopped through `abort`. */
+  readonly cancelled: boolean
+  /** Whether the current run was already going on the server when this page opened. */
+  readonly resumed: boolean
   reanalyze: () => Promise<void>
   /** Stops the in-flight run (and any chat) - leaves `error` unset. */
   abort: () => void
@@ -31,6 +47,12 @@ export interface DiffsStoreLlm {
     readonly messages: AgentMessage[]
     readonly isStreaming: boolean
     readonly error: Error | undefined
+    /** The pending (or last) reply's work log from a CLI engine; `[]` for API providers. */
+    readonly activities: TrackedActivity[]
+    /** When the pending (or last) reply was asked for, ms since the epoch. */
+    readonly startedAt: number | undefined
+    /** When the last reply settled, ms since the epoch; unset while it streams. */
+    readonly endedAt: number | undefined
     send: (text: string) => Promise<void>
     retry: () => Promise<void>
     stop: () => void

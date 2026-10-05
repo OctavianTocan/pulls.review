@@ -6,7 +6,9 @@ import ActionIconButton from '@antfu/design/components/Action/ActionIconButton.v
 import ActionToggleGroup from '@antfu/design/components/Action/ActionToggleGroup.vue'
 import FormField from '@antfu/design/components/Form/FormField.vue'
 import FormTextInput from '@antfu/design/components/Form/FormTextInput.vue'
-import { computed, ref, watch } from 'vue'
+import { computed, reactive, ref, watch } from 'vue'
+import { refreshCliModels, useCliModels } from '../../composables/useCliModels'
+import AiCliSettings from '../ai/AiCliSettings.vue'
 import ModelPicker from './ModelPicker.vue'
 
 const props = defineProps<{
@@ -29,15 +31,8 @@ const isEmbedded = import.meta.env.PR_EMBED
 const isLocal = import.meta.env.PR_LOCAL
 type ApiProvider = Exclude<LlmProvider, 'claude-code' | 'codex'>
 
-const cliOptions = [
-  { value: 'claude-code', label: 'Claude Code', icon: 'i-simple-icons-claude' },
-  { value: 'codex', label: 'Codex', icon: 'i-simple-icons-openai' },
-]
-
-const cliModel = computed({
-  get: () => props.llmSettings.provider === 'codex' ? props.llmSettings.codexModel : props.llmSettings.claudeCodeModel,
-  set: value => update(props.llmSettings.provider === 'codex' ? { codexModel: value } : { claudeCodeModel: value }),
-})
+const analysisModels = reactive(useCliModels(() => isLocal ? (props.llmSettings.provider === 'codex' ? 'codex' : 'claude-code') : undefined))
+const askModels = reactive(useCliModels(() => isLocal ? props.llmSettings.askProvider || undefined : undefined))
 
 interface ProviderConfig {
   tokenKey: 'gatewayToken' | 'anthropicApiKey' | 'openaiApiKey'
@@ -117,23 +112,18 @@ const model = computed({
           {{ $t('settings.llm.title') }}
         </div>
         <p class="text-sm color-faint">
-          {{ $t('settings.llm.description') }}
+          {{ isLocal ? $t('settings.llm.localDescription') : $t('settings.llm.description') }}
         </p>
       </div>
 
-      <template v-if="isLocal">
-        <FormField :label="$t('settings.llm.provider')">
-          <ActionToggleGroup
-            :model-value="llmSettings.provider"
-            :options="cliOptions"
-            @update:model-value="update({ provider: $event as LlmProvider })"
-          />
-        </FormField>
-
-        <FormField :label="$t('settings.llm.model')">
-          <FormTextInput v-model="cliModel" />
-        </FormField>
-      </template>
+      <AiCliSettings
+        v-if="isLocal"
+        :llm-settings="llmSettings"
+        :analysis-models="analysisModels"
+        :ask-models="askModels"
+        @update:llm-settings="emit('update:llmSettings', $event)"
+        @refresh="refreshCliModels"
+      />
 
       <template v-else>
         <FormField :label="$t('settings.llm.provider')">
