@@ -13,7 +13,8 @@ export interface Settings {
 
 const defaultSettings: Settings = {
   githubToken: '',
-  llm: defaultLlmSettings,
+  // `mergeDefaults` never runs for a browser with nothing stored, so the local build's provider is set here too.
+  llm: import.meta.env.PR_LOCAL ? { ...defaultLlmSettings, provider: 'claude-code' } : defaultLlmSettings,
   locale: detectLocale(),
 }
 
