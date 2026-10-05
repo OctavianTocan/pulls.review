@@ -1,9 +1,15 @@
 import type { AiActivityStatus, AiJobRequest, AiUsage } from '@pulls.review/core/local-rpc'
 import type { ActivityPatch, McpServerSpec, RunOutcome, RunSink, StreamParser } from './types'
+import { homedir } from 'node:os'
+import { join } from 'node:path'
+import process from 'node:process'
 import { describeCommand, describeTool } from './titles'
 
 const TEXT_LIMIT = 8_000
 const OUTPUT_LIMIT = 400
+// Codex prunes its SQLite logs before it reports anything, which took up to 30s on a busy shared ~/.codex.
+// A home of our own stays small; only its very first run waits, once, to index past sessions.
+const STATE_DIR = join(process.env.XDG_CACHE_HOME || join(homedir(), '.cache'), 'pulls-review', 'codex')
 
 /**
  * The arguments for one `codex exec` run that streams its work as JSON lines. The prompt goes on stdin.
@@ -29,6 +35,8 @@ export function codexArgs(request: AiJobRequest, answerPath: string, schemaPath?
     answerPath,
     '-c',
     'model_reasoning_summary="auto"',
+    '-c',
+    `sqlite_home=${JSON.stringify(STATE_DIR)}`,
   ]
   if (request.model)
     args.push('--model', request.model)

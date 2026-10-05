@@ -76,4 +76,11 @@ describe('codex invocation', () => {
     expect(args.slice(args.indexOf('--output-schema'), args.indexOf('--output-schema') + 2)).toEqual(['--output-schema', '/tmp/schema.json'])
     expect(args.at(-1)).toBe('-')
   })
+
+  it('keeps its state databases apart from the user\'s own Codex sessions', () => {
+    const args = codexArgs({ engine: 'codex', system: 'S', prompt: 'P' }, '/tmp/answer.txt')
+    const home = args.findIndex(arg => arg.startsWith('sqlite_home='))
+    expect(args[home - 1]).toBe('-c')
+    expect(args[home]).toMatch(/^sqlite_home=".+pulls-review.codex"$/)
+  })
 })
