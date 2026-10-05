@@ -381,7 +381,9 @@
     "llm": {
       "title": "AI Analysis",
       "description": "Configure a model provider to enable AI-generated summaries. Stored only in this browser and sent only to the provider you select.",
+      "localDescription": "Claude Code and Codex run on this machine under their own sign-in, so no API key is needed.",
       "provider": "Provider",
+      "engine": "Engine",
       "baseUrl": "Base URL",
       "baseUrlDescription": "Any OpenAI-compatible chat completions endpoint (OpenAI itself, a local server, etc.).",
       "apiKey": "API key",
@@ -394,6 +396,15 @@
       "changeKey": "Change key",
       "model": "Model",
       "modelListFailed": "Could not load the model list ({error}). Enter a model id manually.",
+      "catalogFailed": "Couldn't load models from the CLI: {message}",
+      "refreshModels": "Reload the model list",
+      "effort": "Reasoning effort",
+      "effortDefault": "CLI default",
+      "effortDefaultNamed": "CLI default ({effort})",
+      "effortHint": "How long the model thinks before it acts. Higher is slower and uses more tokens.",
+      "askTitle": "Ask about the PR",
+      "askDescription": "The engine that answers your questions in the chat. It can differ from the one that analyzes the PR.",
+      "askSame": "Same as analysis",
       "embedUnavailable": "AI features aren't available in embedded mode",
       "embedReason": "github.com's strict Content Security Policy blocks the requests AI features need here. {link} to use them.",
       "goToWebsite": "Go to the website"
@@ -405,7 +416,8 @@
       "noMatch": "No matching model",
       "useCustom": "Use “{id}”",
       "free": "Free",
-      "priceTitle": "Input {input}/M · Output {output}/M tokens"
+      "priceTitle": "Input {input}/M · Output {output}/M tokens",
+      "default": "Default"
     }
   },
   "rules": {
