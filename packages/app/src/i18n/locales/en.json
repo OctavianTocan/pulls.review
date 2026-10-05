@@ -46,9 +46,39 @@
     "uploadTitle": "Review a diff without a PR",
     "uploadDescription": "Upload or paste a unified diff, or drop a {diff} / {patch} file anywhere on this page.",
     "uploadButton": "Upload a diff",
-    "embedTitle": "Use it directly on github.com",
+    "embedTitle": "Use it embedded on github.com",
     "embedDescription": "With {tampermonkey} or {violentmonkey} installed, a pulls.review drawer appears on every pull request page.",
-    "installUserscript": "Install userscript"
+    "installUserscript": "Install userscript",
+    "actionsTitle": "Set up auto analyze with GitHub Actions",
+    "actionsDescription": "Analyze every pull request once in CI and post the result as a PR comment, so reviewers don't each need a model key.",
+    "cliTitle": "Run on local git changes with the CLI",
+    "cliDescription": "Review your working tree, a commit or a branch before you push, grouped and summarized like a PR.",
+    "viewGuide": "View guide"
+  },
+  "guide": {
+    "userscript": {
+      "title": "Use pulls.review embedded on github.com",
+      "intro": "The userscript adds a pulls.review drawer directly to pull request pages on github.com, with grouped files and summaries, so you don't have to switch tabs.",
+      "manager": "Install a userscript manager: {tampermonkey} or {violentmonkey}.",
+      "install": "Install the pulls.review userscript. Your manager asks you to confirm.",
+      "open": "Open any pull request on github.com and click the {tab} tab next to \"Files changed\".",
+      "ai": "github.com blocks the requests AI analysis needs, so the drawer shows analyses shared as PR comments. Open the PR on pulls.review to run a new one."
+    },
+    "actions": {
+      "title": "Auto analyze with GitHub Actions",
+      "intro": "Let CI analyze each pull request once, as soon as it's opened or updated. Everyone who opens the PR, here or in the github.com drawer, sees the same grouped summary right away. Nobody needs their own model key, and pull requests from forks get it too.",
+      "secret": "Add your model key as a repository secret, for example {name}.",
+      "workflow": "Add this workflow to the repository:",
+      "result": "Open or update a pull request to try it. The analysis arrives as a comment, and re-runs on an unchanged PR skip the model call.",
+      "options": "The {provider} is inferred from the key. Set {provider}, {model} or {locale} to override it. See the {readme} for every option."
+    },
+    "cli": {
+      "title": "Review local git changes with the CLI",
+      "intro": "Review your own change before anyone else does. The CLI opens your branch, a commit or your uncommitted work in pulls.review, so you can see how the change reads, grouped and summarized, before you push or open a PR.",
+      "branch": "In a git repository, run this to review your current branch against the default branch:",
+      "target": "Or choose what to review:",
+      "browser": "It opens {url} in your browser to visualize your local changes. Confirm the tab with the one-time code printed in your terminal. From there, you can also pick other branches or commits to compare."
+    }
   },
   "load": {
     "title": "Load a diff",

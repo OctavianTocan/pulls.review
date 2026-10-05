@@ -46,9 +46,39 @@
     "uploadTitle": "Revise um diff sem PR",
     "uploadDescription": "Envie ou cole um unified diff, ou solte um arquivo {diff} / {patch} em qualquer lugar desta página.",
     "uploadButton": "Enviar um diff",
-    "embedTitle": "Use diretamente no github.com",
+    "embedTitle": "Use integrado ao github.com",
     "embedDescription": "Com {tampermonkey} ou {violentmonkey} instalado, um painel do pulls.review aparece em cada página de pull request.",
-    "installUserscript": "Instalar userscript"
+    "installUserscript": "Instalar userscript",
+    "actionsTitle": "Configure a análise automática com GitHub Actions",
+    "actionsDescription": "Analise cada pull request uma vez na CI e publique o resultado como comentário, para que cada revisor não precise da própria chave de modelo.",
+    "cliTitle": "Rode em mudanças locais do git com a CLI",
+    "cliDescription": "Revise sua árvore de trabalho, um commit ou uma branch antes do push, agrupados e resumidos como um PR.",
+    "viewGuide": "Ver guia"
+  },
+  "guide": {
+    "userscript": {
+      "title": "Use o pulls.review integrado ao github.com",
+      "intro": "O userscript adiciona um painel do pulls.review diretamente às páginas de pull request no github.com, com arquivos agrupados e resumos, para você não precisar trocar de aba.",
+      "manager": "Instale um gerenciador de userscripts: {tampermonkey} ou {violentmonkey}.",
+      "install": "Instale o userscript do pulls.review. Seu gerenciador pede confirmação.",
+      "open": "Abra qualquer pull request no github.com e clique na aba {tab} ao lado de \"Files changed\".",
+      "ai": "O github.com bloqueia as requisições de que a análise por IA precisa, então o painel mostra análises compartilhadas como comentários do PR. Abra o PR no pulls.review para rodar uma nova."
+    },
+    "actions": {
+      "title": "Análise automática com GitHub Actions",
+      "intro": "Deixe a CI analisar cada pull request uma vez, assim que ele é aberto ou atualizado. Todos que abrem o PR, aqui ou no painel do github.com, veem na hora o mesmo resumo agrupado. Ninguém precisa da própria chave de modelo, e pull requests de forks também recebem.",
+      "secret": "Adicione sua chave de modelo como secret do repositório, por exemplo {name}.",
+      "workflow": "Adicione este workflow ao repositório:",
+      "result": "Abra ou atualize um pull request para testar. A análise chega como comentário, e novas execuções em um PR sem mudanças pulam a chamada ao modelo.",
+      "options": "O {provider} é inferido a partir da chave. Defina {provider}, {model} ou {locale} para substituí-lo. Veja o {readme} para todas as opções."
+    },
+    "cli": {
+      "title": "Revise mudanças locais do git com a CLI",
+      "intro": "Revise sua própria mudança antes de qualquer outra pessoa. A CLI abre no pulls.review sua branch, um commit ou o trabalho ainda sem commit, para você ver como a mudança se lê, agrupada e resumida, antes do push ou de abrir um PR.",
+      "branch": "Em um repositório git, rode isto para revisar sua branch atual em relação à branch padrão:",
+      "target": "Ou escolha o que revisar:",
+      "browser": "Ela abre {url} no navegador para visualizar suas mudanças locais. Confirme a aba com o código de uso único exibido no terminal. Lá você também pode escolher outras branches ou commits para comparar."
+    }
   },
   "load": {
     "title": "Carregar um diff",

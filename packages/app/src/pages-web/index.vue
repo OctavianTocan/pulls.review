@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import type { LandingGuide } from '../components/landing/LandingGuideModal.vue'
 import ActionButton from '@antfu/design/components/Action/ActionButton.vue'
 import DisplayDonut from '@antfu/design/components/Display/DisplayDonut.vue'
 import FormTextInput from '@antfu/design/components/Form/FormTextInput.vue'
@@ -8,7 +9,9 @@ import { useRouter } from 'vue-router'
 import AppFooter from '../components/AppFooter.vue'
 import AppHeader from '../components/AppHeader.vue'
 import DiffPill from '../components/DiffPill.vue'
+import ExternalLink from '../components/landing/ExternalLink.vue'
 import LandingDemo from '../components/landing/LandingDemo.vue'
+import LandingGuideModal from '../components/landing/LandingGuideModal.vue'
 import LandingHero from '../components/landing/LandingHero.vue'
 import LoadDiffModal from '../components/load/LoadDiffModal.vue'
 import RepositoryPill from '../components/RepositoryPill.vue'
@@ -30,6 +33,7 @@ const router = useRouter()
 const { locale, t } = useI18n()
 const url = ref('')
 const loadDiffOpen = ref(false)
+const guide = ref<LandingGuide>()
 
 const parsed = computed(() => routeFromGithubUrl(url.value))
 
@@ -217,17 +221,62 @@ useDocumentTitle(() => t('landing.documentTitle'), ' - ')
               </h2>
               <i18n-t keypath="landing.embedDescription" tag="p" class="text-sm op-fade" scope="global">
                 <template #tampermonkey>
-                  <a href="https://www.tampermonkey.net/" target="_blank" rel="noopener" class="color-base hover:underline">Tampermonkey</a>
+                  <ExternalLink href="https://www.tampermonkey.net/">
+                    Tampermonkey
+                  </ExternalLink>
                 </template>
                 <template #violentmonkey>
-                  <a href="https://violentmonkey.github.io/" target="_blank" rel="noopener" class="color-base hover:underline">Violentmonkey</a>
+                  <ExternalLink href="https://violentmonkey.github.io/">
+                    Violentmonkey
+                  </ExternalLink>
                 </template>
               </i18n-t>
             </div>
           </div>
-          <div class="mt-auto flex">
+          <div class="mt-auto flex gap-2">
             <ActionButton href="https://pulls.review/pulls-review-github.user.js" icon="i-ph:download-duotone">
               {{ $t('landing.installUserscript') }}
+            </ActionButton>
+            <ActionButton icon="i-ph:book-open-duotone" @click="guide = 'userscript'">
+              {{ $t('landing.viewGuide') }}
+            </ActionButton>
+          </div>
+        </div>
+
+        <div class="flex flex-col gap-4 border border-base rounded-lg p-5">
+          <div class="flex items-start gap-3">
+            <span class="i-ph:lightning-duotone mt-0.5 shrink-0 text-xl color-accent-orange" aria-hidden="true" />
+            <div class="flex-1">
+              <h2 class="font-semibold">
+                {{ $t('landing.actionsTitle') }}
+              </h2>
+              <p class="text-sm op-fade">
+                {{ $t('landing.actionsDescription') }}
+              </p>
+            </div>
+          </div>
+          <div class="mt-auto flex">
+            <ActionButton icon="i-ph:book-open-duotone" @click="guide = 'actions'">
+              {{ $t('landing.viewGuide') }}
+            </ActionButton>
+          </div>
+        </div>
+
+        <div class="flex flex-col gap-4 border border-base rounded-lg p-5">
+          <div class="flex items-start gap-3">
+            <span class="i-ph:terminal-window-duotone mt-0.5 shrink-0 text-xl color-accent-teal" aria-hidden="true" />
+            <div class="flex-1">
+              <h2 class="font-semibold">
+                {{ $t('landing.cliTitle') }}
+              </h2>
+              <p class="text-sm op-fade">
+                {{ $t('landing.cliDescription') }}
+              </p>
+            </div>
+          </div>
+          <div class="mt-auto flex">
+            <ActionButton icon="i-ph:book-open-duotone" @click="guide = 'cli'">
+              {{ $t('landing.viewGuide') }}
             </ActionButton>
           </div>
         </div>
@@ -237,5 +286,6 @@ useDocumentTitle(() => t('landing.documentTitle'), ' - ')
     <AppFooter />
 
     <LoadDiffModal v-model:open="loadDiffOpen" />
+    <LandingGuideModal v-model:guide="guide" />
   </div>
 </template>

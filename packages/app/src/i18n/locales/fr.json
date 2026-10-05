@@ -46,9 +46,39 @@
     "uploadTitle": "Relire un diff sans PR",
     "uploadDescription": "Importez ou collez un unified diff, ou déposez un fichier {diff} / {patch} n'importe où sur cette page.",
     "uploadButton": "Importer un diff",
-    "embedTitle": "Utilisez-le directement sur github.com",
+    "embedTitle": "Utilisez-le intégré à github.com",
     "embedDescription": "Avec {tampermonkey} ou {violentmonkey} installé, un panneau pulls.review apparaît sur chaque page de pull request.",
-    "installUserscript": "Installer le userscript"
+    "installUserscript": "Installer le userscript",
+    "actionsTitle": "Configurer l'analyse automatique avec GitHub Actions",
+    "actionsDescription": "Analysez chaque pull request une fois en CI et publiez le résultat en commentaire, pour que chaque relecteur n'ait pas besoin de sa propre clé de modèle.",
+    "cliTitle": "Lancez-le sur vos modifications git locales avec la CLI",
+    "cliDescription": "Relisez votre arbre de travail, un commit ou une branche avant de pousser, groupés et résumés comme une PR.",
+    "viewGuide": "Voir le guide"
+  },
+  "guide": {
+    "userscript": {
+      "title": "Utiliser pulls.review intégré à github.com",
+      "intro": "Le userscript ajoute un panneau pulls.review directement aux pages de pull request sur github.com, avec fichiers groupés et résumés, pour que vous n'ayez pas à changer d'onglet.",
+      "manager": "Installez un gestionnaire de userscripts : {tampermonkey} ou {violentmonkey}.",
+      "install": "Installez le userscript pulls.review. Votre gestionnaire vous demande de confirmer.",
+      "open": "Ouvrez n'importe quelle pull request sur github.com et cliquez sur l'onglet {tab} à côté de \"Files changed\".",
+      "ai": "github.com bloque les requêtes nécessaires à l'analyse IA : le panneau affiche donc les analyses partagées en commentaire. Ouvrez la PR sur pulls.review pour en lancer une nouvelle."
+    },
+    "actions": {
+      "title": "Analyse automatique avec GitHub Actions",
+      "intro": "Laissez la CI analyser chaque pull request une fois, dès qu'elle est ouverte ou mise à jour. Toute personne qui ouvre la PR, ici ou dans le panneau sur github.com, voit aussitôt le même résumé groupé. Personne n'a besoin de sa propre clé de modèle, et les pull requests venant de forks en profitent aussi.",
+      "secret": "Ajoutez votre clé de modèle comme secret du dépôt, par exemple {name}.",
+      "workflow": "Ajoutez ce workflow au dépôt :",
+      "result": "Ouvrez ou mettez à jour une pull request pour essayer. L'analyse arrive en commentaire, et les relances sur une PR inchangée sautent l'appel au modèle.",
+      "options": "Le {provider} est déduit de la clé. Définissez {provider}, {model} ou {locale} pour le remplacer. Toutes les options sont dans le {readme}."
+    },
+    "cli": {
+      "title": "Relire des modifications git locales avec la CLI",
+      "intro": "Relisez votre propre modification avant les autres. La CLI ouvre votre branche, un commit ou votre travail non commité dans pulls.review, pour voir comment la modification se lit, groupée et résumée, avant de pousser ou d'ouvrir une PR.",
+      "branch": "Dans un dépôt git, lancez ceci pour relire votre branche actuelle par rapport à la branche par défaut :",
+      "target": "Ou choisissez quoi relire :",
+      "browser": "Elle ouvre {url} dans votre navigateur pour visualiser vos modifications locales. Confirmez l'onglet avec le code à usage unique affiché dans votre terminal. Vous pouvez aussi y choisir d'autres branches ou commits à comparer."
+    }
   },
   "load": {
     "title": "Charger un diff",

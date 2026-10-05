@@ -46,9 +46,39 @@
     "uploadTitle": "Ein Diff ohne PR reviewen",
     "uploadDescription": "Lade ein Unified Diff hoch oder füge es ein, oder ziehe eine {diff}- / {patch}-Datei irgendwo auf diese Seite.",
     "uploadButton": "Diff hochladen",
-    "embedTitle": "Direkt auf github.com nutzen",
+    "embedTitle": "Eingebettet auf github.com nutzen",
     "embedDescription": "Mit installiertem {tampermonkey} oder {violentmonkey} erscheint auf jeder Pull-Request-Seite ein pulls.review-Panel.",
-    "installUserscript": "Userscript installieren"
+    "installUserscript": "Userscript installieren",
+    "actionsTitle": "Automatische Analyse mit GitHub Actions einrichten",
+    "actionsDescription": "Jeden Pull Request einmal in der CI analysieren und das Ergebnis als PR-Kommentar posten, damit nicht jeder Reviewer einen eigenen Modell-Key braucht.",
+    "cliTitle": "Lokale Git-Änderungen mit der CLI prüfen",
+    "cliDescription": "Prüfe Working Tree, einen Commit oder einen Branch vor dem Push, gruppiert und zusammengefasst wie ein PR.",
+    "viewGuide": "Anleitung ansehen"
+  },
+  "guide": {
+    "userscript": {
+      "title": "pulls.review eingebettet auf github.com nutzen",
+      "intro": "Das Userscript fügt Pull-Request-Seiten auf github.com direkt eine pulls.review-Seitenleiste mit gruppierten Dateien und Zusammenfassungen hinzu, sodass du keinen Tab wechseln musst.",
+      "manager": "Installiere einen Userscript-Manager: {tampermonkey} oder {violentmonkey}.",
+      "install": "Installiere das pulls.review-Userscript. Dein Manager fragt nach einer Bestätigung.",
+      "open": "Öffne einen beliebigen Pull Request auf github.com und klicke auf den Tab {tab} neben \"Files changed\".",
+      "ai": "github.com blockiert die Anfragen, die die KI-Analyse braucht. Die Seitenleiste zeigt daher als PR-Kommentar geteilte Analysen. Öffne den PR auf pulls.review, um eine neue zu starten."
+    },
+    "actions": {
+      "title": "Automatische Analyse mit GitHub Actions",
+      "intro": "Lass die CI jeden Pull Request einmal analysieren, sobald er geöffnet oder aktualisiert wird. Alle, die den PR öffnen, hier oder in der Seitenleiste auf github.com, sehen sofort dieselbe gruppierte Zusammenfassung. Niemand braucht einen eigenen Modell-Key, und auch Pull Requests aus Forks bekommen sie.",
+      "secret": "Lege deinen Modell-Key als Repository-Secret an, zum Beispiel {name}.",
+      "workflow": "Füge diesen Workflow zum Repository hinzu:",
+      "result": "Öffne oder aktualisiere einen Pull Request, um es auszuprobieren. Die Analyse kommt als Kommentar, und erneute Läufe auf einem unveränderten PR überspringen den Modellaufruf.",
+      "options": "Der {provider} wird aus dem Key abgeleitet. Setze {provider}, {model} oder {locale}, um das zu überschreiben. Alle Optionen stehen in der {readme}."
+    },
+    "cli": {
+      "title": "Lokale Git-Änderungen mit der CLI prüfen",
+      "intro": "Prüfe deine eigene Änderung, bevor es andere tun. Die CLI öffnet deinen Branch, einen Commit oder deine nicht committete Arbeit in pulls.review. So siehst du gruppiert und zusammengefasst, wie sich die Änderung liest, bevor du pushst oder einen PR öffnest.",
+      "branch": "Führe das in einem Git-Repository aus, um deinen aktuellen Branch gegen den Standard-Branch zu prüfen:",
+      "target": "Oder wähle, was du prüfen willst:",
+      "browser": "Sie öffnet {url} im Browser und zeigt deine lokalen Änderungen an. Bestätige den Tab mit dem Einmalcode aus deinem Terminal. Dort kannst du auch andere Branches oder Commits zum Vergleichen auswählen."
+    }
   },
   "load": {
     "title": "Diff laden",
