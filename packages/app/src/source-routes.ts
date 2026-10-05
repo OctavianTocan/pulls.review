@@ -3,7 +3,9 @@ import type { RouteComponent, RouteLocation, RouteRecordRaw } from 'vue-router'
 
 /**
  * The one place that maps diff refs to app routes and back. Components link through
- * these helpers instead of spelling out `/gh/...` paths.
+ * these helpers instead of spelling out paths. A PR lives at `/{owner}/{repo}/{number}`;
+ * github.com's own shapes and the old `/gh/...` paths redirect there, so swapping the
+ * host of a github.com link is enough to open it here.
  */
 
 /** Every ref kind with a page of its own in this build. */
@@ -14,10 +16,21 @@ export function routes(component: () => Promise<RouteComponent>): RouteRecordRaw
   // The page receives its ref as the `sourceRef` prop rather than reading the route.
   const props = (route: RouteLocation) => ({ sourceRef: refFromRoute(route) })
   return [
-    { name: 'github-pr', path: '/gh/:owner/:repo/:number(\\d+)', component, props },
+    { name: 'github-pr', path: '/:owner/:repo/:number(\\d+)', component, props },
     // A range is `base...head`; either side may be a branch with slashes.
-    { name: 'github-compare', path: '/gh/:owner/:repo/compare/:range(.+\\.\\.\\..+)', component, props },
-    { name: 'github-commit', path: '/gh/:owner/:repo/commit/:sha', component, props },
+    { name: 'github-compare', path: '/:owner/:repo/compare/:range(.+\\.\\.\\..+)', component, props },
+    { name: 'github-commit', path: '/:owner/:repo/commit/:sha', component, props },
+    { path: '/:owner/:repo/pull/:number(\\d+)/:rest(.*)?', redirect: to => `/${to.params.owner}/${to.params.repo}/${to.params.number}` },
+    { path: '/:owner/:repo/commits/:sha', redirect: to => `/${to.params.owner}/${to.params.repo}/commit/${to.params.sha}` },
+    { path: '/gh/:rest(.*)', redirect: to => ({ path: `/${to.params.rest}`, query: to.query, hash: to.hash }) },
+  ]
+}
+
+/** A repo's PR list, plus github.com's `/pulls` shape redirecting to it. */
+export function repoRoutes(component: () => Promise<RouteComponent>): RouteRecordRaw[] {
+  return [
+    { path: '/:owner/:repo', component },
+    { path: '/:owner/:repo/pulls', redirect: to => `/${to.params.owner}/${to.params.repo}` },
   ]
 }
 
@@ -26,11 +39,11 @@ export function routeForRef(ref: SourceRef): string | undefined
 export function routeForRef(ref: SourceRef): string | undefined {
   switch (ref.kind) {
     case 'github-pr':
-      return `/gh/${ref.owner}/${ref.repo}/${ref.number}`
+      return `/${ref.owner}/${ref.repo}/${ref.number}`
     case 'github-compare':
-      return `/gh/${ref.owner}/${ref.repo}/compare/${ref.base}...${ref.head}`
+      return `/${ref.owner}/${ref.repo}/compare/${ref.base}...${ref.head}`
     case 'github-commit':
-      return `/gh/${ref.owner}/${ref.repo}/commit/${ref.sha}`
+      return `/${ref.owner}/${ref.repo}/commit/${ref.sha}`
     case 'paste':
       // Deliberately unroutable: a paste has no live source to reopen from a link.
       return undefined
@@ -63,7 +76,7 @@ export function refFromRoute(route: Pick<RouteLocation, 'name' | 'params'>): Rou
 }
 
 export function repoRoute(owner: string, repo: string): string {
-  return `/gh/${owner}/${repo}`
+  return `/${owner}/${repo}`
 }
 
 /** Where a diff sits, e.g. its repo's PR list - `undefined` for a ref with no parent view. */

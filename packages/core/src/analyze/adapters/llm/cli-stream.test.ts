@@ -27,17 +27,18 @@ describe('cli provider', () => {
   })
 
   it('answers a submit_grouping transcript with that tool call', async () => {
-    const runner = vi.fn(async () => '{"overallSummary":"s","groups":[]}')
+    const runner = vi.fn(async () => ({ text: '{"overallSummary":"s","groups":[]}', usage: { inputTokens: 10, outputTokens: 5, costUsd: 0.02 } }))
     setCliRunner(runner)
     const stream = await createCliStreamFn(resolved, 'claude-code')(resolved.model, contextFor([user('diff')], true))
     const message = await stream.result()
     expect(message.stopReason).toBe('toolUse')
     expect(message.content[0]).toMatchObject({ type: 'toolCall', name: 'submit_grouping', arguments: { overallSummary: 's' } })
-    expect(runner).toHaveBeenCalledWith(expect.objectContaining({ engine: 'claude-code', schema: { type: 'object' } }))
+    expect(runner).toHaveBeenCalledWith(expect.objectContaining({ engine: 'claude-code', schema: { type: 'object' } }), expect.anything())
+    expect(message.usage).toMatchObject({ input: 10, output: 5, totalTokens: 15, cost: { total: 0.02 } })
   })
 
   it('answers chat with prose', async () => {
-    setCliRunner(async () => 'because')
+    setCliRunner(async () => ({ text: 'because' }))
     const stream = await createCliStreamFn(resolved, 'claude-code')(resolved.model, contextFor([user('why?')], false))
     const message = await stream.result()
     expect(message.stopReason).toBe('stop')

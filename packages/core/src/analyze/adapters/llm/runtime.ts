@@ -3,6 +3,7 @@ import type { ResolvedModel } from './model'
 import { createModels, createProvider } from '@earendil-works/pi-ai'
 import { anthropicMessagesApi } from '@earendil-works/pi-ai/api/anthropic-messages.lazy'
 import { openAICompletionsApi } from '@earendil-works/pi-ai/api/openai-completions.lazy'
+import type { CliStreamHooks } from './cli-stream'
 import { createCliStreamFn, isCliEngine } from './cli-stream'
 
 /**
@@ -22,9 +23,9 @@ export function createCorsSafeFetch(provider: string): typeof fetch {
   }
 }
 
-export function createStreamFn(resolved: ResolvedModel): StreamFn {
+export function createStreamFn(resolved: ResolvedModel, hooks?: CliStreamHooks): StreamFn {
   if (isCliEngine(resolved.model.provider))
-    return createCliStreamFn(resolved, resolved.model.provider)
+    return createCliStreamFn(resolved, resolved.model.provider, hooks)
   const models = createModels()
   models.setProvider(createProvider({
     id: resolved.model.provider,

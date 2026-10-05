@@ -14,7 +14,7 @@ import AppHeader from '../components/AppHeader.vue'
 import { useDocumentTitle } from '../composables/useDocumentTitle'
 import { formatTimeAgo } from '../i18n/time-ago'
 import { localRpcKey } from '../local/local-rpc-key'
-import { routeForRef, routeFromGithubUrl } from '../source-routes'
+import { repoRoute, routeForRef, routeFromGithubUrl } from '../source-routes'
 
 const ROLE_ORDER: MyPullRole[] = ['review-requested', 'authored', 'involved', 'owned']
 
@@ -154,7 +154,7 @@ useDocumentTitle(() => t('local.home.title'))
             <span class="i-ph:git-branch-duotone op-fade" aria-hidden="true" />
             <span>{{ group.name }}</span>
             <span class="op-fade">{{ group.items.length }}</span>
-            <RouterLink :to="`/gh/${group.owner}/${group.repo}`" class="ml-auto text-xs op-fade hover:underline" @click.stop>
+            <RouterLink :to="repoRoute(group.owner, group.repo)" class="ml-auto text-xs op-fade hover:underline" @click.stop>
               {{ $t('local.home.allInRepo') }}
             </RouterLink>
           </summary>

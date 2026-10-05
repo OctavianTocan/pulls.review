@@ -2,11 +2,11 @@ import type { App } from 'vue'
 import type { Router } from 'vue-router'
 import { createCacheRepositories } from '@pulls.review/core/cache'
 import { setCliRunner } from '@pulls.review/core/llm'
-import { LOCAL_RPC } from '@pulls.review/core/local-rpc'
 import { createStorage } from 'unstorage'
 import { createApp } from 'vue'
 import { installAppContext, settingsCredentials } from '../app-context'
 import { i18n } from '../i18n'
+import { createJobRunner } from './ai-jobs'
 import { connectLocal } from './connection'
 import { localRpcKey } from './local-rpc-key'
 import LocalAuthGate from './LocalAuthGate.vue'
@@ -42,7 +42,7 @@ export async function installLocal(app: App, router: Router): Promise<void> {
     credentials: createRpcCredentials(rpc, settingsCredentials),
   })
   app.provide(localRpcKey, rpc)
-  setCliRunner(async request => String(await rpc.call(LOCAL_RPC.llmRun, request)))
+  setCliRunner(createJobRunner(rpc))
 
   for (const route of localRoutes(() => import('../pages-local/diff.vue')))
     router.addRoute(route)

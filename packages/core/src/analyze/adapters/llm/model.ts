@@ -4,6 +4,8 @@ import type { LlmSettings } from './settings'
 export interface ResolvedModel {
   model: Model<Api>
   apiKey: string
+  /** Reasoning effort for the CLI engines; unset leaves it to the CLI. */
+  effort?: string
 }
 
 function customModel(id: string, api: Api, provider: string, baseUrl: string): Model<Api> {
@@ -29,10 +31,10 @@ function customModel(id: string, api: Api, provider: string, baseUrl: string): M
 export function resolveModel(llm: LlmSettings): ResolvedModel | undefined {
   switch (llm.provider) {
     case 'claude-code':
-      return { model: customModel(llm.claudeCodeModel, 'anthropic-messages', 'claude-code', ''), apiKey: '' }
+      return { model: customModel(llm.claudeCodeModel, 'anthropic-messages', 'claude-code', ''), apiKey: '', effort: llm.claudeCodeEffort || undefined }
 
     case 'codex':
-      return { model: customModel(llm.codexModel, 'openai-completions', 'codex', ''), apiKey: '' }
+      return { model: customModel(llm.codexModel, 'openai-completions', 'codex', ''), apiKey: '', effort: llm.codexEffort || undefined }
 
     case 'gateway':
       return llm.gatewayToken
@@ -49,4 +51,13 @@ export function resolveModel(llm: LlmSettings): ResolvedModel | undefined {
         ? { model: customModel(llm.openaiModel, 'openai-completions', 'openai-compatible', llm.openaiBaseUrl), apiKey: llm.openaiApiKey }
         : undefined
   }
+}
+
+/** The model that answers questions about the PR: the ask engine when one is set, else the analysis model. */
+export function resolveAskModel(llm: LlmSettings): ResolvedModel | undefined {
+  if (!llm.askProvider)
+    return resolveModel(llm)
+  const model = llm.askModel || (llm.askProvider === 'codex' ? llm.codexModel : llm.claudeCodeModel)
+  const api = llm.askProvider === 'codex' ? 'openai-completions' : 'anthropic-messages'
+  return { model: customModel(model, api, llm.askProvider, ''), apiKey: '', effort: llm.askEffort || undefined }
 }

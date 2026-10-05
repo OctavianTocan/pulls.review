@@ -1,6 +1,7 @@
 import type { AgentContext, AgentEvent, AgentLoopConfig, AgentMessage } from '@earendil-works/pi-agent-core'
 import type { AssistantMessage, Message } from '@earendil-works/pi-ai'
 import type { Locale } from '../../../locales'
+import type { AiActivity, AiPrContext } from '../../../local-rpc'
 import type { AnalyzeOptions } from '../../../types/analyze'
 import type { DiffsPayload } from '../../../types/diff'
 import type { ResolvedModel } from './model'
@@ -29,6 +30,10 @@ function readPaths(args: unknown): string[] {
 export interface LlmAnalyzeOptions extends AnalyzeOptions {
   /** Called with the full transcript so far whenever a message starts, streams, or ends. */
   onTranscript?: (messages: AgentMessage[]) => void
+  /** Live work-log entries from a Claude Code or Codex run; entries repeat as they update, merge by `id`. */
+  onActivity?: (activities: AiActivity[]) => void
+  /** Lets a CLI engine read the PR's diffs and source through tools while it works. */
+  context?: AiPrContext
 }
 
 export async function runAgent(diff: DiffsPayload, resolved: ResolvedModel, locale: Locale, options?: LlmAnalyzeOptions): Promise<{ analysis: Analysis, transcript: AgentMessage[] }> {
@@ -94,7 +99,7 @@ export async function runAgent(diff: DiffsPayload, resolved: ResolvedModel, loca
     }
   }
 
-  const newMessages = await runAgentLoop([prompt], context, config, emit, options?.signal, createStreamFn(resolved))
+  const newMessages = await runAgentLoop([prompt], context, config, emit, options?.signal, createStreamFn(resolved, { onActivity: options?.onActivity, context: options?.context, label: `Analyze ${serializeRef(diff.ref)}` }))
   const transcript = [...context.messages, ...newMessages]
 
   const last = newMessages.findLast((message): message is AssistantMessage => message.role === 'assistant')

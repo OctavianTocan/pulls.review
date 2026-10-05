@@ -14,7 +14,14 @@ export function isLlmProvider(value: string): value is LlmProvider {
 export interface LlmSettings {
   provider: LlmProvider
   claudeCodeModel: string
+  /** A reasoning effort the model reports it accepts; `''` leaves it to the CLI. */
+  claudeCodeEffort: string
   codexModel: string
+  codexEffort: string
+  /** The CLI that answers questions about the PR; `''` reuses the analysis model and effort. */
+  askProvider: '' | 'claude-code' | 'codex'
+  askModel: string
+  askEffort: string
   gatewayToken: string
   gatewayModel: string
   anthropicApiKey: string
@@ -27,7 +34,12 @@ export interface LlmSettings {
 export const defaultLlmSettings: LlmSettings = {
   provider: 'gateway',
   claudeCodeModel: 'claude-sonnet-5',
+  claudeCodeEffort: '',
   codexModel: 'gpt-5.6-sol',
+  codexEffort: '',
+  askProvider: '',
+  askModel: '',
+  askEffort: '',
   gatewayToken: '',
   gatewayModel: 'anthropic/claude-sonnet-5',
   anthropicApiKey: '',
