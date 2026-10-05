@@ -80,7 +80,7 @@ async function codexCatalog(): Promise<CliModelCatalog> {
   const models: CliModel[] = (Array.isArray(parsed.models) ? parsed.models : [])
     .filter((model: Json) => typeof model?.slug === 'string' && model.visibility !== 'hide')
     .toSorted((a: Json, b: Json) => (a.priority ?? Infinity) - (b.priority ?? Infinity))
-    .map((model: Json) => ({
+    .map((model: Json, index: number) => ({
       id: model.slug,
       name: typeof model.display_name === 'string' ? model.display_name : model.slug,
       description: typeof model.description === 'string' ? model.description : undefined,
@@ -88,6 +88,8 @@ async function codexCatalog(): Promise<CliModelCatalog> {
         .map((level: Json) => level?.effort)
         .filter((effort: unknown): effort is string => typeof effort === 'string'),
       defaultEffort: typeof model.default_reasoning_level === 'string' ? model.default_reasoning_level : undefined,
+      // Jobs run this model when none is picked, so the default shown is the one that runs.
+      isDefault: index === 0 || undefined,
     }))
   return { engine: 'codex', models, version }
 }

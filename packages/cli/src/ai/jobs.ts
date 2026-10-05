@@ -10,6 +10,7 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import process from 'node:process'
 import { fileURLToPath } from 'node:url'
+import { listCliModels } from './catalog'
 import { claudeArgs, claudeInput, createClaudeParser } from './claude'
 import { codexArgs, createCodexParser } from './codex'
 import { prTools } from './pr-tools'
@@ -213,12 +214,19 @@ async function prepare(job: Job, dir: string): Promise<Launch> {
   const schemaPath = request.schema === undefined ? undefined : join(dir, 'schema.json')
   if (schemaPath)
     await writeFile(schemaPath, JSON.stringify(strictSchema(request.schema)))
+  const model = request.model ?? await defaultCodexModel()
   return {
-    args: codexArgs(request, answerPath, schemaPath, server),
+    args: codexArgs({ ...request, model }, answerPath, schemaPath, server),
     input: `${system}\n\n${request.prompt}`,
-    parser: createCodexParser(sink, { schema: request.schema !== undefined, model: request.model }),
+    parser: createCodexParser(sink, { schema: request.schema !== undefined, model }),
     answerPath,
   }
+}
+
+/** The catalog's first model, which Codex never names in its own output. */
+async function defaultCodexModel(): Promise<string | undefined> {
+  const catalog = await listCliModels('codex').catch(() => undefined)
+  return catalog?.models[0]?.id
 }
 
 async function answerOf(job: Job, launch: Launch): Promise<string | undefined> {
