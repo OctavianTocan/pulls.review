@@ -1,92 +1,99 @@
 <script setup lang="ts">
-import type { MyPull, MyPullRole, MyPullState } from '@pulls.review/core/local-rpc'
-import { LOCAL_RPC } from '@pulls.review/core/local-rpc'
+import type { MyPull, MyPullRole, MyPullsSnapshot, MyPullState } from '@pulls.review/core/local-rpc'
+import type { TriageQueue } from '../components/home/triage'
 import ActionButton from '@antfu/design/components/Action/ActionButton.vue'
+import ActionToggleGroup from '@antfu/design/components/Action/ActionToggleGroup.vue'
 import FeedbackEmptyState from '@antfu/design/components/Feedback/FeedbackEmptyState.vue'
 import FeedbackLoading from '@antfu/design/components/Feedback/FeedbackLoading.vue'
-import ActionToggleGroup from '@antfu/design/components/Action/ActionToggleGroup.vue'
 import FormTextInput from '@antfu/design/components/Form/FormTextInput.vue'
-import { computed, inject, onMounted, ref } from 'vue'
+import { createGithubSource } from '@pulls.review/core/github'
+import { LOCAL_RPC, MY_PULL_ROLES, MY_PULL_STATES } from '@pulls.review/core/local-rpc'
+import { useNow } from '@vueuse/core'
+import { computed, inject, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { useRouter } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
+import { useAppContext } from '../app-context'
 import AppFooter from '../components/AppFooter.vue'
 import AppHeader from '../components/AppHeader.vue'
+import HomePullRow from '../components/home/HomePullRow.vue'
+import HomeQueueNav from '../components/home/HomeQueueNav.vue'
+import HomeSyncStatus from '../components/home/HomeSyncStatus.vue'
+import { filterPulls, groupByRepo, TRIAGE_QUEUES } from '../components/home/triage'
+import { deviceStorage, useMyPulls } from '../components/home/use-my-pulls'
 import { useDocumentTitle } from '../composables/useDocumentTitle'
-import { formatTimeAgo } from '../i18n/time-ago'
 import { localRpcKey } from '../local/local-rpc-key'
-import { repoRoute, routeForRef, routeFromGithubUrl } from '../source-routes'
-
-const ROLE_ORDER: MyPullRole[] = ['review-requested', 'authored', 'involved', 'owned']
+import { repoRoute, routeFromGithubUrl } from '../source-routes'
+import { createPrefetcher } from '../state/prefetch'
+import { prSnapshots } from '../state/snapshots'
 
 // Only `installLocal` registers this page, after providing the RPC client.
 const rpc = inject(localRpcKey)!
+const { cache, credentials } = useAppContext()
+const route = useRoute()
 const router = useRouter()
-const { locale, t } = useI18n()
+const { t } = useI18n()
 
-const pulls = ref<MyPull[]>()
-const error = ref<string>()
 const url = ref('')
-const query = ref('')
-const state = ref<MyPullState>('open')
-const filter = ref<MyPullRole | 'all'>('all')
+const search = ref('')
+const parsed = computed(() => routeFromGithubUrl(url.value))
+
+function fromQuery<T extends string>(name: string, allowed: readonly T[], fallback: T): T {
+  const value = route.query[name]
+  return typeof value === 'string' && (allowed as readonly string[]).includes(value) ? value as T : fallback
+}
+
+/** Keeps the filters in the URL, leaving defaults out. */
+function setQuery(patch: Record<string, string | undefined>) {
+  const query = { ...route.query, ...patch }
+  for (const [name, value] of Object.entries(query)) {
+    if (value === undefined)
+      delete query[name]
+  }
+  void router.replace({ query })
+}
+
+const state = computed<MyPullState>({
+  get: () => fromQuery('state', MY_PULL_STATES, 'open'),
+  set: value => setQuery({ state: value === 'open' ? undefined : value, queue: undefined }),
+})
+const queue = computed<TriageQueue>({
+  get: () => state.value === 'open' ? fromQuery('queue', TRIAGE_QUEUES, 'all') : 'all',
+  set: value => setQuery({ queue: value === 'all' ? undefined : value }),
+})
+const role = computed<MyPullRole | 'all'>({
+  get: () => fromQuery('role', ['all', ...MY_PULL_ROLES], 'all'),
+  set: value => setQuery({ role: value === 'all' ? undefined : value }),
+})
 
 const stateOptions = computed(() => [
   { value: 'open', label: t('local.home.state.open') },
   { value: 'closed', label: t('local.home.state.closed') },
 ])
 
-const parsed = computed(() => routeFromGithubUrl(url.value))
+const { pulls, fetchedAt, updating, error, reload } = useMyPulls({
+  cached: async selected => await rpc.call(LOCAL_RPC.myPullsCached, { state: selected }) as MyPullsSnapshot | null,
+  fresh: async selected => await rpc.call(LOCAL_RPC.myPulls, { state: selected }) as MyPull[],
+}, state, { storage: deviceStorage() })
 
-const filters = computed(() => [
-  { value: 'all' as const, label: t('local.home.all'), count: pulls.value?.length ?? 0 },
-  ...ROLE_ORDER.map(role => ({
-    value: role,
-    label: t(`local.home.role.${role}`),
-    count: pulls.value?.filter(pull => pull.role === role).length ?? 0,
-  })),
-])
+const now = useNow({ interval: 60_000 })
+const filtered = computed(() => filterPulls(pulls.value ?? [], {
+  queue: queue.value,
+  role: role.value,
+  needle: search.value.trim().toLowerCase(),
+}, now.value.getTime()))
+const groups = computed(() => groupByRepo(filtered.value.pulls))
 
-/** Repos with the most recently active pull request first; pulls inside keep that order. */
-const groups = computed(() => {
-  const byRepo = new Map<string, MyPull[]>()
-  const needle = query.value.trim().toLowerCase()
-  for (const pull of pulls.value ?? []) {
-    if (filter.value !== 'all' && pull.role !== filter.value)
-      continue
-    if (needle && ![pull.owner, pull.repo, pull.title, pull.author, `#${pull.number}`, ...pull.labels].some(text => text.toLowerCase().includes(needle)))
-      continue
-    const name = `${pull.owner}/${pull.repo}`
-    byRepo.set(name, [...byRepo.get(name) ?? [], pull])
-  }
-  return [...byRepo].map(([name, items]) => ({ name, owner: items[0].owner, repo: items[0].repo, items }))
+const prefetcher = createPrefetcher({
+  snapshots: prSnapshots(),
+  cache,
+  fetchDiff: pull => createGithubSource({ kind: 'github-pr', owner: pull.owner, repo: pull.repo, number: String(pull.number) }, credentials).fetch(),
 })
-
-async function load() {
-  pulls.value = undefined
-  error.value = undefined
-  try {
-    pulls.value = await rpc.call(LOCAL_RPC.myPulls, { state: state.value }) as MyPull[]
-  }
-  catch (e) {
-    error.value = e instanceof Error ? e.message : String(e)
-  }
-}
-
-function setState(next: MyPullState) {
-  state.value = next
-  void load()
-}
 
 function open() {
   if (parsed.value)
     router.push(parsed.value)
 }
 
-function pullRoute(pull: MyPull) {
-  return routeForRef({ kind: 'github-pr', owner: pull.owner, repo: pull.repo, number: String(pull.number) })
-}
-
-onMounted(load)
 useDocumentTitle(() => t('local.home.title'))
 </script>
 
@@ -94,7 +101,7 @@ useDocumentTitle(() => t('local.home.title'))
   <div class="relative min-h-screen flex flex-col">
     <AppHeader />
 
-    <main class="mxa max-w-4xl w-full flex flex-1 flex-col gap-6 px-6 py-10">
+    <main class="mxa max-w-5xl w-full flex flex-1 flex-col gap-6 px-4 py-8 md:px-6 md:py-10">
       <div class="flex flex-col gap-1">
         <h1 class="text-2xl font-semibold">
           {{ $t('local.home.title') }}
@@ -105,75 +112,63 @@ useDocumentTitle(() => t('local.home.title'))
       </div>
 
       <form class="flex items-stretch gap-2" @submit.prevent="open">
-        <FormTextInput v-model="url" :placeholder="$t('local.home.urlPlaceholder')" icon="i-ph:link-duotone" class="flex-1" />
+        <FormTextInput v-model="url" :placeholder="$t('local.home.urlPlaceholder')" icon="i-ph:link-duotone" class="min-w-0 flex-1" />
         <ActionButton type="submit" variant="primary" icon="i-ph-arrow-right-bold" :disabled="!parsed">
           {{ $t('local.home.open') }}
         </ActionButton>
       </form>
 
+      <div class="flex flex-wrap items-center gap-x-3 gap-y-2">
+        <FormTextInput v-model="search" :placeholder="$t('local.home.search')" icon="i-ph:magnifying-glass-duotone" class="min-w-0 flex-1 basis-60" />
+        <ActionToggleGroup v-model="state" :options="stateOptions" />
+        <HomeSyncStatus :updating="updating" :fetched-at="fetchedAt" :error="pulls ? error : undefined" class="ml-auto" @refresh="reload" />
+      </div>
+
       <FeedbackLoading v-if="!pulls && !error" :text="$t('local.home.loading')" />
 
-      <FeedbackEmptyState v-else-if="error" icon="i-ph:warning-duotone" :title="$t('local.home.failed')">
+      <FeedbackEmptyState v-else-if="!pulls" icon="i-ph:warning-duotone" :title="$t('local.home.failed')">
         <template #hint>
           {{ error }}
         </template>
         <template #actions>
-          <ActionButton variant="primary" @click="load">
+          <ActionButton variant="primary" :disabled="updating" @click="reload">
             {{ $t('common.retry') }}
           </ActionButton>
         </template>
       </FeedbackEmptyState>
 
-      <template v-else>
-        <div class="flex items-center gap-2">
-          <FormTextInput v-model="query" :placeholder="$t('local.home.search')" icon="i-ph:magnifying-glass-duotone" class="flex-1" />
-          <ActionToggleGroup :model-value="state" :options="stateOptions" @update:model-value="setState($event as MyPullState)" />
-        </div>
+      <div v-else class="grid gap-4 md:grid-cols-[13rem_minmax(0,1fr)] md:gap-6">
+        <aside class="min-w-0 md:sticky md:top-4 md:self-start">
+          <HomeQueueNav
+            v-model:queue="queue"
+            v-model:role="role"
+            :queue-counts="filtered.queueCounts"
+            :role-counts="filtered.roleCounts"
+            :show-queues="state === 'open'"
+          />
+        </aside>
 
-        <div class="flex flex-wrap items-center gap-2">
-          <button
-            v-for="item in filters"
-            :key="item.value"
-            type="button"
-            class="border border-base rounded-full px-3 py-1 text-xs transition hover:bg-hover"
-            :class="filter === item.value ? 'bg-hover color-base font-medium' : 'op-fade'"
-            @click="filter = item.value"
-          >
-            {{ item.label }} <span class="font-mono op-fade">{{ item.count }}</span>
-          </button>
-          <ActionButton size="sm" variant="text" icon="i-ph:arrows-clockwise-duotone" class="ml-auto" @click="load">
-            {{ $t('local.home.refresh') }}
-          </ActionButton>
-        </div>
+        <section class="min-w-0 flex flex-col gap-4">
+          <FeedbackEmptyState v-if="!groups.length" icon="i-ph:git-pull-request-duotone" :title="queue === 'all' ? $t('local.home.empty') : $t('triage.empty')" />
 
-        <FeedbackEmptyState v-if="!groups.length" icon="i-ph:git-pull-request-duotone" :title="$t('local.home.empty')" />
-
-        <details v-for="group in groups" :key="group.name" open class="group flex flex-col gap-2">
-          <summary class="flex cursor-pointer select-none list-none items-center gap-2 text-sm font-mono">
-            <span class="i-ph:caret-right-bold text-xs op-fade transition group-open:rotate-90" aria-hidden="true" />
-            <span class="i-ph:git-branch-duotone op-fade" aria-hidden="true" />
-            <span>{{ group.name }}</span>
-            <span class="op-fade">{{ group.items.length }}</span>
-            <RouterLink :to="repoRoute(group.owner, group.repo)" class="ml-auto text-xs op-fade hover:underline" @click.stop>
-              {{ $t('local.home.allInRepo') }}
-            </RouterLink>
-          </summary>
-          <ul class="flex flex-col border border-base rounded-lg py-1">
-            <li v-for="pull in group.items" :key="pull.number">
-              <RouterLink :to="pullRoute(pull)" class="flex items-center gap-3 px-3 py-2 text-sm transition hover:bg-hover">
-                <span class="w-12 shrink-0 font-mono text-xs op-fade">#{{ pull.number }}</span>
-                <span class="min-w-0 flex-1 truncate">
-                  <span v-if="pull.isDraft" class="mr-1 text-xs op-fade">[{{ $t('local.home.draft') }}]</span>{{ pull.title }}
-                </span>
-                <span v-for="label in pull.labels.slice(0, 2)" :key="label" class="hidden shrink-0 rounded bg-hover px-1.5 py-0.5 text-xs op-fade md:inline">{{ label }}</span>
-                <span v-if="pull.role === 'review-requested'" class="shrink-0 rounded bg-hover px-1.5 py-0.5 text-xs color-accent-teal">{{ $t('local.home.role.review-requested') }}</span>
-                <span class="hidden shrink-0 text-xs op-fade sm:inline">{{ pull.author }}</span>
-                <span class="w-24 shrink-0 text-right text-xs op-fade">{{ formatTimeAgo(new Date(pull.updatedAt), locale) }}</span>
+          <details v-for="group in groups" :key="group.name" open class="group flex flex-col gap-2">
+            <summary class="flex cursor-pointer select-none list-none items-center gap-2 text-sm font-mono">
+              <span class="i-ph:caret-right-bold text-xs op-fade transition group-open:rotate-90" aria-hidden="true" />
+              <span class="i-ph:git-branch-duotone op-fade" aria-hidden="true" />
+              <span class="min-w-0 truncate">{{ group.name }}</span>
+              <span class="op-fade">{{ group.pulls.length }}</span>
+              <RouterLink :to="repoRoute(group.owner, group.repo)" class="ml-auto shrink-0 text-xs op-fade hover:underline" @click.stop>
+                {{ $t('local.home.allInRepo') }}
               </RouterLink>
-            </li>
-          </ul>
-        </details>
-      </template>
+            </summary>
+            <ul class="mt-2 flex flex-col border border-base rounded-lg py-1">
+              <li v-for="pull in group.pulls" :key="pull.number">
+                <HomePullRow :pull="pull" @intent="prefetcher.hover" @leave="prefetcher.leave" />
+              </li>
+            </ul>
+          </details>
+        </section>
+      </div>
     </main>
 
     <AppFooter />

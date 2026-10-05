@@ -148,6 +148,8 @@ export interface DiffsStore {
   readonly error: Error | undefined
   /** Only meaningful once `diff`/`grouped` are loaded - a source with no live origin (paste) just never sets this. */
   readonly isStale: boolean
+  /** The server or GitHub could not be reached, so the page shows a saved copy that may be out of date. */
+  readonly isOffline?: boolean
   readonly reviewed: Set<string>
   /**
    * Paths reviewed at an earlier `sha` that later commits replaced. Only meaningful for

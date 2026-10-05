@@ -10,6 +10,7 @@ import { useAppContext } from '../../../../app-context'
 import DiffsPage from '../../../../components/diff/DiffsPage.vue'
 import { useDocumentTitle } from '../../../../composables/useDocumentTitle'
 import { resolveStoredTokenMeta } from '../../../../composables/useGithubTokenMeta'
+import { prSnapshots } from '../../../../state/snapshots'
 import { createDiffsStore } from '../../../../stores/diffs-store'
 
 const props = defineProps<{ sourceRef: RoutableRef }>()
@@ -23,7 +24,11 @@ const ref = props.sourceRef
 // `?from=<login>` deep-links a shared analysis (see plans/07); read once, never rewritten.
 const from = typeof route.query.from === 'string' ? route.query.from : undefined
 
-const store = createDiffsStore(createGithubSource(ref, credentials, { tokenMeta: resolveStoredTokenMeta }), { cache, from })
+const store = createDiffsStore(createGithubSource(ref, credentials, { tokenMeta: resolveStoredTokenMeta }), {
+  cache,
+  from,
+  snapshots: import.meta.env.PR_LOCAL ? prSnapshots() : undefined,
+})
 
 // Matches the header's title and label; before the diff loads, the repo still
 // identifies what is opening.
