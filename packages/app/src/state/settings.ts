@@ -29,6 +29,9 @@ export const settings = useLocalStorage<Settings>('diffs:settings', defaultSetti
     // seed the explicit selection the same way so existing setups keep working.
     if (!storage?.llm?.provider)
       llm.provider = deriveProvider(llm)
+    // The local build has no API keys; whatever a browser stored from the site falls back to Claude Code.
+    if (import.meta.env.PR_LOCAL && llm.provider !== 'codex')
+      llm.provider = 'claude-code'
     // A locale this build no longer ships (or none stored yet) falls back to the browser's.
     const locale = isLocale(storage?.locale) ? storage.locale : defaults.locale
     return { ...defaults, ...storage, llm, locale }

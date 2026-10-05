@@ -1,4 +1,5 @@
-export const LLM_PROVIDERS = ['gateway', 'anthropic', 'openai-compatible'] as const
+/** `claude-code` and `codex` run the server's signed-in CLIs; the rest call an API with a key from the browser. */
+export const LLM_PROVIDERS = ['claude-code', 'codex', 'gateway', 'anthropic', 'openai-compatible'] as const
 export type LlmProvider = typeof LLM_PROVIDERS[number]
 
 export function isLlmProvider(value: string): value is LlmProvider {
@@ -12,6 +13,8 @@ export function isLlmProvider(value: string): value is LlmProvider {
  */
 export interface LlmSettings {
   provider: LlmProvider
+  claudeCodeModel: string
+  codexModel: string
   gatewayToken: string
   gatewayModel: string
   anthropicApiKey: string
@@ -23,6 +26,8 @@ export interface LlmSettings {
 
 export const defaultLlmSettings: LlmSettings = {
   provider: 'gateway',
+  claudeCodeModel: 'claude-sonnet-5',
+  codexModel: 'gpt-5.6-sol',
   gatewayToken: '',
   gatewayModel: 'anthropic/claude-sonnet-5',
   anthropicApiKey: '',

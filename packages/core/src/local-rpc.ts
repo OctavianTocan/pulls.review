@@ -22,4 +22,9 @@ export const LOCAL_RPC = {
   storageRemoveItem: 'storage-remove-item',
   storageGetKeys: 'storage-get-keys',
   githubToken: 'github-token',
+  /** One prompt through the server's Claude Code or Codex CLI. */
+  llmRun: 'llm-run',
 } as const
+
+/** The CLIs the server can run a model prompt through. */
+export const LLM_ENGINES = ['claude-code', 'codex'] as const

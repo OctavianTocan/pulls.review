@@ -24,10 +24,16 @@ function customModel(id: string, api: Api, provider: string, baseUrl: string): M
 /**
  * Resolves the model to call: only the explicitly selected provider is used,
  * even when several tokens are configured. `undefined` means the selected
- * provider has no token.
+ * API provider has no token; the CLI providers need none.
  */
 export function resolveModel(llm: LlmSettings): ResolvedModel | undefined {
   switch (llm.provider) {
+    case 'claude-code':
+      return { model: customModel(llm.claudeCodeModel, 'anthropic-messages', 'claude-code', ''), apiKey: '' }
+
+    case 'codex':
+      return { model: customModel(llm.codexModel, 'openai-completions', 'codex', ''), apiKey: '' }
+
     case 'gateway':
       return llm.gatewayToken
         ? { model: customModel(llm.gatewayModel, 'anthropic-messages', 'vercel-ai-gateway', 'https://ai-gateway.vercel.sh'), apiKey: llm.gatewayToken }

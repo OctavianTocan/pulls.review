@@ -54,6 +54,9 @@ async function listOpenAiCompatibleModels(baseUrl: string, apiKey: string): Prom
 /** Fetches the selected provider's model catalog with its configured credentials. */
 export function listModels(llm: LlmSettings): Promise<ModelOption[]> {
   switch (llm.provider) {
+    case 'claude-code':
+    case 'codex':
+      return Promise.resolve([])
     case 'gateway':
       return listGatewayModels(llm.gatewayToken)
     case 'anthropic':

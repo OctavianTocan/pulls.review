@@ -18,6 +18,9 @@ defineProps<{
   modelsError?: string
 }>()
 
+// The server's `gh` login supplies GitHub access, so the local build has no token to enter.
+const isLocal = import.meta.env.PR_LOCAL
+
 defineEmits<{
   /** Save a new GitHub token (validated by the container); `''` removes it. */
   'saveGithubToken': [token: string]
@@ -35,15 +38,17 @@ defineEmits<{
 
     <div class="border-t border-base" />
 
-    <GithubTokenSettings
-      :token-set="githubTokenSet"
-      :meta="githubTokenMeta"
-      :busy="githubTokenBusy"
-      :error="githubTokenError"
-      @save="$emit('saveGithubToken', $event)"
-    />
+    <template v-if="!isLocal">
+      <GithubTokenSettings
+        :token-set="githubTokenSet"
+        :meta="githubTokenMeta"
+        :busy="githubTokenBusy"
+        :error="githubTokenError"
+        @save="$emit('saveGithubToken', $event)"
+      />
 
-    <div class="border-t border-base" />
+      <div class="border-t border-base" />
+    </template>
 
     <LlmSettingsSection
       :llm-settings="llmSettings"

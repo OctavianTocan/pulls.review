@@ -1,6 +1,8 @@
 import type { App } from 'vue'
 import type { Router } from 'vue-router'
 import { createCacheRepositories } from '@pulls.review/core/cache'
+import { setCliRunner } from '@pulls.review/core/llm'
+import { LOCAL_RPC } from '@pulls.review/core/local-rpc'
 import { createStorage } from 'unstorage'
 import { createApp } from 'vue'
 import { installAppContext, settingsCredentials } from '../app-context'
@@ -40,6 +42,7 @@ export async function installLocal(app: App, router: Router): Promise<void> {
     credentials: createRpcCredentials(rpc, settingsCredentials),
   })
   app.provide(localRpcKey, rpc)
+  setCliRunner(async request => String(await rpc.call(LOCAL_RPC.llmRun, request)))
 
   for (const route of localRoutes(() => import('../pages-local/diff.vue')))
     router.addRoute(route)

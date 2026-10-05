@@ -25,6 +25,20 @@ const emit = defineEmits<{
 // requests AI providers need. Keyed off the compile-time `PR_EMBED` flag, not a prop.
 const isEmbedded = import.meta.env.PR_EMBED
 
+// The local build has no API keys: Claude Code and Codex run on the server under its own sign-in.
+const isLocal = import.meta.env.PR_LOCAL
+type ApiProvider = Exclude<LlmProvider, 'claude-code' | 'codex'>
+
+const cliOptions = [
+  { value: 'claude-code', label: 'Claude Code', icon: 'i-simple-icons-claude' },
+  { value: 'codex', label: 'Codex', icon: 'i-simple-icons-openai' },
+]
+
+const cliModel = computed({
+  get: () => props.llmSettings.provider === 'codex' ? props.llmSettings.codexModel : props.llmSettings.claudeCodeModel,
+  set: value => update(props.llmSettings.provider === 'codex' ? { codexModel: value } : { claudeCodeModel: value }),
+})
+
 interface ProviderConfig {
   tokenKey: 'gatewayToken' | 'anthropicApiKey' | 'openaiApiKey'
   modelKey: 'gatewayModel' | 'anthropicModel' | 'openaiModel'
@@ -32,7 +46,7 @@ interface ProviderConfig {
   createKey: { vendor: string, url: string }
 }
 
-const providerConfigs: Record<LlmProvider, ProviderConfig> = {
+const providerConfigs: Record<ApiProvider, ProviderConfig> = {
   'gateway': { tokenKey: 'gatewayToken', modelKey: 'gatewayModel', placeholder: 'vck_…', createKey: { vendor: 'Vercel', url: 'https://vercel.com/d?to=%2F%5Bteam%5D%2F%7E%2Fai-gateway%2Fapi-keys' } },
   'anthropic': { tokenKey: 'anthropicApiKey', modelKey: 'anthropicModel', placeholder: 'sk-ant-…', createKey: { vendor: 'Anthropic', url: 'https://console.anthropic.com/settings/keys' } },
   'openai-compatible': { tokenKey: 'openaiApiKey', modelKey: 'openaiModel', placeholder: 'sk-…', createKey: { vendor: 'OpenAI', url: 'https://platform.openai.com/api-keys' } },
@@ -44,7 +58,7 @@ const providerOptions = [
   { value: 'openai-compatible', label: 'OpenAI-compatible', icon: 'i-simple-icons-openai' },
 ]
 
-const config = computed(() => providerConfigs[props.llmSettings.provider])
+const config = computed(() => providerConfigs[props.llmSettings.provider as ApiProvider])
 const token = computed(() => props.llmSettings[config.value.tokenKey])
 const isOpenAi = computed(() => props.llmSettings.provider === 'openai-compatible')
 
@@ -107,15 +121,31 @@ const model = computed({
         </p>
       </div>
 
-      <FormField :label="$t('settings.llm.provider')">
-        <ActionToggleGroup
-          :model-value="llmSettings.provider"
-          :options="providerOptions"
-          @update:model-value="update({ provider: $event as LlmProvider })"
-        />
-      </FormField>
+      <template v-if="isLocal">
+        <FormField :label="$t('settings.llm.provider')">
+          <ActionToggleGroup
+            :model-value="llmSettings.provider"
+            :options="cliOptions"
+            @update:model-value="update({ provider: $event as LlmProvider })"
+          />
+        </FormField>
 
-      <template v-if="!token || editing">
+        <FormField :label="$t('settings.llm.model')">
+          <FormTextInput v-model="cliModel" />
+        </FormField>
+      </template>
+
+      <template v-else>
+        <FormField :label="$t('settings.llm.provider')">
+          <ActionToggleGroup
+            :model-value="llmSettings.provider"
+            :options="providerOptions"
+            @update:model-value="update({ provider: $event as LlmProvider })"
+          />
+        </FormField>
+      </template>
+
+      <template v-if="!isLocal && (!token || editing)">
         <FormField v-if="isOpenAi" :label="$t('settings.llm.baseUrl')" :description="$t('settings.llm.baseUrlDescription')">
           <FormTextInput
             v-model="draftBaseUrl"
@@ -167,7 +197,7 @@ const model = computed({
         </FormField>
       </template>
 
-      <template v-else>
+      <template v-else-if="!isLocal">
         <FormField :label="$t('settings.llm.apiKey')">
           <div class="h-9 flex items-center gap-2 border border-base rounded bg-raised px-3 text-sm">
             <span class="i-ph:check-circle-duotone shrink-0 color-active" aria-hidden="true" />

@@ -24,6 +24,12 @@ Target (git revision syntax):
 Options:
   --worktree     open the uncommitted changes against HEAD
   --port <port>  port to listen on
+  --host <host>  address to bind (default localhost)
+  --allow-origin <origin>
+                 accept browser connections from this origin, e.g. behind a
+                 tunnel (repeatable)
+  --no-auth      skip the terminal code gate; only for a deployment whose
+                 reverse proxy already authenticates every request
   --no-open      do not open the browser
   -h, --help
 
@@ -51,6 +57,9 @@ async function main() {
     options: {
       'worktree': { type: 'boolean' },
       'port': { type: 'string' },
+      'host': { type: 'string' },
+      'allow-origin': { type: 'string', multiple: true },
+      'no-auth': { type: 'boolean' },
       'no-open': { type: 'boolean' },
       'help': { type: 'boolean', short: 'h' },
     },
@@ -64,6 +73,9 @@ async function main() {
   await createDevServer(devframe, {
     app: createAppWithRefRoutes(),
     port: flags.port ? Number(flags.port) : undefined,
+    host: flags.host,
+    allowedOrigins: flags['allow-origin'],
+    ...(flags['no-auth'] ? { auth: false } : {}),
     openBrowser: flags['no-open'] ? false : page,
     onReady: ({ origin }) => {
       process.stdout.write(`pulls.review is serving ${origin}${page}\n`)

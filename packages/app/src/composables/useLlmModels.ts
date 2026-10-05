@@ -9,6 +9,9 @@ import { settings } from '../state/settings'
 /** The selected provider's configured token/key ('' when unset). */
 export function llmToken(llm: LlmSettings): string {
   switch (llm.provider) {
+    case 'claude-code':
+    case 'codex':
+      return ''
     case 'gateway':
       return llm.gatewayToken
     case 'anthropic':

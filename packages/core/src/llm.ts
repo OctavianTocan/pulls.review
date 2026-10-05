@@ -5,6 +5,7 @@
 export * from './analyze/adapters/llm'
 export * from './analyze/adapters/llm/agent'
 export * from './analyze/adapters/llm/chat'
+export * from './analyze/adapters/llm/cli-stream'
 export * from './analyze/adapters/llm/list-models'
 export * from './analyze/adapters/llm/prompt'
 export * from './analyze/adapters/llm/runtime'

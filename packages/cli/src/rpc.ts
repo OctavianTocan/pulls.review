@@ -1,11 +1,12 @@
 import type { Env } from '@pulls.review/core/env'
 import type { Driver } from 'unstorage'
 import { createLocalSource, readRepoInfo } from '@pulls.review/core/local'
-import { LOCAL_RPC } from '@pulls.review/core/local-rpc'
+import { LLM_ENGINES, LOCAL_RPC } from '@pulls.review/core/local-rpc'
 import { DiffsPayloadSchema } from '@pulls.review/core/types'
 import { defineRpcFunction } from 'devframe'
 import * as v from 'valibot'
 import { resolveGithubToken } from './credentials'
+import { runLlm } from './llm'
 
 export interface LocalRpcOptions {
   /** Any directory inside the repository under review. */
@@ -71,5 +72,19 @@ export function localRpcFunctions({ cwd, driver, env }: LocalRpcOptions) {
       handler: ({ base }) => driver.getKeys(base, {}),
     }),
     defineRpcFunction({ name: LOCAL_RPC.githubToken, type: 'query', handler: () => resolveGithubToken(env) }),
+    defineRpcFunction({
+      name: LOCAL_RPC.llmRun,
+      type: 'action',
+      args: [v.object({
+        engine: v.picklist(LLM_ENGINES),
+        model: v.optional(v.string()),
+        effort: v.optional(v.string()),
+        system: v.string(),
+        prompt: v.string(),
+        schema: v.optional(v.unknown()),
+      })],
+      returns: v.string(),
+      handler: request => runLlm(request),
+    }),
   ]
 }
