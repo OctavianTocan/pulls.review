@@ -3,7 +3,7 @@
   "type": "module",
   "version": "0.0.0",
   "private": true,
-  "packageManager": "pnpm@12.6.0",
+  "packageManager": "pnpm@12.9.1",
   "description": "Review pull requests with grouped, summarized, and beautiful diffs.",
   "author": "Anthony Fu <hi@antfu.me>",
   "license": "MIT",
