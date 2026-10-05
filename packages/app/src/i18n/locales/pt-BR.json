@@ -171,7 +171,7 @@
     "thinking": "Pensando… (etapa {step})",
     "reading": "Lendo {n} arquivo: {first} | Lendo {n} arquivos: {first}",
     "organizing": "Organizando grupos…",
-    "notConfigured": "A análise de IA não está configurada: adicione um token de gateway ou uma API key de fornecedor nas Configurações",
+    "notConfigured": "AI analysis is not configured: pick Claude Code or Codex in Settings",
     "chatFailed": "A solicitação do chat falhou"
   },
   "share": {
@@ -379,6 +379,30 @@
     "tooLarge": "A análise é grande demais para ser compartilhada como comentário ({n} caracteres)."
   },
   "local": {
+    "home": {
+      "title": "Your pull requests",
+      "tagline": "Open pull requests you're involved in on GitHub, grouped by repository.",
+      "search": "Filter by repo, title, author or label",
+      "allInRepo": "All pull requests",
+      "state": {
+        "open": "Open",
+        "closed": "Closed"
+      },
+      "urlPlaceholder": "Paste a GitHub pull request or repository URL",
+      "open": "Open",
+      "loading": "Loading your pull requests…",
+      "failed": "Couldn't load your pull requests",
+      "refresh": "Refresh",
+      "empty": "No open pull requests here",
+      "all": "All",
+      "draft": "draft",
+      "role": {
+        "review-requested": "Review requested",
+        "authored": "Authored",
+        "involved": "Involved",
+        "owned": "In your repos"
+      }
+    },
     "loading": "Carregando alterações locais…",
     "loadFailed": "Não foi possível carregar estas alterações",
     "auth": {

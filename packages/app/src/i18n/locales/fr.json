@@ -171,7 +171,7 @@
     "thinking": "Réflexion… (étape {step})",
     "reading": "Lecture de {n} fichier : {first} | Lecture de {n} fichiers : {first}",
     "organizing": "Organisation des groupes…",
-    "notConfigured": "L'analyse IA n'est pas configurée : ajoutez un token gateway ou une API key de fournisseur dans les Paramètres",
+    "notConfigured": "AI analysis is not configured: pick Claude Code or Codex in Settings",
     "chatFailed": "La requête du chat a échoué"
   },
   "share": {
@@ -379,6 +379,30 @@
     "tooLarge": "L'analyse est trop volumineuse pour être partagée en commentaire ({n} caractères)."
   },
   "local": {
+    "home": {
+      "title": "Your pull requests",
+      "tagline": "Open pull requests you're involved in on GitHub, grouped by repository.",
+      "search": "Filter by repo, title, author or label",
+      "allInRepo": "All pull requests",
+      "state": {
+        "open": "Open",
+        "closed": "Closed"
+      },
+      "urlPlaceholder": "Paste a GitHub pull request or repository URL",
+      "open": "Open",
+      "loading": "Loading your pull requests…",
+      "failed": "Couldn't load your pull requests",
+      "refresh": "Refresh",
+      "empty": "No open pull requests here",
+      "all": "All",
+      "draft": "draft",
+      "role": {
+        "review-requested": "Review requested",
+        "authored": "Authored",
+        "involved": "Involved",
+        "owned": "In your repos"
+      }
+    },
     "loading": "Chargement des modifications locales…",
     "loadFailed": "Impossible de charger ces modifications",
     "auth": {

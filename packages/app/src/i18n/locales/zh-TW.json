@@ -171,7 +171,7 @@
     "thinking": "思考中…（第 {step} 步）",
     "reading": "正在讀取 {n} 個檔案：{first}",
     "organizing": "正在整理群組…",
-    "notConfigured": "尚未設定 AI 分析：請在設定中新增 gateway token 或廠商 API key",
+    "notConfigured": "AI analysis is not configured: pick Claude Code or Codex in Settings",
     "chatFailed": "對話請求失敗"
   },
   "share": {
@@ -379,6 +379,30 @@
     "tooLarge": "分析內容過大，無法以留言分享（{n} 個字元）。"
   },
   "local": {
+    "home": {
+      "title": "Your pull requests",
+      "tagline": "Open pull requests you're involved in on GitHub, grouped by repository.",
+      "search": "Filter by repo, title, author or label",
+      "allInRepo": "All pull requests",
+      "state": {
+        "open": "Open",
+        "closed": "Closed"
+      },
+      "urlPlaceholder": "Paste a GitHub pull request or repository URL",
+      "open": "Open",
+      "loading": "Loading your pull requests…",
+      "failed": "Couldn't load your pull requests",
+      "refresh": "Refresh",
+      "empty": "No open pull requests here",
+      "all": "All",
+      "draft": "draft",
+      "role": {
+        "review-requested": "Review requested",
+        "authored": "Authored",
+        "involved": "Involved",
+        "owned": "In your repos"
+      }
+    },
     "loading": "正在載入本機變更…",
     "loadFailed": "無法載入這些變更",
     "auth": {

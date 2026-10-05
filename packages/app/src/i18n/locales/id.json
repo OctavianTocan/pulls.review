@@ -171,7 +171,7 @@
     "thinking": "Berpikir… (langkah {step})",
     "reading": "Membaca {n} berkas: {first}",
     "organizing": "Menyusun grup…",
-    "notConfigured": "Analisis AI belum dikonfigurasi: tambahkan token gateway atau API key penyedia di Pengaturan",
+    "notConfigured": "AI analysis is not configured: pick Claude Code or Codex in Settings",
     "chatFailed": "Permintaan chat gagal"
   },
   "share": {
@@ -379,6 +379,30 @@
     "tooLarge": "Analisis terlalu besar untuk dibagikan sebagai komentar ({n} karakter)."
   },
   "local": {
+    "home": {
+      "title": "Your pull requests",
+      "tagline": "Open pull requests you're involved in on GitHub, grouped by repository.",
+      "search": "Filter by repo, title, author or label",
+      "allInRepo": "All pull requests",
+      "state": {
+        "open": "Open",
+        "closed": "Closed"
+      },
+      "urlPlaceholder": "Paste a GitHub pull request or repository URL",
+      "open": "Open",
+      "loading": "Loading your pull requests…",
+      "failed": "Couldn't load your pull requests",
+      "refresh": "Refresh",
+      "empty": "No open pull requests here",
+      "all": "All",
+      "draft": "draft",
+      "role": {
+        "review-requested": "Review requested",
+        "authored": "Authored",
+        "involved": "Involved",
+        "owned": "In your repos"
+      }
+    },
     "loading": "Memuat perubahan lokal…",
     "loadFailed": "Tidak dapat memuat perubahan ini",
     "auth": {

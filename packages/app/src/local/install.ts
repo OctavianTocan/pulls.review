@@ -46,7 +46,9 @@ export async function installLocal(app: App, router: Router): Promise<void> {
 
   for (const route of localRoutes(() => import('../pages-local/diff.vue')))
     router.addRoute(route)
-  // The ref picker replaces the site's landing page.
+  // Your open pull requests, grouped by repository, replace the site's landing page;
+  // the checkout's own ref picker moves to `/checkout`.
   router.removeRoute('home')
   router.addRoute({ path: '/', component: () => import('../pages-local/index.vue') })
+  router.addRoute({ path: '/checkout', component: () => import('../pages-local/checkout.vue') })
 }

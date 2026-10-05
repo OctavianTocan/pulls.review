@@ -171,7 +171,7 @@
     "thinking": "思考中…（ステップ {step}）",
     "reading": "{n} ファイルを読み取り中：{first}",
     "organizing": "グループを整理中…",
-    "notConfigured": "AI 分析が設定されていません：設定で gateway トークンまたはベンダーの API キーを追加してください",
+    "notConfigured": "AI analysis is not configured: pick Claude Code or Codex in Settings",
     "chatFailed": "チャットのリクエストに失敗しました"
   },
   "share": {
@@ -379,6 +379,30 @@
     "tooLarge": "分析が大きすぎてコメントとして共有できません（{n} 文字）。"
   },
   "local": {
+    "home": {
+      "title": "Your pull requests",
+      "tagline": "Open pull requests you're involved in on GitHub, grouped by repository.",
+      "search": "Filter by repo, title, author or label",
+      "allInRepo": "All pull requests",
+      "state": {
+        "open": "Open",
+        "closed": "Closed"
+      },
+      "urlPlaceholder": "Paste a GitHub pull request or repository URL",
+      "open": "Open",
+      "loading": "Loading your pull requests…",
+      "failed": "Couldn't load your pull requests",
+      "refresh": "Refresh",
+      "empty": "No open pull requests here",
+      "all": "All",
+      "draft": "draft",
+      "role": {
+        "review-requested": "Review requested",
+        "authored": "Authored",
+        "involved": "Involved",
+        "owned": "In your repos"
+      }
+    },
     "loading": "ローカルの変更を読み込み中…",
     "loadFailed": "これらの変更を読み込めませんでした",
     "auth": {

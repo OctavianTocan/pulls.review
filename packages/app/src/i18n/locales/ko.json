@@ -171,7 +171,7 @@
     "thinking": "생각 중… ({step}단계)",
     "reading": "파일 {n}개 읽는 중: {first}",
     "organizing": "그룹 정리 중…",
-    "notConfigured": "AI 분석이 설정되지 않았습니다: 설정에서 gateway 토큰이나 공급자 API 키를 추가하세요",
+    "notConfigured": "AI analysis is not configured: pick Claude Code or Codex in Settings",
     "chatFailed": "채팅 요청 실패"
   },
   "share": {
@@ -379,6 +379,30 @@
     "tooLarge": "분석이 너무 커서 댓글로 공유할 수 없습니다 ({n}자)."
   },
   "local": {
+    "home": {
+      "title": "Your pull requests",
+      "tagline": "Open pull requests you're involved in on GitHub, grouped by repository.",
+      "search": "Filter by repo, title, author or label",
+      "allInRepo": "All pull requests",
+      "state": {
+        "open": "Open",
+        "closed": "Closed"
+      },
+      "urlPlaceholder": "Paste a GitHub pull request or repository URL",
+      "open": "Open",
+      "loading": "Loading your pull requests…",
+      "failed": "Couldn't load your pull requests",
+      "refresh": "Refresh",
+      "empty": "No open pull requests here",
+      "all": "All",
+      "draft": "draft",
+      "role": {
+        "review-requested": "Review requested",
+        "authored": "Authored",
+        "involved": "Involved",
+        "owned": "In your repos"
+      }
+    },
     "loading": "로컬 변경 사항을 불러오는 중…",
     "loadFailed": "이 변경 사항을 불러올 수 없습니다",
     "auth": {

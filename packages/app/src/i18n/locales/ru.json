@@ -171,7 +171,7 @@
     "thinking": "Думаю… (шаг {step})",
     "reading": "Чтение {n} файлов: {first} | Чтение {n} файла: {first} | Чтение {n} файлов: {first} | Чтение {n} файлов: {first}",
     "organizing": "Формирование групп…",
-    "notConfigured": "ИИ-анализ не настроен: добавьте токен gateway или API-ключ провайдера в настройках",
+    "notConfigured": "AI analysis is not configured: pick Claude Code or Codex in Settings",
     "chatFailed": "Запрос чата не удался"
   },
   "share": {
@@ -379,6 +379,30 @@
     "tooLarge": "Анализ слишком велик, чтобы поделиться им в комментарии ({n} символов)."
   },
   "local": {
+    "home": {
+      "title": "Your pull requests",
+      "tagline": "Open pull requests you're involved in on GitHub, grouped by repository.",
+      "search": "Filter by repo, title, author or label",
+      "allInRepo": "All pull requests",
+      "state": {
+        "open": "Open",
+        "closed": "Closed"
+      },
+      "urlPlaceholder": "Paste a GitHub pull request or repository URL",
+      "open": "Open",
+      "loading": "Loading your pull requests…",
+      "failed": "Couldn't load your pull requests",
+      "refresh": "Refresh",
+      "empty": "No open pull requests here",
+      "all": "All",
+      "draft": "draft",
+      "role": {
+        "review-requested": "Review requested",
+        "authored": "Authored",
+        "involved": "Involved",
+        "owned": "In your repos"
+      }
+    },
     "loading": "Загрузка локальных изменений…",
     "loadFailed": "Не удалось загрузить эти изменения",
     "auth": {
