@@ -1,8 +1,9 @@
 <script setup lang="ts">
 import type { EmbedPr, ReviewLink } from './githubIntegration'
 import ActionButton from '@antfu/design/components/Action/ActionButton.vue'
-import { computed, onBeforeUnmount, onMounted, ref, useTemplateRef, watch, watchEffect } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, useTemplateRef, watch, watchEffect } from 'vue'
 import { useAppContext } from '../app-context'
+import KeyboardLayer from '../components/KeyboardLayer.vue'
 import SettingsModal from '../components/settings/SettingsModal.vue'
 import { i18n } from '../i18n'
 import { settingsModalOpen } from '../state/settingsModal'
@@ -118,6 +119,17 @@ function onResizeDown(event: PointerEvent) {
 // scroll target, AppModal's Teleport target) should read this, not the bare global.
 const document = computed(() => (rootRef.value?.getRootNode() ?? window.document) as Document | ShadowRoot)
 
+// Shortcuts only listen inside the drawer, so it holds focus exactly while it's open.
+const drawer = useTemplateRef<HTMLDivElement>('drawer')
+watch(open, async (isOpen) => {
+  await nextTick()
+  const active = document.value.activeElement
+  if (isOpen)
+    drawer.value?.focus({ preventScroll: true })
+  else if (active instanceof HTMLElement && drawer.value?.contains(active))
+    active.blur()
+})
+
 let stopHijackingLinks: (() => void) | undefined
 let stopKeepingTab: (() => void) | undefined
 onMounted(() => {
@@ -153,7 +165,9 @@ onBeforeUnmount(() => {
 
     <div
       v-if="pr"
-      class="z-[2147483001] fixed right-0 top-0 h-full flex flex-col border-l border-base bg-base color-base shadow-2xl transition-transform"
+      ref="drawer"
+      tabindex="-1"
+      class="z-[2147483001] fixed right-0 top-0 h-full flex flex-col border-l border-base bg-base color-base shadow-2xl outline-none transition-transform"
       :style="{ width: `${width}px`, maxWidth: '92vw', transform: open ? 'translateX(0)' : 'translateX(100%)' }"
     >
       <div
@@ -182,5 +196,6 @@ onBeforeUnmount(() => {
     </div>
 
     <SettingsModal v-model:open="settingsModalOpen" :document="document" />
+    <KeyboardLayer :document="document" :target="drawer" />
   </div>
 </template>

@@ -47,7 +47,8 @@ onBeforeUnmount(() => document.removeEventListener('keydown', onKeydown))
 
 <template>
   <Teleport :to="teleportTarget">
-    <div v-if="open" class="fixed inset-0 z-modal flex items-center justify-center p-4">
+    <!-- In the embed it must clear the drawer, which sits above GitHub's own page. -->
+    <div v-if="open" class="fixed inset-0 flex items-center justify-center p-4" :class="teleportTarget === 'body' ? 'z-modal' : 'z-[2147483002]'">
       <div class="fixed inset-0 z-modal-backdrop bg-[#ddd]/40 backdrop-blur-sm dark:bg-black/40" @click="close" />
       <div
         role="dialog"
