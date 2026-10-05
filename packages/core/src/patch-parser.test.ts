@@ -117,4 +117,27 @@ describe('parsePatch', () => {
     ].join('\n'))
     expect(files.map(f => [f.path, f.previousPath])).toEqual([['say "hi".txt', undefined], ['café', 'tab\there']])
   })
+
+  it('reads paths under mnemonic prefixes, without a prefix, and with spaces', async () => {
+    const files = await parsePatch([
+      'diff --git i/src/a.ts w/src/a.ts',
+      '@@ -1 +1 @@',
+      '-a',
+      '+b',
+      'diff --git src/b.ts src/b.ts',
+      '@@ -1 +1 @@',
+      '-a',
+      '+b',
+      'diff --git c/my dir/c.ts w/my dir/c.ts',
+      '@@ -1 +1 @@',
+      '-a',
+      '+b',
+      'diff --git "i/tab\\there" "w/tab\\there"',
+      '@@ -1 +1 @@',
+      '-a',
+      '+b',
+      '',
+    ].join('\n'))
+    expect(files.map(f => f.path)).toEqual(['src/a.ts', 'src/b.ts', 'my dir/c.ts', 'tab\there'])
+  })
 })

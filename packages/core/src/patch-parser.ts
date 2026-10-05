@@ -1,8 +1,8 @@
 import type { DiffHunk, FileChange, FileChangeStatus } from './types/diff'
 
-const GIT_DIFF_HEADER_RE = /^diff --git a\/.* b\/(.*)$/
+const GIT_DIFF_HEADER_RE = /^diff --git [^/\s]+\/.* [^/\s]+\/(.*)$/
 /** Git quotes a path holding a tab, newline, `"` or `\` (and, without `core.quotePath=false`, any non-ASCII byte). */
-const QUOTED_GIT_DIFF_HEADER_RE = /^diff --git "a\/(?:[^"\\]|\\.)*" "b\/((?:[^"\\]|\\.)*)"$/
+const QUOTED_GIT_DIFF_HEADER_RE = /^diff --git "[^/"]+\/(?:[^"\\]|\\.)*" "[^/"]+\/((?:[^"\\]|\\.)*)"$/
 const C_ESCAPES: Record<string, number> = { 'a': 7, 'b': 8, 't': 9, 'n': 10, 'v': 11, 'f': 12, 'r': 13, '"': 34, '\\': 92 }
 
 /** Reverses git's C-style quoting of a path (`"x\"y"` -> `x"y`); octal escapes are UTF-8 bytes. */
@@ -176,11 +176,30 @@ function resolveGitStatusAndPath(preamble: GitPreamble, headerPath: string): { s
   return { status: 'modified', path: headerPath }
 }
 
+/** Reads the path out of an unquoted `diff --git` header whose two halves name the same file, whatever the prefixes. */
+function sameNameHeaderPath(header: string): string | undefined {
+  const names = header.slice('diff --git '.length)
+  if (names.length % 2 === 0)
+    return undefined
+  const middle = (names.length - 1) / 2
+  const [left, right] = [names.slice(0, middle), names.slice(middle + 1)]
+  if (names[middle] !== ' ')
+    return undefined
+  // `--no-prefix` is the only way both sides get the same prefix, so identical halves are the bare path.
+  if (left === right)
+    return right
+  const strip = (name: string) => /^[^/\s]+\/(.+)$/.exec(name)?.[1]
+  const path = strip(right)
+  return path !== undefined && path === strip(left) ? path : undefined
+}
+
 function parseGitChunk(chunk: string): ParsedChunk {
   const lines = chunk.split('\n')
   const header = lines[0] ?? ''
   const quoted = QUOTED_GIT_DIFF_HEADER_RE.exec(header)?.[1]
-  const headerPath = quoted === undefined ? GIT_DIFF_HEADER_RE.exec(header)?.[1] ?? '' : unquoteGitPath(`"${quoted}"`)
+  const headerPath = quoted === undefined
+    ? sameNameHeaderPath(header) ?? GIT_DIFF_HEADER_RE.exec(header)?.[1] ?? ''
+    : unquoteGitPath(`"${quoted}"`)
   const preamble = parseGitPreamble(lines)
   const { status, path, previousPath } = resolveGitStatusAndPath(preamble, headerPath)
   const hunks = preamble.isBinary || preamble.hunkStartIndex === -1 ? [] : parseHunks(lines.slice(preamble.hunkStartIndex))
