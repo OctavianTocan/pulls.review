@@ -57,4 +57,11 @@ describe('local RPC', () => {
     await cache.reviewMarks.set(['sha-a'], true)
     expect(await cache.reviewMarks.get(['sha-a', 'sha-b'])).toEqual(new Set(['sha-a']))
   })
+
+  it('reads and writes many cache keys in one call', async () => {
+    const functions = localRpcFunctions({ cwd: repo, driver: memoryDriver(), env: {} })
+
+    await call(functions, LOCAL_RPC.storageSetItems, { items: [{ key: 'a', value: '1' }, { key: 'b', value: '2' }] })
+    expect(await call(functions, LOCAL_RPC.storageGetItems, { keys: ['b', 'missing', 'a'] })).toEqual(['2', null, '1'])
+  })
 })

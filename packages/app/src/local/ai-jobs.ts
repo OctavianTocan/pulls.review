@@ -1,5 +1,5 @@
-import type { AiActivity, AiJobRequest, AiJobSnapshot, CliModelCatalog, LlmEngine } from '@pulls.review/core/local-rpc'
 import type { CliRunner } from '@pulls.review/core/llm'
+import type { AiActivity, AiJobRequest, AiJobSnapshot, CliModelCatalog, LlmEngine } from '@pulls.review/core/local-rpc'
 import type { LocalRpc } from './connection'
 import { LOCAL_RPC } from '@pulls.review/core/local-rpc'
 

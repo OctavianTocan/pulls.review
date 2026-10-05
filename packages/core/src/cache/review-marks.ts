@@ -32,9 +32,10 @@ export function createReviewMarks(storage: Storage): ReviewMarks {
     },
     async set(shas, reviewed) {
       const reviewedAt = Date.now()
-      await Promise.all(shas.map(sha => reviewed
-        ? storage.setItem(reviewKey(sha), { sha, reviewedAt } satisfies FileReviewState)
-        : storage.removeItem(reviewKey(sha))))
+      if (reviewed)
+        await storage.setItems(shas.map(sha => ({ key: reviewKey(sha), value: { sha, reviewedAt } satisfies FileReviewState })))
+      else
+        await Promise.all(shas.map(sha => storage.removeItem(reviewKey(sha))))
     },
     async prune(remainingShas) {
       const keys = await storage.getKeys(REVIEW_KEY_PREFIX)

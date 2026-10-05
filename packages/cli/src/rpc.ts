@@ -10,7 +10,7 @@ import { listCliModels } from './ai/catalog'
 import { cancelAiJob, listAiJobs, runAiJob, startAiJob, waitAiJob } from './ai/jobs'
 import { resolveGithubToken } from './credentials'
 import { getLens, listLenses } from './lenses'
-import { listMyPulls } from './my-pulls'
+import { cachedMyPulls, listMyPulls } from './my-pulls'
 
 export interface LocalRpcOptions {
   /** Any directory inside the repository under review. */
@@ -146,5 +146,31 @@ export function localRpcFunctions({ cwd, driver, env }: LocalRpcOptions) {
     }),
     defineRpcFunction({ name: LOCAL_RPC.aiJobCancel, type: 'action', args: [v.object({ id: v.string() })], returns: v.boolean(), handler: ({ id }) => cancelAiJob(id) }),
     defineRpcFunction({ name: LOCAL_RPC.aiJobList, type: 'query', handler: () => listAiJobs() }),
+    defineRpcFunction({
+      name: LOCAL_RPC.myPullsCached,
+      type: 'query',
+      args: [v.object({ state: v.picklist(MY_PULL_STATES) })],
+      returns: v.unknown(),
+      handler: async ({ state }) => cachedMyPulls(state),
+    }),
+    defineRpcFunction({
+      name: LOCAL_RPC.storageGetItems,
+      type: 'query',
+      args: [v.object({ keys: v.array(v.string()) })],
+      returns: v.array(v.nullable(v.string())),
+      handler: ({ keys }) => Promise.all(keys.map(async (key) => {
+        const value = await driver.getItem(key, {})
+        return typeof value === 'string' ? value : null
+      })),
+    }),
+    defineRpcFunction({
+      name: LOCAL_RPC.storageSetItems,
+      type: 'action',
+      args: [v.object({ items: v.array(v.object({ key: v.string(), value: v.string() })) })],
+      returns: v.void(),
+      handler: async ({ items }) => {
+        await Promise.all(items.map(({ key, value }) => driver.setItem?.(key, value, {})))
+      },
+    }),
   ]
 }

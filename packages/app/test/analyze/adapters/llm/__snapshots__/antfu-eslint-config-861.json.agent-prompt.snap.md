@@ -47,7 +47,7 @@ test/__snapshots__/factory/
 
 ---DIFFS--- (all diffs included; you may submit directly)
 ### README.md [modified, +44/-0]
-@@ -814,6 +814,50 @@ Running `npx eslint` should prompt you to install the required dependencies, oth
+[hunk 0] @@ -814,6 +814,50 @@ Running `npx eslint` should prompt you to install the required dependencies, oth
  npm i -D @angular-eslint/eslint-plugin @angular-eslint/eslint-plugin-template @angular-eslint/template-parser
  ```
  
@@ -100,7 +100,7 @@ test/__snapshots__/factory/
  This config also provides some optional plugins/rules for extended usage.
 
 ### package.json [modified, +10/-0]
-@@ -58,7 +58,9 @@
+[hunk 0] @@ -58,7 +58,9 @@
      "eslint-plugin-format": ">=0.1.0",
      "eslint-plugin-jsx-a11y": ">=6.10.2",
      "eslint-plugin-react-refresh": "^0.5.0",
@@ -110,7 +110,7 @@ test/__snapshots__/factory/
      "eslint-plugin-svelte": ">=2.35.1",
      "eslint-plugin-vuejs-accessibility": "^2.4.1",
      "prettier-plugin-astro": "^0.14.0",
-@@ -105,9 +107,15 @@
+[hunk 1] @@ -105,9 +107,15 @@
      "eslint-plugin-react-refresh": {
        "optional": true
      },
@@ -126,7 +126,7 @@ test/__snapshots__/factory/
      "eslint-plugin-svelte": {
        "optional": true
      },
-@@ -185,7 +193,9 @@
+[hunk 2] @@ -185,7 +193,9 @@
      "eslint-plugin-format": "catalog:peer",
      "eslint-plugin-jsx-a11y": "catalog:peer",
      "eslint-plugin-react-refresh": "catalog:peer",
@@ -141,7 +141,7 @@ test/__snapshots__/factory/
 (generated file, diff omitted to save tokens)
 
 ### pnpm-workspace.yaml [modified, +3/-0]
-@@ -4,6 +4,7 @@ minimumReleaseAgeExcludePrune: true
+[hunk 0] @@ -4,6 +4,7 @@ minimumReleaseAgeExcludePrune: true
  minimumReleaseAgeExclude:
    - eslint-plugin-pnpm@1.9.1
    - pnpm-workspace-yaml@1.9.1
@@ -149,7 +149,7 @@ test/__snapshots__/factory/
  
  trustPolicy: no-downgrade
  trustPolicyExclude:
-@@ -75,7 +76,9 @@ catalogs:
+[hunk 1] @@ -75,7 +76,9 @@ catalogs:
      eslint-plugin-format: ^2.0.1
      eslint-plugin-jsx-a11y: ^6.10.2
      eslint-plugin-react-refresh: ^0.5.5
@@ -161,7 +161,7 @@ test/__snapshots__/factory/
      prettier-plugin-astro: ^0.14.1
 
 ### src/config-presets.ts [modified, +2/-0]
-@@ -3,6 +3,7 @@ import type { OptionsConfig } from './types'
+[hunk 0] @@ -3,6 +3,7 @@ import type { OptionsConfig } from './types'
  // @keep-sorted
  export const CONFIG_PRESET_FULL_ON: OptionsConfig = {
    angular: true,
@@ -169,7 +169,7 @@ test/__snapshots__/factory/
    astro: true,
    formatters: true,
    gitignore: true,
-@@ -40,6 +41,7 @@ export const CONFIG_PRESET_FULL_ON: OptionsConfig = {
+[hunk 1] @@ -40,6 +41,7 @@ export const CONFIG_PRESET_FULL_ON: OptionsConfig = {
  
  export const CONFIG_PRESET_FULL_OFF: OptionsConfig = {
    angular: false,
@@ -179,7 +179,7 @@ test/__snapshots__/factory/
    gitignore: false,
 
 ### src/configs/antislop.ts [added, +87/-0]
-@@ -0,0 +1,87 @@
+[hunk 0] @@ -0,0 +1,87 @@
 +import type { OptionsAntislop, OptionsHasTypeScript, TypedFlatConfigItem } from '../types'
 +
 +import { ensurePackages, interopDefault } from '../utils'
@@ -269,7 +269,7 @@ test/__snapshots__/factory/
 +}
 
 ### src/configs/index.ts [modified, +1/-0]
-@@ -1,4 +1,5 @@
+[hunk 0] @@ -1,4 +1,5 @@
  export * from './angular'
 +export * from './antislop'
  export * from './astro'
@@ -277,7 +277,7 @@ test/__snapshots__/factory/
  export * from './comments'
 
 ### src/factory.ts [modified, +13/-0]
-@@ -7,6 +7,7 @@ import { findUpSync } from 'find-up-simple'
+[hunk 0] @@ -7,6 +7,7 @@ import { findUpSync } from 'find-up-simple'
  import { isPackageExists } from 'local-pkg'
  import {
    angular,
@@ -285,7 +285,7 @@ test/__snapshots__/factory/
    astro,
    command,
    comments,
-@@ -88,6 +89,7 @@ export function antfu(
+[hunk 1] @@ -88,6 +89,7 @@ export function antfu(
  ): FlatConfigComposer<TypedFlatConfigItem, ConfigNames> {
    const {
      angular: enableAngular = false,
@@ -293,7 +293,7 @@ test/__snapshots__/factory/
      astro: enableAstro = false,
      autoRenamePlugins = true,
      componentExts = [],
-@@ -231,6 +233,17 @@ export function antfu(
+[hunk 2] @@ -231,6 +233,17 @@ export function antfu(
      )
    }
  
@@ -313,7 +313,7 @@ test/__snapshots__/factory/
        stylistic({
 
 ### src/types.ts [modified, +52/-0]
-@@ -195,6 +195,37 @@ export interface OptionsE18e extends OptionsOverrides {
+[hunk 0] @@ -195,6 +195,37 @@ export interface OptionsE18e extends OptionsOverrides {
    performanceImprovements?: boolean
  }
  
@@ -351,7 +351,7 @@ test/__snapshots__/factory/
  export interface OptionsUnicorn extends OptionsOverrides {
    /**
     * Include all rules recommended by `eslint-plugin-unicorn`, instead of only ones picked by Anthony.
-@@ -499,6 +530,27 @@ export interface OptionsConfig extends OptionsComponentExts, OptionsProjectType
+[hunk 1] @@ -499,6 +530,27 @@ export interface OptionsConfig extends OptionsComponentExts, OptionsProjectType
     */
    angular?: boolean | OptionsOverrides
  
@@ -381,7 +381,7 @@ test/__snapshots__/factory/
     *
 
 ### test/__snapshots__/api/@antfu/eslint-config/index.snapshot.d.ts [modified, +433/-2]
-@@ -2,6 +2,10 @@
+[hunk 0] @@ -2,6 +2,10 @@
   * Generated by tsnapi — public API snapshot of `@antfu/eslint-config`
   */
  // #region Interfaces
@@ -392,7 +392,7 @@ test/__snapshots__/factory/
  export interface OptionsComponentExts {
    componentExts?: string[];
  }
-@@ -25,6 +29,7 @@ export interface OptionsConfig extends OptionsComponentExts, OptionsProjectType
+[hunk 1] @@ -25,6 +29,7 @@ export interface OptionsConfig extends OptionsComponentExts, OptionsProjectType
    toml?: boolean | OptionsOverrides;
    astro?: boolean | OptionsOverrides;
    angular?: boolean | OptionsOverrides;
@@ -400,7 +400,7 @@ test/__snapshots__/factory/
    markdown?: boolean | OptionsMarkdown;
    stylistic?: boolean | (StylisticConfig & OptionsOverrides);
    regexp?: boolean | (OptionsRegExp & OptionsOverrides);
-@@ -90,7 +95,7 @@ export interface OptionsMarkdown extends OptionsOverrides {
+[hunk 2] @@ -90,7 +95,7 @@ export interface OptionsMarkdown extends OptionsOverrides {
  export interface OptionsOverrides {
    overrides?: TypedFlatConfigItem['rules'];
  }
@@ -409,7 +409,7 @@ test/__snapshots__/factory/
    catalogs?: boolean;
    json?: boolean;
    yaml?: boolean;
-@@ -103,6 +108,15 @@ export interface OptionsReact extends OptionsOverrides {}
+[hunk 3] @@ -103,6 +108,15 @@ export interface OptionsReact extends OptionsOverrides {}
  export interface OptionsRegExp {
    level?: 'error' | 'warn';
  }
@@ -425,7 +425,7 @@ test/__snapshots__/factory/
  export interface OptionsStylistic {
    stylistic?: boolean | StylisticConfig;
  }
-@@ -864,6 +878,7 @@ export interface RuleOptions {
+[hunk 4] @@ -864,6 +878,7 @@ export interface RuleOptions {
    'pnpm/json-enforce-catalog'?: Linter.RuleEntry<PnpmJsonEnforceCatalog>;
    'pnpm/json-prefer-workspace-settings'?: Linter.RuleEntry<PnpmJsonPreferWorkspaceSettings>;
    'pnpm/json-valid-catalog'?: Linter.RuleEntry<PnpmJsonValidCatalog>;
@@ -433,7 +433,7 @@ test/__snapshots__/factory/
    'pnpm/yaml-enforce-settings'?: Linter.RuleEntry<PnpmYamlEnforceSettings>;
    'pnpm/yaml-no-anonymous-catalog'?: Linter.RuleEntry<[]>;
    'pnpm/yaml-no-duplicate-catalog-item'?: Linter.RuleEntry<PnpmYamlNoDuplicateCatalogItem>;
-@@ -1118,6 +1133,13 @@ export interface RuleOptions {
+[hunk 5] @@ -1118,6 +1133,13 @@ export interface RuleOptions {
    'semi'?: Linter.RuleEntry<Semi>;
    'semi-spacing'?: Linter.RuleEntry<SemiSpacing>;
    'semi-style'?: Linter.RuleEntry<SemiStyle>;
@@ -447,7 +447,7 @@ test/__snapshots__/factory/
    'solid/components-return-once'?: Linter.RuleEntry<[]>;
    'solid/event-handlers'?: Linter.RuleEntry<SolidEventHandlers>;
    'solid/imports'?: Linter.RuleEntry<[]>;
-@@ -1149,6 +1171,285 @@ export interface RuleOptions {
+[hunk 6] @@ -1149,6 +1171,285 @@ export interface RuleOptions {
    'solid/self-closing-comp'?: Linter.RuleEntry<SolidSelfClosingComp>;
    'solid/style-prop'?: Linter.RuleEntry<SolidStyleProp>;
    'solid/valid-use-server'?: Linter.RuleEntry<SolidValidUseServer>;
@@ -733,7 +733,7 @@ test/__snapshots__/factory/
    'sort-imports'?: Linter.RuleEntry<SortImports>;
    'sort-keys'?: Linter.RuleEntry<SortKeys>;
    'sort-vars'?: Linter.RuleEntry<SortVars>;
-@@ -2261,7 +2562,7 @@ export interface StylisticOptions extends StylisticConfig, OptionsOverrides {
+[hunk 7] @@ -2261,7 +2562,7 @@ export interface StylisticOptions extends StylisticConfig, OptionsOverrides {
  
  // #region Types
  export type Awaitable<T> = T | Promise<T>;
@@ -742,7 +742,7 @@ test/__snapshots__/factory/
  export type OptionsTypescript = (OptionsTypeScriptWithTypes & OptionsOverrides & OptionsTypeScriptErasableOnly) | (OptionsTypeScriptParserOptions & OptionsOverrides & OptionsTypeScriptErasableOnly);
  export type ResolvedOptions<T> = T extends boolean ? never : NonNullable<T>;
  export type Rules = Record<string, Linter.RuleEntry<any> | undefined> & RuleOptions;
-@@ -2274,6 +2575,7 @@ export type TypedFlatConfigItem = Omit<ConfigWithExtends, 'plugins' | 'rules'> &
+[hunk 8] @@ -2274,6 +2575,7 @@ export type TypedFlatConfigItem = Omit<ConfigWithExtends, 'plugins' | 'rules'> &
  // #region Functions
  export declare function angular(_?: OptionsOverrides): Promise<TypedFlatConfigItem[]>;
  export declare function antfu(_?: OptionsConfig & Omit<TypedFlatConfigItem, 'files' | 'ignores'>, ..._: Awaitable<TypedFlatConfigItem | TypedFlatConfigItem[] | FlatConfigComposer<any, any> | Linter.Config[]>[]): FlatConfigComposer<TypedFlatConfigItem, ConfigNames>;
@@ -750,7 +750,7 @@ test/__snapshots__/factory/
  export declare function astro(_?: OptionsOverrides & OptionsStylistic & OptionsFiles): Promise<TypedFlatConfigItem[]>;
  export declare function combine(..._: Awaitable<TypedFlatConfigItem | TypedFlatConfigItem[]>[]): Promise<TypedFlatConfigItem[]>;
  export declare function command(): Promise<TypedFlatConfigItem[]>;
-@@ -8124,6 +8426,62 @@ type SemiSpacing = [] | [{
+[hunk 9] @@ -8124,6 +8426,62 @@ type SemiSpacing = [] | [{
    after?: boolean;
  }];
  type SemiStyle = [] | [("last" | "first")];
@@ -813,7 +813,7 @@ test/__snapshots__/factory/
  type SolidEventHandlers = [] | [{
    ignoreCase?: boolean;
    warnOnSpread?: boolean;
-@@ -8159,6 +8517,79 @@ type SolidStyleProp = [] | [{
+[hunk 10] @@ -8159,6 +8517,79 @@ type SolidStyleProp = [] | [{
  type SolidValidUseServer = [] | [{
    clientWrappers?: string[];
  }];
@@ -895,7 +895,7 @@ test/__snapshots__/factory/
    memberSyntaxSortOrder?: [("none" | "all" | "multiple" | "single"), ("none" | "all" | "multiple" | "single"), ("none" | "all" | "multiple" | "single"), ("none" | "all" | "multiple" | "single")];
 
 ### test/__snapshots__/api/@antfu/eslint-config/index.snapshot.js [modified, +1/-0]
-@@ -4,6 +4,7 @@
+[hunk 0] @@ -4,6 +4,7 @@
  // #region Functions
  export async function angular(_) {}
  export function antfu(_, ..._) {}
@@ -905,7 +905,7 @@ test/__snapshots__/factory/
  export async function command() {}
 
 ### test/__snapshots__/factory/default.snap.js [modified, +15/-0]
-@@ -893,6 +893,21 @@
+[hunk 0] @@ -893,6 +893,21 @@
        "pnpm/yaml-no-unused-catalog-item",
      ],
    },
@@ -929,7 +929,7 @@ test/__snapshots__/factory/
        "pnpm-workspace.yaml",
 
 ### test/__snapshots__/factory/full-on.snap.js [modified, +54/-0]
-@@ -515,6 +515,45 @@
+[hunk 0] @@ -515,6 +515,45 @@
        "erasable-syntax-only/parameter-properties",
      ],
    },
@@ -975,7 +975,7 @@ test/__snapshots__/factory/
    {
      "ignores": [
        "**/*.md",
-@@ -1409,6 +1448,21 @@
+[hunk 1] @@ -1409,6 +1448,21 @@
        "pnpm/yaml-no-unused-catalog-item",
      ],
    },
@@ -999,7 +999,7 @@ test/__snapshots__/factory/
        "pnpm-workspace.yaml",
 
 ### test/__snapshots__/factory/in-editor.snap.js [modified, +15/-0]
-@@ -893,6 +893,21 @@
+[hunk 0] @@ -893,6 +893,21 @@
        "pnpm/yaml-no-unused-catalog-item",
      ],
    },
@@ -1023,7 +1023,7 @@ test/__snapshots__/factory/
        "pnpm-workspace.yaml",
 
 ### test/__snapshots__/factory/javascript-vue.snap.js [modified, +15/-0]
-@@ -796,6 +796,21 @@
+[hunk 0] @@ -796,6 +796,21 @@
        "pnpm/yaml-no-unused-catalog-item",
      ],
    },
@@ -1047,7 +1047,7 @@ test/__snapshots__/factory/
        "pnpm-workspace.yaml",
 
 ### test/__snapshots__/factory/less-opinionated.snap.js [modified, +15/-0]
-@@ -891,6 +891,21 @@
+[hunk 0] @@ -891,6 +891,21 @@
        "pnpm/yaml-no-unused-catalog-item",
      ],
    },
@@ -1071,7 +1071,7 @@ test/__snapshots__/factory/
        "pnpm-workspace.yaml",
 
 ### test/__snapshots__/factory/lib.snap.js [modified, +15/-0]
-@@ -894,6 +894,21 @@
+[hunk 0] @@ -894,6 +894,21 @@
        "pnpm/yaml-no-unused-catalog-item",
      ],
    },
@@ -1095,7 +1095,7 @@ test/__snapshots__/factory/
        "pnpm-workspace.yaml",
 
 ### test/__snapshots__/factory/pnpm-without-jsonc.snap.js [modified, +15/-0]
-@@ -804,6 +804,21 @@
+[hunk 0] @@ -804,6 +804,21 @@
        "pnpm/yaml-no-unused-catalog-item",
      ],
    },

@@ -14,6 +14,7 @@ import { commitSelectionRef, formatCommitSelection, parseCommitSelection } from 
 import { createPrOverviewContext, prOverviewKey } from '../../../../components/overview/context'
 import { useDocumentTitle } from '../../../../composables/useDocumentTitle'
 import { resolveStoredTokenMeta } from '../../../../composables/useGithubTokenMeta'
+import { prSnapshots } from '../../../../state/snapshots'
 import { createDiffsStore } from '../../../../stores/diffs-store'
 import { createPrOverviewStore } from '../../../../stores/pr-overview-store'
 
@@ -31,7 +32,11 @@ const pr = source.kind === 'github-pr' ? source : undefined
 // `?from=<login>` deep-links a shared analysis (see plans/07); read once, never rewritten.
 const from = typeof route.query.from === 'string' ? route.query.from : undefined
 
-const store = createDiffsStore(createGithubSource(source, credentials, { tokenMeta: resolveStoredTokenMeta }), { cache, from })
+const store = createDiffsStore(createGithubSource(source, credentials, { tokenMeta: resolveStoredTokenMeta }), {
+  cache,
+  from,
+  snapshots: import.meta.env.PR_LOCAL ? prSnapshots() : undefined,
+})
 
 const overview = pr && createPrOverviewStore(pr, {
   credentials,

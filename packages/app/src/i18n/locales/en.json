@@ -336,6 +336,29 @@
       "pending": "Some checks haven't completed yet"
     }
   },
+  "triage": {
+    "queue": {
+      "needs-review": "Needs my review",
+      "ci-failing": "CI failing",
+      "changes-requested": "Changes requested",
+      "ready-to-merge": "Ready to merge",
+      "stale": "Stale",
+      "all": "All"
+    },
+    "hint": {
+      "needs-review": "Your review is requested",
+      "ci-failing": "A check failed on the latest commit",
+      "changes-requested": "A reviewer asked for changes",
+      "ready-to-merge": "Approved, checks passing and no conflicts",
+      "stale": "No activity for {n} days or more",
+      "all": "Every pull request in the list"
+    },
+    "empty": "Nothing in this queue right now",
+    "requested": "Your review",
+    "conflict": "Conflicts",
+    "conflictHint": "This branch has conflicts that must be resolved",
+    "files": "{n} file | {n} files"
+  },
   "analyze": {
     "setup": "Set up AI",
     "setupTitle": "Pick an AI provider in Settings",
@@ -692,7 +715,15 @@
         "authored": "Authored",
         "involved": "Involved",
         "owned": "In your repos"
-      }
+      },
+      "queues": "Queues",
+      "roles": "Roles",
+      "updating": "Updating…",
+      "updatedAgo": "Updated {time}",
+      "updateFailed": "Couldn't update: {message}"
+    },
+    "snapshot": {
+      "offline": "Couldn't reach the server or GitHub. This is the copy saved on this device and may be out of date."
     },
     "loading": "Loading local changes…",
     "loadFailed": "Couldn't load these changes",

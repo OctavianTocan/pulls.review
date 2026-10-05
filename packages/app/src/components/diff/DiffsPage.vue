@@ -19,6 +19,7 @@ import { diffVirtualizerKey } from './diff-virtualizer'
 import DiffGroup from './DiffGroup.vue'
 import DiffGroupSidebar from './DiffGroupSidebar.vue'
 import DiffsHeader from './DiffsHeader.vue'
+import OfflineBanner from './OfflineBanner.vue'
 import ReviewSummaries from './ReviewSummaries.vue'
 import SharedAnalysisBanner from './SharedAnalysisBanner.vue'
 
@@ -241,6 +242,7 @@ function refreshFromBanner() {
                 </div>
               </div>
             </slot>
+            <OfflineBanner v-if="store?.isOffline" :store="store" />
 
             <SharedAnalysisBanner v-if="store?.shared" :store="store" />
 

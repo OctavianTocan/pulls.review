@@ -131,7 +131,7 @@ packages/runtime-core/src/
 
 ---DIFFS--- (all diffs included; you may submit directly)
 ### packages/reactivity/__tests__/computed.spec.ts [modified, +7/-6]
-@@ -25,8 +25,9 @@ import {
+[hunk 0] @@ -25,8 +25,9 @@ import {
    toRaw,
    triggerRef,
  } from '../src'
@@ -142,7 +142,7 @@ packages/runtime-core/src/
  
  describe('reactivity/computed', () => {
    it('should return updated value', () => {
-@@ -409,9 +410,9 @@ describe('reactivity/computed', () => {
+[hunk 1] @@ -409,9 +410,9 @@ describe('reactivity/computed', () => {
      a.value++
      e.value
  
@@ -155,7 +155,7 @@ packages/runtime-core/src/
      expect(cSpy).toHaveBeenCalledTimes(2)
  
      a.value++
-@@ -466,8 +467,8 @@ describe('reactivity/computed', () => {
+[hunk 2] @@ -466,8 +467,8 @@ describe('reactivity/computed', () => {
      const c2 = computed(() => c1.value) as unknown as ComputedRefImpl
  
      c2.value
@@ -168,7 +168,7 @@ packages/runtime-core/src/
    it('should chained computeds dirtyLevel update with first computed effect', () => {
 
 ### packages/reactivity/__tests__/effect.spec.ts [modified, +14/-19]
-@@ -1,3 +1,14 @@
+[hunk 0] @@ -1,3 +1,14 @@
 +import {
 +  computed,
 +  h,
@@ -183,7 +183,7 @@ packages/runtime-core/src/
  import {
    type DebuggerEvent,
    type ReactiveEffectRunner,
-@@ -11,23 +22,7 @@ import {
+[hunk 1] @@ -11,23 +22,7 @@ import {
    stop,
    toRaw,
  } from '../src/index'
@@ -208,7 +208,7 @@ packages/runtime-core/src/
  
  describe('reactivity/effect', () => {
    it('should run the passed function once (wrapped by a effect)', () => {
-@@ -1183,12 +1178,12 @@ describe('reactivity/effect', () => {
+[hunk 2] @@ -1183,12 +1178,12 @@ describe('reactivity/effect', () => {
    })
  
    describe('dep unsubscribe', () => {
@@ -225,7 +225,7 @@ packages/runtime-core/src/
      }
 
 ### packages/reactivity/__tests__/gc.spec.ts [modified, +35/-2]
-@@ -2,6 +2,7 @@ import {
+[hunk 0] @@ -2,6 +2,7 @@ import {
    type ComputedRef,
    computed,
    effect,
@@ -233,7 +233,7 @@ packages/runtime-core/src/
    reactive,
    shallowRef as ref,
    toRaw,
-@@ -19,7 +20,7 @@ describe.skipIf(!global.gc)('reactivity/gc', () => {
+[hunk 1] @@ -19,7 +20,7 @@ describe.skipIf(!global.gc)('reactivity/gc', () => {
    }
  
    // #9233
@@ -242,7 +242,7 @@ packages/runtime-core/src/
      const src = ref<{} | undefined>({})
      // @ts-expect-error ES2021 API
      const srcRef = new WeakRef(src.value!)
-@@ -34,7 +35,7 @@ describe.skipIf(!global.gc)('reactivity/gc', () => {
+[hunk 2] @@ -34,7 +35,7 @@ describe.skipIf(!global.gc)('reactivity/gc', () => {
      expect(srcRef.deref()).toBeUndefined()
    })
  
@@ -251,7 +251,7 @@ packages/runtime-core/src/
      const src = reactive({ foo: 1 })
  
      let c: ComputedRef | undefined = computed(() => src.foo)
-@@ -79,4 +80,36 @@ describe.skipIf(!global.gc)('reactivity/gc', () => {
+[hunk 3] @@ -79,4 +80,36 @@ describe.skipIf(!global.gc)('reactivity/gc', () => {
      src.foo++
      expect(spy).toHaveBeenCalledTimes(2)
    })
@@ -290,7 +290,7 @@ packages/runtime-core/src/
  })
 
 ### packages/reactivity/src/arrayInstrumentations.ts [modified, +4/-3]
-@@ -1,8 +1,9 @@
+[hunk 0] @@ -1,8 +1,9 @@
 +import { isArray } from '@vue/shared'
  import { TrackOpTypes } from './constants'
 -import { endBatch, pauseTracking, resetTracking, startBatch } from './effect'
@@ -305,7 +305,7 @@ packages/runtime-core/src/
   * Track array iteration and return:
 
 ### packages/reactivity/src/computed.ts [modified, +101/-66]
-@@ -1,17 +1,27 @@
+[hunk 0] @@ -1,17 +1,27 @@
 -import { isFunction } from '@vue/shared'
 +import { hasChanged, isFunction } from '@vue/shared'
 +import { ReactiveFlags, TrackOpTypes } from './constants'
@@ -340,7 +340,7 @@ packages/runtime-core/src/
  
  declare const ComputedRefSymbol: unique symbol
  declare const WritableComputedRefSymbol: unique symbol
-@@ -44,15 +54,23 @@ export interface WritableComputedOptions<T, S = T> {
+[hunk 1] @@ -44,15 +54,23 @@ export interface WritableComputedOptions<T, S = T> {
   * @private exported by @vue/reactivity for Vue core use, but not exported from
   * the main vue package
   */
@@ -370,7 +370,7 @@ packages/runtime-core/src/
    /**
     * @internal
     */
-@@ -63,34 +81,39 @@ export class ComputedRefImpl<T = any> implements Subscriber {
+[hunk 2] @@ -63,34 +81,39 @@ export class ComputedRefImpl<T = any> implements Subscriber {
     */
    readonly __v_isReadonly: boolean
    // TODO isolatedDeclarations ReactiveFlags.IS_READONLY
@@ -436,7 +436,7 @@ packages/runtime-core/src/
    // dev only
    onTrack?: (event: DebuggerEvent) => void
    // dev only
-@@ -105,43 +128,34 @@ export class ComputedRefImpl<T = any> implements Subscriber {
+[hunk 3] @@ -105,43 +128,34 @@ export class ComputedRefImpl<T = any> implements Subscriber {
    constructor(
      public fn: ComputedGetter<T>,
      private readonly setter: ComputedSetter<T> | undefined,
@@ -497,7 +497,7 @@ packages/runtime-core/src/
    }
  
    set value(newValue) {
-@@ -151,6 +165,27 @@ export class ComputedRefImpl<T = any> implements Subscriber {
+[hunk 4] @@ -151,6 +165,27 @@ export class ComputedRefImpl<T = any> implements Subscriber {
        warn('Write operation failed: computed value is readonly')
      }
    }
@@ -525,7 +525,7 @@ packages/runtime-core/src/
  }
  
  /**
-@@ -209,7 +244,7 @@ export function computed<T>(
+[hunk 5] @@ -209,7 +244,7 @@ export function computed<T>(
      setter = getterOrOptions.set
    }
  
@@ -536,7 +536,7 @@ packages/runtime-core/src/
      cRef.onTrack = debugOptions.onTrack
 
 ### packages/reactivity/src/debug.ts [added, +72/-0]
-@@ -0,0 +1,72 @@
+[hunk 0] @@ -0,0 +1,72 @@
 +import { extend } from '@vue/shared'
 +import type { DebuggerEventExtraInfo, ReactiveEffectOptions } from './effect'
 +import { type Link, type Subscriber, SubscriberFlags } from './system'
@@ -611,7 +611,7 @@ packages/runtime-core/src/
 +}
 
 ### packages/reactivity/src/dep.ts [modified, +41/-232]
-@@ -1,230 +1,38 @@
+[hunk 0] @@ -1,230 +1,38 @@
 -import { extend, isArray, isIntegerKey, isMap, isSymbol } from '@vue/shared'
 -import type { ComputedRefImpl } from './computed'
 +import { isArray, isIntegerKey, isMap, isSymbol } from '@vue/shared'
@@ -863,7 +863,7 @@ packages/runtime-core/src/
  // The main WeakMap that stores {target -> key -> dep} connections.
  // Conceptually, it's easier to think of a dependency as a Dep class
  // which maintains a Set of subscribers, but we simply store them as
-@@ -254,25 +62,25 @@ export const ARRAY_ITERATE_KEY: unique symbol = Symbol(
+[hunk 1] @@ -254,25 +62,25 @@ export const ARRAY_ITERATE_KEY: unique symbol = Symbol(
   * @param key - Identifier of the reactive property to track.
   */
  export function track(target: object, type: TrackOpTypes, key: unknown): void {
@@ -901,7 +901,7 @@ packages/runtime-core/src/
      }
    }
  }
-@@ -296,23 +104,24 @@ export function trigger(
+[hunk 2] @@ -296,23 +104,24 @@ export function trigger(
    const depsMap = targetMap.get(target)
    if (!depsMap) {
      // never been tracked
@@ -932,7 +932,7 @@ packages/runtime-core/src/
        }
      }
    }
-@@ -385,7 +194,7 @@ export function trigger(
+[hunk 3] @@ -385,7 +194,7 @@ export function trigger(
  export function getDepFromReactive(
    object: any,
    key: string | number | symbol,
@@ -943,7 +943,7 @@ packages/runtime-core/src/
  }
 
 ### packages/reactivity/src/effect.ts [modified, +121/-379]
-@@ -1,8 +1,16 @@
+[hunk 0] @@ -1,8 +1,16 @@
 -import { extend, hasChanged } from '@vue/shared'
 -import type { ComputedRefImpl } from './computed'
 +import { extend } from '@vue/shared'
@@ -963,7 +963,7 @@ packages/runtime-core/src/
  import { warn } from './warning'
  
  export type EffectScheduler = (...args: any[]) => any
-@@ -27,7 +35,6 @@ export interface DebuggerOptions {
+[hunk 1] @@ -27,7 +35,6 @@ export interface DebuggerOptions {
  
  export interface ReactiveEffectOptions extends DebuggerOptions {
    scheduler?: EffectScheduler
@@ -971,7 +971,7 @@ packages/runtime-core/src/
    onStop?: () => void
  }
  
-@@ -36,78 +43,29 @@ export interface ReactiveEffectRunner<T = any> {
+[hunk 2] @@ -36,78 +43,29 @@ export interface ReactiveEffectRunner<T = any> {
    effect: ReactiveEffect
  }
  
@@ -1060,7 +1060,7 @@ packages/runtime-core/src/
    onStop?: () => void
    onTrack?: (event: DebuggerEvent) => void
    onTrigger?: (event: DebuggerEvent) => void
-@@ -116,52 +74,59 @@ export class ReactiveEffect<T = any>
+[hunk 3] @@ -116,52 +74,59 @@ export class ReactiveEffect<T = any>
      if (activeEffectScope && activeEffectScope.active) {
        activeEffectScope.effects.push(this)
      }
@@ -1144,7 +1144,7 @@ packages/runtime-core/src/
  
      try {
        return this.fn()
-@@ -172,299 +137,42 @@ export class ReactiveEffect<T = any>
+[hunk 4] @@ -172,299 +137,42 @@ export class ReactiveEffect<T = any>
              'this is likely a Vue internal bug.',
          )
        }
@@ -1467,7 +1467,7 @@ packages/runtime-core/src/
    }
  }
  
-@@ -505,34 +213,55 @@ export function stop(runner: ReactiveEffectRunner): void {
+[hunk 5] @@ -505,34 +213,55 @@ export function stop(runner: ReactiveEffectRunner): void {
    runner.effect.stop()
  }
  
@@ -1534,7 +1534,7 @@ packages/runtime-core/src/
  }
  
  /**
-@@ -561,7 +290,7 @@ export function onEffectCleanup(fn: () => void, failSilently = false): void {
+[hunk 6] @@ -561,7 +290,7 @@ export function onEffectCleanup(fn: () => void, failSilently = false): void {
  function cleanupEffect(e: ReactiveEffect) {
    const { cleanup } = e
    e.cleanup = undefined
@@ -1543,7 +1543,7 @@ packages/runtime-core/src/
      // run cleanup without active effect
      const prevSub = activeSub
      activeSub = undefined
-@@ -572,3 +301,16 @@ function cleanupEffect(e: ReactiveEffect) {
+[hunk 7] @@ -572,3 +301,16 @@ function cleanupEffect(e: ReactiveEffect) {
      }
    }
  }
@@ -1562,7 +1562,7 @@ packages/runtime-core/src/
 +}
 
 ### packages/reactivity/src/effectScope.ts [modified, +33/-25]
-@@ -1,13 +1,23 @@
+[hunk 0] @@ -1,13 +1,23 @@
 -import type { ReactiveEffect } from './effect'
 +import { EffectFlags, type ReactiveEffect, nextTrackId } from './effect'
 +import {
@@ -1592,7 +1592,7 @@ packages/runtime-core/src/
    /**
     * @internal
     */
-@@ -17,8 +27,6 @@ export class EffectScope {
+[hunk 1] @@ -17,8 +27,6 @@ export class EffectScope {
     */
    cleanups: (() => void)[] = []
  
@@ -1601,7 +1601,7 @@ packages/runtime-core/src/
    /**
     * only assigned by undetached scope
     * @internal
-@@ -47,12 +55,12 @@ export class EffectScope {
+[hunk 2] @@ -47,12 +55,12 @@ export class EffectScope {
    }
  
    get active(): boolean {
@@ -1617,7 +1617,7 @@ packages/runtime-core/src/
        let i, l
        if (this.scopes) {
          for (i = 0, l = this.scopes.length; i < l; i++) {
-@@ -69,24 +77,22 @@ export class EffectScope {
+[hunk 3] @@ -69,24 +77,22 @@ export class EffectScope {
     * Resumes the effect scope, including all child scopes and effects.
     */
    resume(): void {
@@ -1652,7 +1652,7 @@ packages/runtime-core/src/
        const currentEffectScope = activeEffectScope
        try {
          activeEffectScope = this
-@@ -116,8 +122,10 @@ export class EffectScope {
+[hunk 4] @@ -116,8 +122,10 @@ export class EffectScope {
    }
  
    stop(fromParent?: boolean): void {
@@ -1667,7 +1667,7 @@ packages/runtime-core/src/
          this.effects[i].stop()
 
 ### packages/reactivity/src/ref.ts [modified, +49/-30]
-@@ -5,7 +5,11 @@ import {
+[hunk 0] @@ -5,7 +5,11 @@ import {
    isFunction,
    isObject,
  } from '@vue/shared'
@@ -1680,7 +1680,7 @@ packages/runtime-core/src/
  import {
    type Builtin,
    type ShallowReactiveMarker,
-@@ -16,8 +20,7 @@ import {
+[hunk 1] @@ -16,8 +20,7 @@ import {
    toRaw,
    toReactive,
  } from './reactive'
@@ -1690,7 +1690,7 @@ packages/runtime-core/src/
  import { warn } from './warning'
  
  declare const RefSymbol: unique symbol
-@@ -105,12 +108,15 @@ function createRef(rawValue: unknown, shallow: boolean) {
+[hunk 2] @@ -105,12 +108,15 @@ function createRef(rawValue: unknown, shallow: boolean) {
  /**
   * @internal
   */
@@ -1709,7 +1709,7 @@ packages/runtime-core/src/
    public readonly [ReactiveFlags.IS_REF] = true
    public readonly [ReactiveFlags.IS_SHALLOW]: boolean = false
  
-@@ -120,16 +126,12 @@ class RefImpl<T = any> {
+[hunk 3] @@ -120,16 +126,12 @@ class RefImpl<T = any> {
      this[ReactiveFlags.IS_SHALLOW] = isShallow
    }
  
@@ -1731,7 +1731,7 @@ packages/runtime-core/src/
      return this._value
    }
  
-@@ -144,15 +146,17 @@ class RefImpl<T = any> {
+[hunk 4] @@ -144,15 +146,17 @@ class RefImpl<T = any> {
        this._rawValue = newValue
        this._value = useDirectValue ? newValue : toReactive(newValue)
        if (__DEV__) {
@@ -1752,7 +1752,7 @@ packages/runtime-core/src/
        }
      }
    }
-@@ -185,17 +189,23 @@ class RefImpl<T = any> {
+[hunk 5] @@ -185,17 +189,23 @@ class RefImpl<T = any> {
   */
  export function triggerRef(ref: Ref): void {
    // ref may be an instance of ObjectRefImpl
@@ -1783,7 +1783,7 @@ packages/runtime-core/src/
    }
  }
  
-@@ -287,8 +297,11 @@ export type CustomRefFactory<T> = (
+[hunk 6] @@ -287,8 +297,11 @@ export type CustomRefFactory<T> = (
    set: (value: T) => void
  }
  
@@ -1797,7 +1797,7 @@ packages/runtime-core/src/
  
    private readonly _get: ReturnType<CustomRefFactory<T>>['get']
    private readonly _set: ReturnType<CustomRefFactory<T>>['set']
-@@ -298,12 +311,18 @@ class CustomRefImpl<T> {
+[hunk 7] @@ -298,12 +311,18 @@ class CustomRefImpl<T> {
    public _value: T = undefined!
  
    constructor(factory: CustomRefFactory<T>) {
@@ -1818,7 +1818,7 @@ packages/runtime-core/src/
    get value() {
      return (this._value = this._get())
    }
-@@ -366,7 +385,7 @@ class ObjectRefImpl<T extends object, K extends keyof T> {
+[hunk 8] @@ -366,7 +385,7 @@ class ObjectRefImpl<T extends object, K extends keyof T> {
      this._object[this._key] = newVal
    }
  
@@ -1829,7 +1829,7 @@ packages/runtime-core/src/
  }
 
 ### packages/reactivity/src/system.ts [added, +366/-0]
-@@ -0,0 +1,366 @@
+[hunk 0] @@ -0,0 +1,366 @@
 +// Ported from https://github.com/stackblitz/alien-signals/blob/v0.4.4/src/system.ts
 +
 +export interface IEffect extends Subscriber {
@@ -2198,7 +2198,7 @@ packages/runtime-core/src/
 +}
 
 ### packages/reactivity/src/watch.ts [modified, +3/-7]
-@@ -10,20 +10,19 @@ import {
+[hunk 0] @@ -10,20 +10,19 @@ import {
    isSet,
    remove,
  } from '@vue/shared'
@@ -2221,7 +2221,7 @@ packages/runtime-core/src/
  
  // These errors were transferred from `packages/runtime-core/src/errorHandling.ts`
  // to @vue/reactivity to allow co-location with the moved base watch logic, hence
-@@ -231,10 +230,7 @@ export function watch(
+[hunk 1] @@ -231,10 +230,7 @@ export function watch(
      : INITIAL_WATCHER_VALUE
  
    const job = (immediateFirstRun?: boolean) => {
@@ -2235,7 +2235,7 @@ packages/runtime-core/src/
      if (cb) {
 
 ### packages/runtime-core/__tests__/apiSetupHelpers.spec.ts [modified, +9/-6]
-@@ -1,3 +1,8 @@
+[hunk 0] @@ -1,3 +1,8 @@
 +import {
 +  type ComputedRefImpl,
 +  type ReactiveEffectRunner,
@@ -2244,7 +2244,7 @@ packages/runtime-core/src/
  import {
    type ComponentInternalInstance,
    type SetupContext,
-@@ -25,8 +30,6 @@ import {
+[hunk 1] @@ -25,8 +30,6 @@ import {
    withAsyncContext,
    withDefaults,
  } from '../src/apiSetupHelpers'
@@ -2253,7 +2253,7 @@ packages/runtime-core/src/
  
  describe('SFC <script setup> helpers', () => {
    test('should warn runtime usage', () => {
-@@ -450,12 +453,12 @@ describe('SFC <script setup> helpers', () => {
+[hunk 2] @@ -450,12 +453,12 @@ describe('SFC <script setup> helpers', () => {
        app.mount(root)
  
        await ready
@@ -2272,7 +2272,7 @@ packages/runtime-core/src/
  })
 
 ### packages/runtime-core/__tests__/errorHandling.spec.ts [modified, +3/-0]
-@@ -531,6 +531,9 @@ describe('error handling', () => {
+[hunk 0] @@ -531,6 +531,9 @@ describe('error handling', () => {
        caughtError = caught
      }
      expect(fn).toHaveBeenCalledWith(err, 'setup function')
@@ -2284,7 +2284,7 @@ packages/runtime-core/src/
      ).toHaveBeenWarned()
 
 ### packages/runtime-core/src/renderer.ts [modified, +2/-1]
-@@ -1558,7 +1558,8 @@ function baseCreateRenderer(
+[hunk 0] @@ -1558,7 +1558,8 @@ function baseCreateRenderer(
      instance.scope.off()
  
      const update = (instance.update = effect.run.bind(effect))
@@ -2296,7 +2296,7 @@ packages/runtime-core/src/
      effect.scheduler = () => queueJob(job)
 
 ### vitest.config.ts [modified, +6/-1]
-@@ -3,7 +3,7 @@ import { entries } from './scripts/aliases.js'
+[hunk 0] @@ -3,7 +3,7 @@ import { entries } from './scripts/aliases.js'
  
  export default defineConfig({
    define: {
@@ -2305,7 +2305,7 @@ packages/runtime-core/src/
      __TEST__: true,
      __VERSION__: '"test"',
      __BROWSER__: false,
-@@ -24,6 +24,11 @@ export default defineConfig({
+[hunk 1] @@ -24,6 +24,11 @@ export default defineConfig({
    test: {
      globals: true,
      pool: 'threads',

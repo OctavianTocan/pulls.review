@@ -8,6 +8,7 @@ import { createDevServer } from 'devframe/adapters/dev'
 import { H3 } from 'h3'
 import devframe from './devframe'
 import { pageFor } from './page'
+import { isPreanalyzeEngine, PREANALYZE_ENGINES, startPreanalyze } from './preanalyze'
 
 const HELP = `Usage: pulls.review [target] [options]
 
@@ -33,6 +34,13 @@ Options:
   --no-auth      skip the terminal code gate; only for a deployment whose
                  reverse proxy already authenticates every request
   --no-open      do not open the browser
+  --preanalyze   every 10 minutes, group the open pull requests that request
+                 your review with AI, so they open already analyzed; runs on
+                 your Claude Code or Codex plan, off by default
+  --preanalyze-engine <claude-code|codex>
+                 the CLI --preanalyze runs (default claude-code)
+  --preanalyze-model <model>
+                 the model --preanalyze asks for (default: the engine's own)
   -h, --help
 
 To review a GitHub pull request in CI, use @pulls.review/actions.
@@ -68,6 +76,9 @@ async function main() {
       'allow-origin': { type: 'string', multiple: true },
       'no-auth': { type: 'boolean' },
       'no-open': { type: 'boolean' },
+      'preanalyze': { type: 'boolean' },
+      'preanalyze-engine': { type: 'string', default: 'claude-code' },
+      'preanalyze-model': { type: 'string' },
       'help': { type: 'boolean', short: 'h' },
     },
     allowPositionals: true,
@@ -76,6 +87,9 @@ async function main() {
     process.stdout.write(HELP)
     return
   }
+  const preanalyzeEngine = flags['preanalyze-engine']
+  if (flags.preanalyze && !isPreanalyzeEngine(preanalyzeEngine))
+    throw new Error(`--preanalyze-engine must be one of: ${PREANALYZE_ENGINES.join(', ')}`)
   const page = encodeURI(await pageFor(process.cwd(), positionals[0], !!flags.worktree))
   await createDevServer(devframe, {
     app: createAppWithRefRoutes(),
@@ -88,6 +102,8 @@ async function main() {
       process.stdout.write(`pulls.review is serving ${origin}${page}\n`)
     },
   })
+  if (flags.preanalyze && isPreanalyzeEngine(preanalyzeEngine))
+    await startPreanalyze({ cwd: process.cwd(), env: process.env, engine: preanalyzeEngine, model: flags['preanalyze-model'] })
 }
 
 main().catch((error) => {

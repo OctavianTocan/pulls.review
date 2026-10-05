@@ -36,6 +36,29 @@ describe('createGithubClient', () => {
     ])
   })
 
+  it('fetches the remaining pages together once the Link header names the last one', async () => {
+    const link = '<https://api.github.com/repositories/1/pulls/1/files?per_page=100&page=2>; rel="next", <https://api.github.com/repositories/1/pulls/1/files?per_page=100&page=3>; rel="last"'
+    let inFlight = 0
+    let maxInFlight = 0
+    const fetchMock = vi.fn(async (url: string) => {
+      const page = Number(url.match(/page=(\d+)$/)![1])
+      if (page === 1)
+        return new Response(JSON.stringify(Array.from({ length: 100 }, (_, i) => i)), { headers: { Link: link } })
+      inFlight++
+      maxInFlight = Math.max(maxInFlight, inFlight)
+      await new Promise(resolve => setTimeout(resolve, page === 2 ? 20 : 5))
+      inFlight--
+      return json(page === 2 ? Array.from({ length: 100 }, (_, i) => 100 + i) : [200])
+    })
+    vi.stubGlobal('fetch', fetchMock)
+
+    const items = await createGithubClient().paginate<number>('/repos/o/r/pulls/1/files')
+
+    expect(items).toEqual(Array.from({ length: 201 }, (_, i) => i))
+    expect(maxInFlight).toBe(2)
+    expect(fetchMock).toHaveBeenCalledTimes(3)
+  })
+
   it('surfaces GitHub\'s own error message with the status', async () => {
     vi.stubGlobal('fetch', vi.fn(async () => json({ message: 'Resource not accessible' }, 403)))
 

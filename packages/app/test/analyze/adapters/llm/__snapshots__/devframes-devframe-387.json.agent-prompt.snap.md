@@ -53,7 +53,7 @@ tests/__snapshots__/tsnapi/devframe/
 
 ---DIFFS--- (all diffs included; you may submit directly)
 ### docs/content/1.guide/17.client-context.md [modified, +4/-2]
-@@ -67,14 +67,16 @@ A client-only dock can also carry `type: 'json-render'` with an inline [JSON-ren
+[hunk 0] @@ -67,14 +67,16 @@ A client-only dock can also carry `type: 'json-render'` with an inline [JSON-ren
  
  ## Dock client scripts
  
@@ -74,7 +74,7 @@ tests/__snapshots__/tsnapi/devframe/
  
 
 ### docs/content/8.references/6.hub-api.md [modified, +3/-1]
-@@ -131,7 +131,9 @@ Which `ClientScriptEntry` field carries an entry's client script, and when it ru
+[hunk 0] @@ -131,7 +131,9 @@ Which `ClientScriptEntry` field carries an entry's client script, and when it ru
  |---|---|---|
  | `action` | `action` | when the dock button is activated |
  | `custom-render` | `renderer` | to render the entry's panel |
@@ -87,7 +87,7 @@ tests/__snapshots__/tsnapi/devframe/
  
 
 ### examples/custom-hub-next/src/client/devframe/next-devframe-hub.ts [modified, +3/-2]
-@@ -287,7 +287,8 @@ export async function nextDevframeHub(
+[hunk 0] @@ -287,7 +287,8 @@ export async function nextDevframeHub(
  
        // The demo dock-client script - the same package the Vite reference
        // host loads via a bare specifier - mounted statically and attached as
@@ -97,7 +97,7 @@ tests/__snapshots__/tsnapi/devframe/
        if (demoDockClient) {
          await ctx.host.mountStatic(DEMO_CLIENT_MOUNT_BASE, demoDockClient.dir)
          ctx.docks.register({
-@@ -296,7 +297,7 @@ export async function nextDevframeHub(
+[hunk 1] @@ -296,7 +297,7 @@ export async function nextDevframeHub(
            title: 'Client Script Demo',
            icon: 'ph:plugs-connected-duotone',
            category: 'app',
@@ -108,7 +108,7 @@ tests/__snapshots__/tsnapi/devframe/
  
 
 ### examples/custom-hub-vite/vite.config.ts [modified, +4/-3]
-@@ -176,15 +176,16 @@ export default defineConfig({
+[hunk 0] @@ -176,15 +176,16 @@ export default defineConfig({
          // Bare-specifier client script demo: `importFrom` names the npm
          // package itself, imported through Vite's own module graph via the
          // host's `clientModuleResolution` (`'/@id/{specifier}'`). The Next
@@ -130,7 +130,7 @@ tests/__snapshots__/tsnapi/devframe/
          // Witness the missing-renderer path: a dock type nothing covers, so
 
 ### packages/devframe/src/types/devframe.ts [modified, +5/-0]
-@@ -329,6 +329,11 @@ export interface DevframeDockDefaults {
+[hunk 0] @@ -329,6 +329,11 @@ export interface DevframeDockDefaults {
     * host wiring; a URL or bare specifier passes through untouched.
     */
    clientScript?: {
@@ -144,7 +144,7 @@ tests/__snapshots__/tsnapi/devframe/
      /**
 
 ### packages/hub-ui/src/client/state/client-script.integration.test.ts [modified, +235/-4]
-@@ -1,6 +1,7 @@
+[hunk 0] @@ -1,6 +1,7 @@
  import type { DevframeDockEntry } from '@devframes/hub'
  import type { DevframeRpcClient } from '@devframes/hub/client'
  import type { SharedState } from 'devframe/utils/shared-state'
@@ -152,7 +152,7 @@ tests/__snapshots__/tsnapi/devframe/
  import { createEventEmitter } from 'devframe/utils/events'
  import { createSharedState } from 'devframe/utils/shared-state'
  import { afterEach, describe, expect, it, vi } from 'vitest'
-@@ -42,7 +43,7 @@ function createStubRpc() {
+[hunk 1] @@ -42,7 +43,7 @@ function createStubRpc() {
  
  declare global {
    // eslint-disable-next-line vars-on-top -- test hook called by the dynamically imported client module
@@ -161,7 +161,7 @@ tests/__snapshots__/tsnapi/devframe/
  }
  
  afterEach(() => {
-@@ -52,6 +53,7 @@ afterEach(() => {
+[hunk 2] @@ -52,6 +53,7 @@ afterEach(() => {
  
  describe('dock client scripts', () => {
    it('retries setup on a later activation after it fails', async () => {
@@ -169,7 +169,7 @@ tests/__snapshots__/tsnapi/devframe/
      vi.spyOn(console, 'error').mockImplementation(() => {})
      let attempts = 0
      globalThis.__DEVFRAME_CLIENT_SCRIPT_ATTEMPT__ = () => {
-@@ -63,11 +65,10 @@ describe('dock client scripts', () => {
+[hunk 3] @@ -63,11 +65,10 @@ describe('dock client scripts', () => {
      const context = await createDocksContext('embedded', rpc)
      const entry = {
        id: 'retry-client-script',
@@ -183,7 +183,7 @@ tests/__snapshots__/tsnapi/devframe/
          importFrom: 'data:text/javascript,export default () => globalThis.__DEVFRAME_CLIENT_SCRIPT_ATTEMPT__()',
        },
      } satisfies DevframeDockEntry
-@@ -81,3 +82,233 @@ describe('dock client scripts', () => {
+[hunk 4] @@ -81,3 +82,233 @@ describe('dock client scripts', () => {
      expect(attempts).toBe(2)
    })
  })
@@ -419,7 +419,7 @@ tests/__snapshots__/tsnapi/devframe/
 +})
 
 ### packages/hub-ui/src/client/state/context.test.ts [modified, +2/-1]
-@@ -10,7 +10,8 @@ import { nextTick, ref } from 'vue'
+[hunk 0] @@ -10,7 +10,8 @@ import { nextTick, ref } from 'vue'
  import { createDocksContext } from './context'
  import { executeSetupScript } from './setup-script'
  
@@ -431,7 +431,7 @@ tests/__snapshots__/tsnapi/devframe/
  
 
 ### packages/hub-ui/src/client/state/context.ts [modified, +44/-11]
-@@ -17,7 +17,7 @@ import { createDockEntryState, DEFAULT_DOCK_PANEL_STORE, DEFAULT_DOCK_SESSION_ST
+[hunk 0] @@ -17,7 +17,7 @@ import { createDockEntryState, DEFAULT_DOCK_PANEL_STORE, DEFAULT_DOCK_SESSION_ST
  import { createClientMessagesClient } from './messages-client'
  import { dockCommandId } from './palette'
  import { registerMainFrameDockActionHandler, triggerMainFrameDockAction, useIsDockPopupOpen } from './popup'
@@ -440,7 +440,7 @@ tests/__snapshots__/tsnapi/devframe/
  
  const docksContextByRpc = new WeakMap<DevframeRpcClient, DocksContext>()
  export async function createDocksContext(
-@@ -229,17 +229,39 @@ export async function createDocksContext(
+[hunk 1] @@ -229,17 +229,39 @@ export async function createDocksContext(
      return null
    }
  
@@ -488,7 +488,7 @@ tests/__snapshots__/tsnapi/devframe/
    }
  
    // Remember selection redirects: a member tab as its frame's live tab, and a
-@@ -286,11 +308,17 @@ export async function createDocksContext(
+[hunk 2] @@ -286,11 +308,17 @@ export async function createDocksContext(
          return false
      }
  
@@ -507,7 +507,7 @@ tests/__snapshots__/tsnapi/devframe/
      rememberEntrySelection(entry)
      return true
    }
-@@ -372,8 +400,10 @@ export async function createDocksContext(
+[hunk 3] @@ -372,8 +400,10 @@ export async function createDocksContext(
      name: HUB_EVENTS.broadcast.docksActivate satisfies keyof DevframeRpcClientFunctions,
      type: 'action',
      handler: (activation: { dockId: string, params?: Record<string, unknown> }) => {
@@ -519,7 +519,7 @@ tests/__snapshots__/tsnapi/devframe/
      },
    })
  
-@@ -707,6 +737,9 @@ export async function createDocksContext(
+[hunk 4] @@ -707,6 +737,9 @@ export async function createDocksContext(
    )
    void restoreAfterInitialization()
  
@@ -531,7 +531,7 @@ tests/__snapshots__/tsnapi/devframe/
  }
 
 ### packages/hub-ui/src/client/state/setup-script.ts [modified, +35/-30]
-@@ -1,29 +1,22 @@
+[hunk 0] @@ -1,29 +1,22 @@
  import type { ClientScriptEntry, DevframeDockUserEntry } from '@devframes/hub'
 -import type { DockClientScriptContext } from '@devframes/hub/client'
 +import type { DevframeRpcClient, DockClientScriptContext } from '@devframes/hub/client'
@@ -571,7 +571,7 @@ tests/__snapshots__/tsnapi/devframe/
    if (!script?.importFrom)
      throw new Error(`[@devframes/hub-ui] Dock entry "${entry.id}" carries no client script to run`)
    // A bare specifier resolves through the host-advertised template; URL
-@@ -41,6 +34,9 @@ async function _executeSetupScript(
+[hunk 1] @@ -41,6 +34,9 @@ async function _executeSetupScript(
      const fn = mod[script.importName ?? 'default']
      if (typeof fn !== 'function')
        throw new Error(`[@devframes/hub-ui] "${specifier}" exports no callable "${script.importName ?? 'default'}"`)
@@ -581,7 +581,7 @@ tests/__snapshots__/tsnapi/devframe/
      await fn(context)
    }
    catch (error) {
-@@ -53,23 +49,32 @@ async function _executeSetupScript(
+[hunk 2] @@ -53,23 +49,32 @@ async function _executeSetupScript(
      throw error
    }
  }
@@ -629,7 +629,7 @@ tests/__snapshots__/tsnapi/devframe/
  }
 
 ### packages/hub/src/client/__tests__/host.test.ts [modified, +144/-2]
-@@ -1,6 +1,7 @@
+[hunk 0] @@ -1,6 +1,7 @@
  import type { DevframeRpcClient } from 'devframe/client'
  import type { SharedState } from 'devframe/utils/shared-state'
  import type { DevframeDockEntry, DevframeDockPanelState } from '../../types/docks'
@@ -637,7 +637,7 @@ tests/__snapshots__/tsnapi/devframe/
  import { createEventEmitter } from 'devframe/utils/events'
  import { describe, expect, it, vi } from 'vitest'
  import { HUB_EVENTS } from '../../events'
-@@ -38,6 +39,8 @@ function createStubRpc() {
+[hunk 1] @@ -38,6 +39,8 @@ function createStubRpc() {
    const states = new Map<string, StubSharedState<any>>()
    const definitions = new Map<string, { name: string, type: string, handler?: (...args: any[]) => any }>()
    const partial: DeepPartial<DevframeRpcClient> = {
@@ -646,7 +646,7 @@ tests/__snapshots__/tsnapi/devframe/
      sharedState: {
        async get(key: string, options?: { initialValue?: any }) {
          if (!states.has(key))
-@@ -301,7 +304,7 @@ describe('createDevframeClientRuntime', () => {
+[hunk 2] @@ -301,7 +304,7 @@ describe('createDevframeClientRuntime', () => {
      const received: any[] = []
      ;(globalThis as any).__DF_TEST_CLIENT_DOCK__ = (ctx: any) => received.push(ctx)
      const dataUrl = `data:text/javascript,export default ctx => globalThis.__DF_TEST_CLIENT_DOCK__(ctx)`
@@ -655,7 +655,7 @@ tests/__snapshots__/tsnapi/devframe/
  
      await vi.waitFor(() => expect(received).toHaveLength(1))
      expect(received[0].current.entryMeta.id).toBe('local')
-@@ -380,7 +383,7 @@ describe('createDevframeClientRuntime', () => {
+[hunk 3] @@ -380,7 +383,7 @@ describe('createDevframeClientRuntime', () => {
      ;(globalThis as any).__DF_TEST_SCRIPT__ = (ctx: any) => received.push(ctx)
      const dataUrl = `data:text/javascript,export default ctx => globalThis.__DF_TEST_SCRIPT__(ctx)`
      states.get('devframe:docks')!.push([
@@ -664,7 +664,7 @@ tests/__snapshots__/tsnapi/devframe/
      ])
  
      await vi.waitFor(() => expect(received).toHaveLength(1))
-@@ -421,3 +424,142 @@ describe('createDevframeClientRuntime', () => {
+[hunk 4] @@ -421,3 +424,142 @@ describe('createDevframeClientRuntime', () => {
      }
    })
  })
@@ -809,7 +809,7 @@ tests/__snapshots__/tsnapi/devframe/
 +})
 
 ### packages/hub/src/client/__tests__/renderers.test.ts [modified, +2/-0]
-@@ -33,6 +33,8 @@ function createStubSharedState<T>(initial: T): StubSharedState<T> {
+[hunk 0] @@ -33,6 +33,8 @@ function createStubSharedState<T>(initial: T): StubSharedState<T> {
  function createStubRpc() {
    const states = new Map<string, StubSharedState<any>>()
    const partial: DeepPartial<DevframeRpcClient> = {
@@ -820,7 +820,7 @@ tests/__snapshots__/tsnapi/devframe/
          if (!states.has(key))
 
 ### packages/hub/src/client/host.ts [modified, +71/-16]
-@@ -27,6 +27,7 @@ import type {
+[hunk 0] @@ -27,6 +27,7 @@ import type {
  } from './docks'
  import type { DockRenderer, DockRendererManifest, DockRenderersContext } from './renderers'
  import { connectDevframe } from 'devframe/client'
@@ -828,7 +828,7 @@ tests/__snapshots__/tsnapi/devframe/
  import { createEventEmitter } from 'devframe/utils/events'
  import { clientScriptFailureHint, resolveClientModuleSpecifier } from '../client-modules'
  import { DEFAULT_CATEGORIES_ORDER, DEFAULT_STATE_USER_SETTINGS, DOCK_RENDERERS_STATE_KEY } from '../constants'
-@@ -199,8 +200,10 @@ export async function createDevframeClientRuntime(
+[hunk 1] @@ -199,8 +200,10 @@ export async function createDevframeClientRuntime(
    // unknown ids. Chain onto any handler a co-consumer already registered on
    // this rpc client rather than replacing it.
    const activateHandler = (activation: { dockId?: string } | undefined): void => {
@@ -840,7 +840,7 @@ tests/__snapshots__/tsnapi/devframe/
    }
    const existingActivate = rpc.client.definitions.get(DOCKS_ACTIVATE_EVENT)
    if (existingActivate) {
-@@ -235,15 +238,18 @@ export async function createDevframeClientRuntime(
+[hunk 2] @@ -235,15 +238,18 @@ export async function createDevframeClientRuntime(
    }
    setDevframeClientContext(context)
  
@@ -860,7 +860,7 @@ tests/__snapshots__/tsnapi/devframe/
        for (const off of disposers.splice(0)) off()
        for (const disposeAdapter of frameNavAdapters.values()) disposeAdapter()
        frameNavAdapters.clear()
-@@ -363,7 +369,9 @@ export async function createDevframeClientRuntime(
+[hunk 3] @@ -363,7 +369,9 @@ export async function createDevframeClientRuntime(
          return selectedId
        },
        set selectedId(id: string | null) {
@@ -871,7 +871,7 @@ tests/__snapshots__/tsnapi/devframe/
        },
        /**
         * A mirror of the session field, so a persisting host reads and writes the
-@@ -417,13 +425,34 @@ export async function createDevframeClientRuntime(
+[hunk 4] @@ -417,13 +425,34 @@ export async function createDevframeClientRuntime(
      return ctx
    }
  
@@ -907,7 +907,7 @@ tests/__snapshots__/tsnapi/devframe/
      const previous = selectedId
      selectedId = next
      // Mirror onto the session context so a persisting host and the when-clause
-@@ -437,6 +466,8 @@ export async function createDevframeClientRuntime(
+[hunk 5] @@ -437,6 +466,8 @@ export async function createDevframeClientRuntime(
        entryToStateMap.get(previous)?.events.emit('entry:deactivated')
      if (next)
        entryToStateMap.get(next)?.events.emit('entry:activated')
@@ -916,7 +916,7 @@ tests/__snapshots__/tsnapi/devframe/
      return true
    }
  
-@@ -524,20 +555,41 @@ export async function createDevframeClientRuntime(
+[hunk 6] @@ -524,20 +555,41 @@ export async function createDevframeClientRuntime(
  
    // ── client scripts ───────────────────────────────────────────────────────
  
@@ -967,7 +967,7 @@ tests/__snapshots__/tsnapi/devframe/
    async function runClientScript(entryId: string, script: ClientScriptEntry): Promise<void> {
      // A bare specifier resolves through the explicit option, then the
      // host-advertised template; URL specifiers pass through untouched. (The
-@@ -554,22 +606,25 @@ export async function createDevframeClientRuntime(
+[hunk 7] @@ -554,22 +606,25 @@ export async function createDevframeClientRuntime(
        const mod = await import(/* @vite-ignore */ /* webpackIgnore: true */ /* turbopackIgnore: true */ specifier)
        const fn = mod[script.importName ?? 'default']
        if (typeof fn !== 'function')
@@ -998,7 +998,7 @@ tests/__snapshots__/tsnapi/devframe/
  }
 
 ### packages/hub/src/types/docks.ts [modified, +6/-3]
-@@ -171,6 +171,11 @@ export interface DevframeDockEntryBase {
+[hunk 0] @@ -171,6 +171,11 @@ export interface DevframeDockEntryBase {
  }
  
  export interface ClientScriptEntry {
@@ -1010,7 +1010,7 @@ tests/__snapshots__/tsnapi/devframe/
    /**
     * What to import: either a **URL the host serves** (a self-contained ES
     * module, e.g. `/@fs/<abs path>` under Vite or a statically-mounted bundle
-@@ -231,9 +236,7 @@ export interface DevframeViewIframe extends DevframeDockEntryBase {
+[hunk 1] @@ -231,9 +236,7 @@ export interface DevframeViewIframe extends DevframeDockEntryBase {
     * share a `frameId` may live in one group, several groups, or none.
     */
    frameId?: string
@@ -1023,7 +1023,7 @@ tests/__snapshots__/tsnapi/devframe/
     * Soft-navigation target within a shared frame. Set on a **member** dock
 
 ### tests/__snapshots__/tsnapi/@devframes/hub/index.snapshot.d.ts [modified, +1/-0]
-@@ -3,6 +3,7 @@
+[hunk 0] @@ -3,6 +3,7 @@
   */
  // #region Interfaces
  export interface ClientScriptEntry {
@@ -1033,7 +1033,7 @@ tests/__snapshots__/tsnapi/devframe/
  }
 
 ### tests/__snapshots__/tsnapi/devframe/index.snapshot.d.ts [modified, +1/-0]
-@@ -171,6 +171,7 @@ export interface DevframeDockDefaults {
+[hunk 0] @@ -171,6 +171,7 @@ export interface DevframeDockDefaults {
    badge?: string;
    groupId?: string;
    clientScript?: {

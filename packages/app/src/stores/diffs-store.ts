@@ -1,5 +1,6 @@
 import type { CacheRepositories, LlmSession, PrCacheEntry } from '@pulls.review/core/cache'
 import type { DiffSource, DiffsPayload, FileChange, GroupedResult, GroupSource, ReviewData } from '@pulls.review/core/types'
+import type { SnapshotEntry, SnapshotStore } from '../state/snapshots'
 import type { DiffsStore, DiffsStoreAsk, DiffsStoreCritique, DiffsStoreLlm } from './types'
 import { computed, getCurrentScope, onScopeDispose, reactive, ref, shallowRef, watch } from 'vue'
 import { resolveAdapter, ruleBasedAdapter } from '../analyze'
@@ -7,6 +8,7 @@ import { resolveGroups } from '../components/diff/group-utils'
 import { i18n, t } from '../i18n'
 import { autoRefresh } from '../state/auto-refresh'
 import { layout } from '../state/layout'
+import { isNetworkError } from '../state/snapshots'
 import { createReviewsStore } from './reviews-store'
 import { createSharedAnalysisStore } from './shared-analysis-store'
 import { createWriteAccess } from './write-access'
@@ -20,6 +22,16 @@ export interface DiffsStoreOptions {
   cache: CacheRepositories
   /** Login from the page's `?from=` query: load that user's shared analysis (see plans/07). */
   from?: string
+  /** Device-local copies of pages: a reopened page renders from one while the cache is read. */
+  snapshots?: SnapshotStore
+}
+
+/** Whether a cache entry shows exactly what a snapshot of it does. */
+function sameEntry(a: SnapshotEntry, b: SnapshotEntry): boolean {
+  return a.headSha === b.headSha
+    && a.llmSession?.messages.length === b.llmSession?.messages.length
+    && String(a.changedSinceReviewed) === String(b.changedSinceReviewed)
+    && JSON.stringify(a.analyzedBy) === JSON.stringify(b.analyzedBy)
 }
 
 export function createDiffsStore(source: DiffSource, opts: DiffsStoreOptions): DiffsStore {
@@ -29,6 +41,7 @@ export function createDiffsStore(source: DiffSource, opts: DiffsStoreOptions): D
   const isLoading = ref(false)
   const error = ref<Error>()
   const isStale = ref(false)
+  const isOffline = ref(false)
   // `llm` even when `PR_LLM` is off: `grouped` falls back to rule-based until an AI
   // result exists, and the embed can still hold one loaded from a shared comment.
   const analyzeMode = ref<GroupSource>('llm')
@@ -186,13 +199,20 @@ export function createDiffsStore(source: DiffSource, opts: DiffsStoreOptions): D
    * are kept on purpose: `resolveGroups` reconciles them against the newer diff, so a
    * refresh never throws away a paid analysis.
    */
-  async function install(key: string, entry: Pick<PrCacheEntry, 'diff' | 'analyzedBy' | 'llmSession' | 'changedSinceReviewed'>) {
+  async function install(key: string, entry: Pick<PrCacheEntry, 'diff' | 'analyzedBy' | 'llmSession' | 'changedSinceReviewed'>, knownReviewed?: string[]) {
     diff.value = entry.diff
     cacheKey.value = key
     changedSinceReviewed.value = new Set(entry.changedSinceReviewed)
     analyzedBy.value = { ...entry.analyzedBy, 'rule-based': await ruleBasedAdapter.analyze(entry.diff) }
     llmSession.value = entry.llmSession as LlmSession | undefined
-    await loadReviewed()
+    if (knownReviewed)
+      reviewed.value = new Set(knownReviewed)
+    else
+      await loadReviewed()
+  }
+
+  function saveSnapshot(key: string, entry: SnapshotEntry) {
+    void opts.snapshots?.put(key, entry, reviewed.value)
   }
 
   async function analyzeAndStore(key: string, freshDiff: DiffsPayload) {
@@ -200,6 +220,7 @@ export function createDiffsStore(source: DiffSource, opts: DiffsStoreOptions): D
     llm.value?.abort()
     const entry = await cache.diffs.putDiff(key, freshDiff, freshDiff.head?.sha ?? '')
     await install(key, entry)
+    saveSnapshot(key, entry)
     // `llm` is never auto-run, even here - a paid/slow call must always be an explicit
     // click (the "(Re-)Analyze with AI" button), never a side effect of loading or
     // refreshing a diff. Only the free/instant modes re-run automatically.
@@ -226,8 +247,10 @@ export function createDiffsStore(source: DiffSource, opts: DiffsStoreOptions): D
       else
         isStale.value = true
     }
-    catch {
+    catch (err) {
       // Non-fatal: the cached view still renders even if the cheap staleness check fails.
+      if (isNetworkError(err))
+        isOffline.value = true
     }
   }
 
@@ -235,14 +258,29 @@ export function createDiffsStore(source: DiffSource, opts: DiffsStoreOptions): D
     isLoading.value = true
     error.value = undefined
     isStale.value = false
+    isOffline.value = false
+    let shown: SnapshotEntry | undefined
     try {
       const key = await source.key()
+      const snapshot = await opts.snapshots?.get(key)
+      if (snapshot) {
+        cachedReviewData = snapshot.entry.reviews
+        cachedSharedComment = snapshot.entry.sharedComment
+        await llmReady
+        await install(key, snapshot.entry, snapshot.reviewed)
+        shown = snapshot.entry
+        isLoading.value = false
+      }
       const cached = await cache.diffs.get(key)
       if (cached) {
         cachedReviewData = cached.reviews
         cachedSharedComment = cached.sharedComment
-        await cache.diffs.touch(key)
-        await install(key, cached)
+        void cache.diffs.touch(key).catch(() => {})
+        if (shown && sameEntry(shown, cached))
+          await loadReviewed()
+        else
+          await install(key, cached)
+        saveSnapshot(key, cached)
         void checkStaleness(cached.headSha)
       }
       else {
@@ -256,7 +294,11 @@ export function createDiffsStore(source: DiffSource, opts: DiffsStoreOptions): D
       await localAiReady
     }
     catch (err) {
-      error.value = err instanceof Error ? err : new Error(String(err))
+      // With a saved copy on screen, a failed revalidation keeps it there.
+      if (shown)
+        isOffline.value = true
+      else
+        error.value = err instanceof Error ? err : new Error(String(err))
     }
     finally {
       isLoading.value = false
@@ -269,11 +311,15 @@ export function createDiffsStore(source: DiffSource, opts: DiffsStoreOptions): D
     try {
       await fetchFresh()
       isStale.value = false
+      isOffline.value = false
       void reviews?.load()
       void shared?.discover()
     }
     catch (err) {
-      error.value = err instanceof Error ? err : new Error(String(err))
+      if (diff.value && isNetworkError(err))
+        isOffline.value = true
+      else
+        error.value = err instanceof Error ? err : new Error(String(err))
     }
     finally {
       isLoading.value = false
@@ -315,6 +361,7 @@ export function createDiffsStore(source: DiffSource, opts: DiffsStoreOptions): D
     isLoading,
     error,
     isStale,
+    isOffline,
     reviewed,
     changedSinceReviewed,
     groups,

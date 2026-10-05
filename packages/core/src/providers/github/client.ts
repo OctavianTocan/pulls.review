@@ -2,6 +2,7 @@ import type { Credentials } from '../../types/source'
 
 const GITHUB_API_BASE = 'https://api.github.com'
 const PAGE_SIZE = 100
+const PAGE_CONCURRENCY = 6
 
 /** A non-ok GitHub response, keeping the status so callers can react to auth/permission failures (401/403). */
 export class GithubApiError extends Error {
@@ -24,9 +25,31 @@ export interface GithubClient {
   token: () => Promise<string | undefined>
   /** `path` is relative to the API root (`/repos/...`). Throws `GithubApiError` on a non-ok response. */
   request: (path: string, options?: GithubRequestOptions) => Promise<Response>
-  /** Follows `per_page=100` pages until a short one comes back. */
+  /** Every item across the `per_page=100` pages, in order. */
   paginate: <T>(path: string) => Promise<T[]>
   graphql: <T>(query: string, variables: Record<string, string | number | null>) => Promise<T>
+}
+
+/** The `page` of the `rel="last"` link in a `Link` header. */
+function lastPage(link: string | null): number | undefined {
+  const last = link?.split(',').find(part => part.includes('rel="last"'))
+  const target = last?.slice(last.indexOf('<') + 1, last.indexOf('>'))
+  const page = target ? new URL(target, 'https://api.github.com').searchParams.get('page') : null
+  return page ? Number(page) : undefined
+}
+
+/** `map` with at most `limit` calls in flight, results in input order. */
+async function mapLimited<T, R>(inputs: T[], limit: number, fn: (input: T) => Promise<R>): Promise<R[]> {
+  const results: R[] = Array.from({ length: inputs.length })
+  let next = 0
+  async function worker() {
+    while (next < inputs.length) {
+      const index = next++
+      results[index] = await fn(inputs[index]!)
+    }
+  }
+  await Promise.all(Array.from({ length: Math.min(limit, inputs.length) }, worker))
+  return results
 }
 
 /** Without credentials every request is anonymous. The token is read per request, never captured. */
@@ -66,10 +89,19 @@ export function createGithubClient(credentials?: Credentials): GithubClient {
     token,
     request,
     async paginate<T>(path: string) {
-      const items: T[] = []
       const separator = path.includes('?') ? '&' : '?'
-      for (let page = 1; ; page++) {
-        const pageItems: T[] = await (await request(`${path}${separator}per_page=${PAGE_SIZE}&page=${page}`)).json()
+      const pageUrl = (page: number) => `${path}${separator}per_page=${PAGE_SIZE}&page=${page}`
+      const first = await request(pageUrl(1))
+      const items: T[] = await first.json()
+      if (items.length < PAGE_SIZE)
+        return items
+      const last = lastPage(first.headers.get('Link'))
+      if (last !== undefined) {
+        const rest = await mapLimited(Array.from({ length: last - 1 }, (_, i) => i + 2), PAGE_CONCURRENCY, async page => await (await request(pageUrl(page))).json() as T[])
+        return items.concat(...rest)
+      }
+      for (let page = 2; ; page++) {
+        const pageItems: T[] = await (await request(pageUrl(page))).json()
         items.push(...pageItems)
         if (pageItems.length < PAGE_SIZE)
           return items
