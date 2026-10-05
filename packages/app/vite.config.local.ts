@@ -38,5 +38,14 @@ export default defineConfig({
   build: {
     outDir: fileURLToPath(new URL('../cli/dist/client', import.meta.url)),
     emptyOutDir: true,
+    rolldownOptions: {
+      output: {
+        // Core's LLM code is imported both statically and dynamically; left to the default split it
+        // spans chunks that import each other, and picomatch's wrapper runs before it is defined.
+        codeSplitting: {
+          groups: [{ name: 'llm', test: /[\\/]core[\\/]src[\\/](?:llm\.ts|analyze[\\/]adapters[\\/]llm[\\/])/ }],
+        },
+      },
+    },
   },
 })
