@@ -49,6 +49,8 @@ export interface CliStreamHooks {
   /** Lets the model read the PR through tools. */
   context?: AiPrContext
   label?: string
+  /** Reattaches to a still-running job started with the same key instead of starting another. */
+  key?: string
 }
 
 export function isCliEngine(value: string): value is CliEngine {
@@ -129,7 +131,7 @@ export function createCliStreamFn(resolved: ResolvedModel, engine: CliEngine, ho
           ? { system, prompt: `${history}\n\nAnswer with the arguments for submit_grouping only, as JSON.`, schema: submit.parameters as unknown }
           : { system: `${system}\n\n${CHAT_LIMITS}${hooks.context ? '' : ` ${CHAT_NO_TOOLS}`}`, prompt: history }
         const { text, usage } = await runCli(
-          { engine, model: resolved.model.id, effort: resolved.effort, label: hooks.label, context: hooks.context, ...asked },
+          { engine, model: resolved.model.id, effort: resolved.effort, label: hooks.label, key: hooks.key, context: hooks.context, ...asked },
           { signal: options?.signal, onActivity: hooks.onActivity },
         )
         applyUsage(message, usage)
