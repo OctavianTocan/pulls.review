@@ -19,7 +19,7 @@ export function renderFilesAsText(files: FileChange[]): string {
     // omitting their diff body saves tokens without losing anything a reviewer needs.
     if (isGeneratedPath(file.path))
       return `${header}\n(generated file, diff omitted to save tokens)`
-    const body = file.hunks.map(hunk => `${hunk.header}\n${hunk.patch}`).join('\n')
+    const body = file.hunks.map((hunk, index) => `[hunk ${index}] ${hunk.header}\n${hunk.patch}`).join('\n')
     return `${header}\n${body}`
   }).join('\n\n')
 }
@@ -48,7 +48,9 @@ You organize a GitHub pull request's changed files into review groups, so a revi
 <output>
 - "summary" and "overallSummary" explain why over what, in 1-3 sentences of Markdown.
 - "key" is short, stable kebab-case. "label" is at most 4 words.
-- Write "label", "summary" and "overallSummary" in the language named at the end of the user message. Keep code, paths and identifiers as they are.
+- "files" holds a 2-3 sentence summary for each file whose diff you have seen, plus "hunks" notes for the hunks (by their [hunk N] index) whose purpose is not obvious. Skip files and hunks you have not read rather than guess from the path.
+- In file summaries and hunk notes, name the actual function, type, flag or value and what it now does for its callers. Never describe the act of changing ("updates X", "modifies Y") and never restate the added lines.
+- Write "label", "summary", "overallSummary" and the "files" text in the language named at the end of the user message. Keep code, paths and identifiers as they are.
 </output>`
 
 export const CHAT_SYSTEM_SECTION = `<chat>

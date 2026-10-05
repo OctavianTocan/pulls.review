@@ -4,7 +4,7 @@ import type { DiffsStore } from '../../stores/types'
 import ActionIconButton from '@antfu/design/components/Action/ActionIconButton.vue'
 import ActionToggleGroup from '@antfu/design/components/Action/ActionToggleGroup.vue'
 import { ACTIONS_BOT_LOGIN } from '@pulls.review/core/github'
-import { computed } from 'vue'
+import { computed, defineAsyncComponent } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { RouterLink } from 'vue-router'
 import { parentForRef } from '../../source-routes'
@@ -47,6 +47,9 @@ const groups = computed(() => props.store.groups)
 // The embedded view keys off the compile-time `PR_EMBED` flag instead of a runtime flag
 // threaded down from the store.
 const isEmbedded = import.meta.env.PR_EMBED
+const CritiqueButton = import.meta.env.PR_LOCAL
+  ? defineAsyncComponent(() => import('../critique/CritiqueButton.vue'))
+  : undefined
 
 const aiResult = computed(() => props.store.aiResult)
 const analyzeOptions = computed(() => [
@@ -145,6 +148,7 @@ function scrollToGroup(key: string) {
           </template>
         </span>
         <DiffAnalyzeButton v-if="store.llm" :store="store" :document="document" />
+        <CritiqueButton v-if="CritiqueButton && store.critique?.available" :critique="store.critique" :document="document" />
         <DiffShareButton v-if="canShareResult" :store="store" :document="document" />
         <DiffPrMeta v-if="showGroupSidebar" class="ml-auto" :store="store" :document="document" />
       </div>

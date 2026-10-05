@@ -154,6 +154,14 @@ function normalizeGroupArguments(value: unknown): unknown {
   return normalized
 }
 
+function normalizeFileNoteArguments(value: unknown): unknown {
+  const note = parseJsonString(value)
+  if (!note || typeof note !== 'object' || Array.isArray(note) || (note as Record<string, unknown>).hunks === undefined)
+    return note
+  const record = note as Record<string, unknown>
+  return { ...record, hunks: parseJsonString(record.hunks) }
+}
+
 /**
  * Some models behind Anthropic-compatible endpoints (e.g. DeepSeek via the Vercel AI Gateway)
  * emit nested arrays as JSON strings; pi validates arguments before execute, so undo that first.
@@ -163,7 +171,12 @@ export function prepareGroupingArguments(args: unknown): unknown {
     return args
   const record = args as Record<string, unknown>
   const groups = parseJsonString(record.groups)
-  return { ...record, groups: Array.isArray(groups) ? groups.map(normalizeGroupArguments) : groups }
+  const prepared: Record<string, unknown> = { ...record, groups: Array.isArray(groups) ? groups.map(normalizeGroupArguments) : groups }
+  if (record.files !== undefined) {
+    const files = parseJsonString(record.files)
+    prepared.files = Array.isArray(files) ? files.map(normalizeFileNoteArguments) : files
+  }
+  return prepared
 }
 
 export function createSubmitGroupingTool(diff: DiffsPayload, ledger: AnalysisLedger): AgentTool {

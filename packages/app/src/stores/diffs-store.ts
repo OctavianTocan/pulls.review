@@ -1,6 +1,6 @@
 import type { CacheRepositories, LlmSession, PrCacheEntry } from '@pulls.review/core/cache'
 import type { DiffSource, DiffsPayload, FileChange, GroupedResult, GroupSource, ReviewData } from '@pulls.review/core/types'
-import type { DiffsStore, DiffsStoreLlm } from './types'
+import type { DiffsStore, DiffsStoreAsk, DiffsStoreCritique, DiffsStoreLlm } from './types'
 import { computed, getCurrentScope, onScopeDispose, reactive, ref, shallowRef, watch } from 'vue'
 import { resolveAdapter, ruleBasedAdapter } from '../analyze'
 import { resolveGroups } from '../components/diff/group-utils'
@@ -78,6 +78,27 @@ export function createDiffsStore(source: DiffSource, opts: DiffsStoreOptions): D
           showLlmResult: () => setAnalyzeMode('llm'),
         })
       })
+    : undefined
+
+  // Reviewing and asking run on the local server's CLI, so only the local build ships them.
+  // A running review is not aborted on dispose: the server finishes it anyway, and it is
+  // saved for when the diff is opened again.
+  const critique = shallowRef<DiffsStoreCritique>()
+  const ask = shallowRef<DiffsStoreAsk>()
+  const ownerScope = getCurrentScope()
+  const localAiReady = import.meta.env.PR_LOCAL
+    ? Promise.all([import('./critique-store'), import('./ask-store'), import('../local/lenses')])
+        .then(([{ createCritiqueStore }, { createAskStore }, { lensSource }]) => {
+          // Created after an await, so their watchers are tied to the store's owner by hand.
+          const create = () => {
+            critique.value = createCritiqueStore({ cache, diff, getReviews: () => reviews, lenses: lensSource() })
+            ask.value = createAskStore({ diff })
+          }
+          if (ownerScope)
+            ownerScope.run(create)
+          else
+            create()
+        })
     : undefined
 
   async function loadReviewed() {
@@ -232,6 +253,7 @@ export function createDiffsStore(source: DiffSource, opts: DiffsStoreOptions): D
       void reviews?.load()
       void shared?.discover(opts.from)
       await llmReady
+      await localAiReady
     }
     catch (err) {
       error.value = err instanceof Error ? err : new Error(String(err))
@@ -304,6 +326,8 @@ export function createDiffsStore(source: DiffSource, opts: DiffsStoreOptions): D
     reviews,
     shared: shared?.store,
     fileContent,
+    critique,
+    ask,
     canRefresh: !!source.fingerprint,
     auth: source.auth,
     load,

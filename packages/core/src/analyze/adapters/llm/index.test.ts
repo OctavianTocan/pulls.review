@@ -233,4 +233,31 @@ describe('reconcile', () => {
       { key: 'code', label: 'Code', category: 'core', filePaths: ['a.ts'], children: undefined },
     ])
   })
+
+  it('keeps file notes for diff paths and hunk notes for hunks that exist', async () => {
+    const twoHunks = { ...file('a.ts'), hunks: [file('a.ts').hunks[0]!, { ...file('a.ts').hunks[0]!, header: '@@ -9,1 +9,1 @@' }] }
+    faux.setResponses([submit({
+      ...oneGroup('a.ts', 'b.ts'),
+      files: [
+        { path: 'a.ts', summary: ' Adds `parse`. ', hunks: [{ index: 1, note: 'Second.' }, { index: 0, note: 'First.' }, { index: 2, note: 'Past the end.' }, { index: 0, note: 'Duplicate.' }, { index: 0.5, note: 'Fractional.' }] },
+        { path: 'a.ts', summary: 'Duplicate path.' },
+        { path: 'made-up.ts', summary: 'Hallucinated.' },
+        { path: 'b.ts', summary: '  ', hunks: [{ index: 0, note: 'Empty summary.' }] },
+      ],
+    })])
+
+    const result = (await analyze(diffWithFiles(twoHunks, file('b.ts')))).result
+
+    expect(result.files).toEqual([
+      { path: 'a.ts', summary: 'Adds `parse`.', hunks: [{ index: 0, note: 'First.' }, { index: 1, note: 'Second.' }] },
+    ])
+  })
+
+  it('leaves files out when the model wrote none', async () => {
+    faux.setResponses([submit(oneGroup('a.ts'))])
+
+    const result = (await analyze(diffWithFiles(file('a.ts')))).result
+
+    expect(result).not.toHaveProperty('files')
+  })
 })

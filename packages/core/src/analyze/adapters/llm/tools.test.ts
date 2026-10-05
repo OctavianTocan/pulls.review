@@ -203,6 +203,11 @@ describe('prepareGroupingArguments', () => {
     })
   })
 
+  it('parses stringified file notes and their hunks', () => {
+    const args = { overallSummary: 'x', groups: [], files: JSON.stringify([{ path: 'a.ts', summary: 's', hunks: '[{"index":0,"note":"n"}]' }]) }
+    expect(prepareGroupingArguments(args)).toEqual({ overallSummary: 'x', groups: [], files: [{ path: 'a.ts', summary: 's', hunks: [{ index: 0, note: 'n' }] }] })
+  })
+
   it('leaves well-formed and unparseable arguments untouched', () => {
     const args = { overallSummary: 'x', groups: [{ key: 'a', label: 'A', category: 'core', filePaths: ['a.ts'] }] }
     expect(prepareGroupingArguments(args)).toEqual(args)

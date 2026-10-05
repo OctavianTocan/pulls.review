@@ -2,12 +2,16 @@
 import type { DiffLineAnnotation, FileDiffOptions, SelectedLineRange } from '@pierre/diffs'
 import type { CommentThread, DiffSide, FileChange, ReviewDraftTarget } from '@pulls.review/core/types'
 import type { DiffsStore } from '../../stores/types'
+import type { AiAnchor } from '../critique/file-annotations'
 import ActionButton from '@antfu/design/components/Action/ActionButton.vue'
 import ActionIconButton from '@antfu/design/components/Action/ActionIconButton.vue'
 import DisplayFilePath from '@antfu/design/components/Display/DisplayFilePath.vue'
 import { FileDiff as PierreFileDiff, processFile, VirtualizedFileDiff } from '@pierre/diffs'
-import { computed, inject, nextTick, onBeforeUnmount, onMounted, ref, useTemplateRef, watch } from 'vue'
+import { computed, defineAsyncComponent, inject, nextTick, onBeforeUnmount, onMounted, ref, useTemplateRef, watch } from 'vue'
 import { isDark as globalIsDark, isDarkKey } from '../../state/dark'
+import { aiAnchors } from '../critique/file-annotations'
+import FileSummary from '../critique/FileSummary.vue'
+import { revealFinding } from '../critique/reveal'
 import { useFileNavigation } from '../../state/navigation'
 import CommentComposer from './CommentComposer.vue'
 import { diffVirtualizerKey } from './diff-virtualizer'
@@ -24,6 +28,12 @@ const props = defineProps<{
   store: DiffsStore
   file: FileChange
 }>()
+
+const AiAnnotations = defineAsyncComponent(() => import('../critique/AiAnnotations.vue'))
+// Asking about lines runs on the local server, so only the local build offers selection actions.
+const SelectionActions = import.meta.env.PR_LOCAL
+  ? defineAsyncComponent(() => import('../ask/SelectionActions.vue'))
+  : undefined
 
 const status = computed(() => reviewStatus(props.store, props.file))
 const isReviewed = computed(() => status.value === 'reviewed')
@@ -184,7 +194,15 @@ interface AnnotationGroup {
   line: number
   threads: CommentThread[]
   hasDraft: boolean
+  ai?: AiAnchor
 }
+
+const fileNote = computed(() => props.store.aiResult?.files?.find(note => note.path === props.file.path))
+const aiAnchorList = computed(() => aiAnchors(props.file, {
+  findings: props.store.critique?.visibleFindings,
+  note: fileNote.value,
+  threads: props.store.ask?.threads,
+}))
 
 // One annotation (and one slotted wrapper) per anchor line: pierre emits one
 // shadow-DOM `<slot>` per annotation, and duplicate slot names would swallow
@@ -204,6 +222,8 @@ const annotationGroups = computed<AnnotationGroup[]>(() => {
     groupFor(thread.side, thread.line!).threads.push(thread)
   if (draftTarget.value)
     groupFor(draftTarget.value.side, draftTarget.value.line).hasDraft = true
+  for (const anchor of aiAnchorList.value)
+    groupFor(anchor.side, anchor.line).ai = anchor
   return [...groups.values()]
 })
 
@@ -211,6 +231,7 @@ const lineAnnotations = computed<DiffLineAnnotation[]>(() =>
   annotationGroups.value.map(group => ({ side: group.side, lineNumber: group.line })))
 
 const canComment = computed(() => (reviews.value?.canWrite ?? false) && !props.file.isBinary)
+const canSelect = computed(() => canComment.value || (!!SelectionActions && !props.file.isBinary))
 
 function openDraft(range: SelectedLineRange) {
   const side: DiffSide = range.endSide ?? range.side ?? 'additions'
@@ -265,7 +286,7 @@ const pierreOptions = computed((): FileDiffOptions<undefined, undefined> => ({
   disableFileHeader: true,
   // The library's built-in hover "+" gutter button and drag line-selection -
   // the click hands us the hovered line or selected range to anchor a draft on.
-  ...(canComment.value
+  ...(canSelect.value
     ? {
         enableGutterUtility: true,
         enableLineSelection: true,
@@ -350,6 +371,19 @@ watch(isReviewed, (value) => {
   collapsed.value = value
 })
 
+watch(() => props.store.critique?.focused, async (focus) => {
+  const finding = focus?.path === props.file.path ? props.store.critique?.visibleFindings.find(item => item.id === focus.id) : undefined
+  if (!finding)
+    return
+  collapsed.value = false
+  await nextTick()
+  const container = containerRef.value
+  if (!container)
+    return
+  const position = instance instanceof VirtualizedFileDiff ? instance.getLinePosition(finding.line, finding.side) : undefined
+  await revealFinding(container, finding.id, position?.top)
+})
+
 defineExpose({
   /** Called by the file tree's "jump to file" navigation, which can't reach `collapsed` otherwise. */
   expand: () => { collapsed.value = false },
@@ -406,6 +440,7 @@ defineExpose({
         {{ $t('file.markReviewed') }}
       </ActionButton>
     </div>
+    <FileSummary v-if="fileNote" :summary="fileNote.summary" />
     <div v-if="file.isBinary" class="p-4 text-sm op-fade">
       {{ $t('file.binaryNotShown') }}
     </div>
@@ -434,8 +469,18 @@ defineExpose({
           :thread="thread"
           :reviews="store.reviews!"
         />
+        <AiAnnotations v-if="group.ai" :store="store" :anchor="group.ai" />
         <div v-if="group.hasDraft" class="my-1 max-w-200 overflow-hidden border border-base rounded-lg bg-base">
+          <SelectionActions
+            v-if="SelectionActions && draftTarget"
+            :store="store"
+            :file="file"
+            :target="draftTarget"
+            :standalone="!canComment"
+            @done="draftTarget = undefined"
+          />
           <CommentComposer
+            v-if="canComment"
             :has-pending-review="!!store.reviews!.pendingReview"
             :busy="draftBusy"
             :error="draftError"

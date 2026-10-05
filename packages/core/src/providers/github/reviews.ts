@@ -2,7 +2,7 @@ import type { DiffSide } from '../../types/comment-threads'
 import type { ReviewsApi } from '../../types/source'
 import type { GithubClient } from './client'
 import type { PullRequestRef } from './shared-analysis-comment'
-import { createPendingReview, createReview, createReviewComment, deletePendingReview, deleteReviewComment, fetchReviewComments, fetchReviewCommentsForReview, fetchReviews, replyToReviewComment, submitPendingReview, updateReviewComment } from './review-api'
+import { createPendingReview, createReview, createReviewComment, createReviewWithComments, deletePendingReview, deleteReviewComment, fetchReviewComments, fetchReviewCommentsForReview, fetchReviews, replyToReviewComment, submitPendingReview, updateReviewComment } from './review-api'
 import { addThreadToPendingReview, fetchThreadResolutions, resolveThread } from './review-graphql'
 import { normalizeReviewData } from './review-normalize'
 import { asWrite } from './writes'
@@ -50,6 +50,27 @@ export function createGithubReviewsApi(client: GithubClient, { owner, repo, numb
     submitReview: (verdict, body, pendingReview) => asWrite(() => pendingReview
       ? submitPendingReview(client, owner, repo, number, pendingReview.id, verdict, body)
       : createReview(client, owner, repo, number, verdict, body)),
+    postReview: ({ headSha, body, comments, pendingReview }) => asWrite(async () => {
+      // GitHub refuses a second review while the viewer has one pending, so the comments join that one.
+      if (pendingReview) {
+        for (const comment of comments)
+          await addThreadToPendingReview(client, pendingReview.nodeId, comment.target, comment.body)
+        return submitPendingReview(client, owner, repo, number, pendingReview.id, 'COMMENT', body)
+      }
+      return createReviewWithComments(client, owner, repo, number, {
+        commitId: headSha,
+        event: 'COMMENT',
+        body,
+        comments: comments.map(comment => ({
+          body: comment.body,
+          path: comment.target.path,
+          side: toGithubSide(comment.target.side),
+          line: comment.target.line,
+          startLine: comment.target.startLine,
+          startSide: comment.target.startSide ? toGithubSide(comment.target.startSide) : undefined,
+        })),
+      })
+    }),
     discardPendingReview: pendingReview => asWrite(() => deletePendingReview(client, owner, repo, number, pendingReview.id)),
   }
 }

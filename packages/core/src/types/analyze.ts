@@ -1,5 +1,6 @@
 import type { DiffsPayload } from './diff'
 import * as v from 'valibot'
+import { DiffSideSchema } from './comment-threads'
 
 export const GroupSourceSchema = v.picklist([
   'none',
@@ -91,6 +92,20 @@ export function withChildren<const TEntries extends v.ObjectEntries>(leaf: v.Obj
 export const DiffGroupSchema = withChildren(DiffGroupLeafSchema)
 export type DiffGroup = v.InferOutput<typeof DiffGroupSchema>
 
+export const HunkNoteSchema = v.object({
+  index: v.pipe(v.number(), v.description('0-based position of the hunk in this file\'s diff: the number in the `[hunk N]` label before its `@@` header.')),
+  note: v.pipe(v.string(), v.description('One or two sentences on what this hunk does, naming the function, type, flag or value it touches and what it changes for callers. Never a description of the act of changing, never a restatement of the added lines.')),
+})
+export type HunkNote = v.InferOutput<typeof HunkNoteSchema>
+
+/** What one changed file does, with optional notes on its hunks; written by the llm adapter. */
+export const FileNoteSchema = v.object({
+  path: v.pipe(v.string(), v.description('The file path, verbatim from the manifest.')),
+  summary: v.pipe(v.string(), v.description('Two or three sentences on what this file\'s changes do and why, naming the actual functions, types and flags. Plain text, no Markdown headings.')),
+  hunks: v.optional(v.pipe(v.array(HunkNoteSchema), v.description('Notes for the hunks a reviewer would otherwise have to puzzle out. Skip hunks the file summary already explains.'))),
+})
+export type FileNote = v.InferOutput<typeof FileNoteSchema>
+
 /**
  * What an adapter itself decides by analyzing the diff. `source` (which adapter ran)
  * and `generatedAt` (when) are invocation metadata the caller already knows - not
@@ -100,6 +115,8 @@ export type DiffGroup = v.InferOutput<typeof DiffGroupSchema>
 export const GroupedResultCoreSchema = v.object({
   overallSummary: v.optional(v.pipe(v.string(), v.description('Short paragraph summarizing the whole PR for a reviewer, rendered as Markdown.'))), // only when an 'llm' or 'web-llm' adapter has run
   groups: v.array(DiffGroupSchema),
+  /** Per-file summaries and hunk notes; absent on rule-based results and on llm results from before they existed. */
+  files: v.optional(v.array(FileNoteSchema)),
   schemaVersion: v.number(), // bump on breaking shape changes, used for cache invalidation
 })
 export type GroupedResultCore = v.InferOutput<typeof GroupedResultCoreSchema>
@@ -121,6 +138,54 @@ export type GroupedResult = v.InferOutput<typeof GroupedResultSchema>
 export function normalizeGroupedResult(source: GroupSource, core: GroupedResultCore, model?: string): GroupedResult {
   return { ...core, source, generatedAt: new Date().toISOString(), model }
 }
+
+export const CritiqueSeveritySchema = v.picklist(['bug', 'risk', 'nit'])
+export type CritiqueSeverity = v.InferOutput<typeof CritiqueSeveritySchema>
+
+/** One problem an AI critique found, anchored to a line (or range) that exists in the diff. */
+export const CritiqueFindingSchema = v.object({
+  id: v.string(),
+  path: v.string(),
+  side: DiffSideSchema,
+  line: v.number(),
+  /** First line of a multi-line range on the same side; absent for a single line. */
+  startLine: v.optional(v.number()),
+  severity: CritiqueSeveritySchema,
+  title: v.string(),
+  /** GitHub-flavored Markdown. */
+  body: v.string(),
+  /** Replacement for lines `startLine..line` on the additions side, without fences. */
+  suggestion: v.optional(v.string()),
+})
+export type CritiqueFinding = v.InferOutput<typeof CritiqueFindingSchema>
+
+export const CritiqueUsageSchema = v.object({
+  inputTokens: v.optional(v.number()),
+  outputTokens: v.optional(v.number()),
+  cacheReadTokens: v.optional(v.number()),
+  cacheWriteTokens: v.optional(v.number()),
+  reasoningTokens: v.optional(v.number()),
+  costUsd: v.optional(v.number()),
+  durationMs: v.optional(v.number()),
+  model: v.optional(v.string()),
+})
+
+/** A finished AI critique of one diff at one head commit. */
+export const CritiqueResultSchema = v.object({
+  summary: v.string(),
+  findings: v.array(CritiqueFindingSchema),
+  /** Findings the model returned that were discarded: off-diff anchors, duplicates, or over the cap. */
+  dropped: v.number(),
+  headSha: v.optional(v.string()),
+  engine: v.string(),
+  model: v.optional(v.string()),
+  effort: v.optional(v.string()),
+  /** Name of the review lens (skill) whose instructions steered the critique. */
+  lens: v.optional(v.string()),
+  generatedAt: v.string(),
+  usage: v.optional(CritiqueUsageSchema),
+})
+export type CritiqueResult = v.InferOutput<typeof CritiqueResultSchema>
 
 /** What the llm adapter is doing, by agent turn; the caller renders it in its own words. */
 export type AnalyzeProgress = { step: number } & (

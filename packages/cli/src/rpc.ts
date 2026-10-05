@@ -2,13 +2,14 @@ import type { Env } from '@pulls.review/core/env'
 import type { AiJobSnapshot, CliModelCatalog, MyPull } from '@pulls.review/core/local-rpc'
 import type { Driver } from 'unstorage'
 import { createLocalSource, readRepoInfo } from '@pulls.review/core/local'
-import { LLM_ENGINES, LOCAL_RPC, MY_PULL_STATES } from '@pulls.review/core/local-rpc'
+import { LLM_ENGINES, LOCAL_RPC, MY_PULL_STATES, REVIEW_LENS_NAME } from '@pulls.review/core/local-rpc'
 import { DiffsPayloadSchema } from '@pulls.review/core/types'
 import { defineRpcFunction } from 'devframe'
 import * as v from 'valibot'
 import { listCliModels } from './ai/catalog'
 import { cancelAiJob, listAiJobs, runAiJob, startAiJob, waitAiJob } from './ai/jobs'
 import { resolveGithubToken } from './credentials'
+import { getLens, listLenses } from './lenses'
 import { listMyPulls } from './my-pulls'
 
 export interface LocalRpcOptions {
@@ -106,6 +107,14 @@ export function localRpcFunctions({ cwd, driver, env }: LocalRpcOptions) {
     }),
     defineRpcFunction({ name: LOCAL_RPC.githubToken, type: 'query', handler: () => resolveGithubToken(env) }),
     defineRpcFunction({ name: LOCAL_RPC.myPulls, type: 'query', args: [v.object({ state: v.picklist(MY_PULL_STATES) })], returns: trusted<MyPull[]>(), handler: ({ state }) => listMyPulls(state) }),
+    defineRpcFunction({ name: LOCAL_RPC.lensList, type: 'query', handler: () => listLenses() }),
+    defineRpcFunction({
+      name: LOCAL_RPC.lensGet,
+      type: 'query',
+      args: [v.object({ name: v.pipe(v.string(), v.regex(REVIEW_LENS_NAME)) })],
+      returns: v.optional(v.string()),
+      handler: ({ name }) => getLens(name),
+    }),
     defineRpcFunction({
       name: LOCAL_RPC.llmRun,
       type: 'action',

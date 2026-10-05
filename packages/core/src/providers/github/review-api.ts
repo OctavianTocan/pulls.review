@@ -105,6 +105,23 @@ export async function createReview(client: GithubClient, owner: string, repo: st
   await client.request(`/repos/${owner}/${repo}/pulls/${number}/reviews`, { method: 'POST', body: { event, body } })
 }
 
+/** Submits a review with its inline comments in one request. */
+export async function createReviewWithComments(client: GithubClient, owner: string, repo: string, number: string, review: { commitId: string, event: ReviewVerdict, body: string, comments: Omit<NewReviewCommentInput, 'commitId'>[] }): Promise<void> {
+  await client.request(`/repos/${owner}/${repo}/pulls/${number}/reviews`, { method: 'POST', body: {
+    commit_id: review.commitId,
+    event: review.event,
+    body: review.body,
+    comments: review.comments.map(comment => ({
+      path: comment.path,
+      body: comment.body,
+      side: comment.side,
+      line: comment.line,
+      start_line: comment.startLine,
+      start_side: comment.startSide,
+    })),
+  } })
+}
+
 /** Deletes the viewer's pending review, discarding its draft comments. */
 export async function deletePendingReview(client: GithubClient, owner: string, repo: string, number: string, reviewId: number): Promise<void> {
   await client.request(`/repos/${owner}/${repo}/pulls/${number}/reviews/${reviewId}`, { method: 'DELETE' })

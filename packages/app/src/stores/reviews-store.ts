@@ -69,6 +69,13 @@ export function createReviewsStore(api: ReviewsApi, opts: ReviewsStoreOptions): 
     await mutate(() => api.addComment({ target, body, mode, headSha, pendingReview: data.value.pendingReview }))
   }
 
+  async function postReview(body: string, comments: { target: ReviewDraftTarget, body: string }[]) {
+    const headSha = opts.getHeadSha()
+    if (!headSha)
+      throw new Error(t('errors.diffNotLoaded'))
+    await mutate(() => api.postReview({ headSha, body, comments, pendingReview: data.value.pendingReview }))
+  }
+
   async function discardPendingReview() {
     const pending = data.value.pendingReview
     if (pending)
@@ -93,6 +100,7 @@ export function createReviewsStore(api: ReviewsApi, opts: ReviewsStoreOptions): 
     deleteComment: (commentId: number) => mutate(() => api.deleteComment(commentId)),
     resolveThread: (threadId: string) => mutate(() => api.resolveThread(threadId)),
     submitReview: (verdict: ReviewVerdict, body: string) => mutate(() => api.submitReview(verdict, body, data.value.pendingReview)),
+    postReview,
     discardPendingReview,
   }) as DiffsStoreReviews
 }

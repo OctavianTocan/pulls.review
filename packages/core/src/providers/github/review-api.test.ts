@@ -5,6 +5,7 @@ import {
   createPendingReview,
   createReview,
   createReviewComment,
+  createReviewWithComments,
   deletePendingReview,
   deleteReviewComment,
   fetchReviewComments,
@@ -119,6 +120,26 @@ describe('write endpoints', () => {
     const [url, init] = fetchMock.mock.calls[0]!
     expect(url).toBe('https://api.github.com/repos/owner/repo/pulls/1/reviews')
     expect(JSON.parse(init.body)).toEqual({ event: 'REQUEST_CHANGES', body: 'Please fix' })
+  })
+
+  it('posts a review with its inline comments in one request', async () => {
+    const fetchMock = vi.fn().mockResolvedValue(jsonResponse({}, 200))
+    vi.stubGlobal('fetch', fetchMock)
+
+    const { commitId, ...comment } = input
+    await createReviewWithComments(createGithubClient(staticCredentials('token')), 'owner', 'repo', '1', { commitId, event: 'COMMENT', body: 'Two notes', comments: [comment, { ...comment, startLine: undefined, startSide: undefined, line: 9 }] })
+
+    const [url, init] = fetchMock.mock.calls[0]!
+    expect(url).toBe('https://api.github.com/repos/owner/repo/pulls/1/reviews')
+    expect(JSON.parse(init.body)).toEqual({
+      commit_id: 'head-sha',
+      event: 'COMMENT',
+      body: 'Two notes',
+      comments: [
+        { path: 'src/a.ts', body: 'Nice catch', side: 'RIGHT', line: 5, start_line: 3, start_side: 'RIGHT' },
+        { path: 'src/a.ts', body: 'Nice catch', side: 'RIGHT', line: 9 },
+      ],
+    })
   })
 
   it('replies, edits and deletes against the comment endpoints', async () => {

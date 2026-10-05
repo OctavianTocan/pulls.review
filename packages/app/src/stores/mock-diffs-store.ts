@@ -99,6 +99,13 @@ export function createMockReviewsStore(input: MockReviewsInput = {}): DiffsStore
       }))
       pendingReview.value = undefined
     },
+    postReview: async (_body: string, comments: { target: ReviewDraftTarget, body: string }[]) => {
+      threads.value = [
+        ...threads.value.map(thread => ({ ...thread, pending: false, comments: thread.comments.map(comment => ({ ...comment, pending: false })) })),
+        ...comments.map(({ target, body }) => ({ rootId: nextMockCommentId, ...target, outdated: false, pending: false, comments: [mockComment(body, false)] })),
+      ]
+      pendingReview.value = undefined
+    },
     discardPendingReview: async () => {
       threads.value = threads.value.filter(thread => !thread.pending)
       pendingReview.value = undefined
