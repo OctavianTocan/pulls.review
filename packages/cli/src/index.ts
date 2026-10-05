@@ -1,4 +1,6 @@
+import { existsSync } from 'node:fs'
 import { readFile } from 'node:fs/promises'
+import { join } from 'node:path'
 import process from 'node:process'
 import { fileURLToPath } from 'node:url'
 import { parseArgs } from 'node:util'
@@ -37,15 +39,20 @@ To review a GitHub pull request in CI, use @pulls.review/actions.
 `
 
 /**
- * devframe's SPA fallback skips any path that looks like a file, and refs do: `main...feat`
- * ends in `.feat`, `v1.2` in `.2`. Pages whose path carries a ref get the SPA's
- * `index.html` here, before devframe's static handler sees them.
+ * devframe's SPA fallback skips any path that looks like a file, and many pages do: refs
+ * (`main...feat`, `v1.2`) and repositories (`/antfu/pulls.review`). Page requests for
+ * such paths get the SPA's `index.html` here, unless a built file really lives there.
  */
 function createAppWithRefRoutes(): H3 {
   const app = new H3()
-  const index = fileURLToPath(new URL('./client/index.html', import.meta.url))
+  const client = fileURLToPath(new URL('./client/', import.meta.url))
+  const index = join(client, 'index.html')
   app.use(async (event, next) => {
-    if (!/^\/(?:compare|branch|commit)\//.test(event.url.pathname) || !event.req.headers.get('accept')?.includes('text/html'))
+    const path = event.url.pathname
+    if (event.req.method !== 'GET' || path.startsWith('/__') || !event.req.headers.get('accept')?.includes('text/html'))
+      return next()
+    const page = /^\/(?:compare|branch|commit)\//.test(path) || (/\.[^/]*$/.test(path) && !existsSync(join(client, path)))
+    if (!page)
       return next()
     return new Response(await readFile(index, 'utf8'), { headers: { 'Content-Type': 'text/html; charset=utf-8' } })
   })

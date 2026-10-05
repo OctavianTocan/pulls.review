@@ -1,7 +1,7 @@
 import type { StreamFn } from '@earendil-works/pi-agent-core'
-import type { AssistantMessage, JsonObject, Message, Model, Api, Tool } from '@earendil-works/pi-ai'
-import type { ResolvedModel } from './model'
+import type { Api, AssistantMessage, JsonObject, Message, Model, Tool } from '@earendil-works/pi-ai'
 import type { AiActivity, AiJobRequest, AiPrContext, AiUsage } from '../../../local-rpc'
+import type { ResolvedModel } from './model'
 import { createAssistantMessageEventStream, getCurrentSystemPrompt, getCurrentTools } from '@earendil-works/pi-ai'
 import { LLM_ENGINES } from '../../../local-rpc'
 
@@ -55,7 +55,8 @@ export function isCliEngine(value: string): value is CliEngine {
   return (LLM_ENGINES as readonly string[]).includes(value)
 }
 
-const CHAT_LIMITS = 'You cannot change the grouping or read more files from here: answer from the diffs already shown above.'
+const CHAT_LIMITS = 'You cannot change the grouping from here.'
+const CHAT_NO_TOOLS = 'You cannot read more files from here: answer from the diffs already shown above.'
 
 function textOf(content: string | readonly { type: string, text?: string }[]): string {
   if (typeof content === 'string')
@@ -126,7 +127,7 @@ export function createCliStreamFn(resolved: ResolvedModel, engine: CliEngine, ho
         const history = flattenTranscript(context.messages)
         const asked = submit
           ? { system, prompt: `${history}\n\nAnswer with the arguments for submit_grouping only, as JSON.`, schema: submit.parameters as unknown }
-          : { system: `${system}\n\n${CHAT_LIMITS}`, prompt: history }
+          : { system: `${system}\n\n${CHAT_LIMITS}${hooks.context ? '' : ` ${CHAT_NO_TOOLS}`}`, prompt: history }
         const { text, usage } = await runCli(
           { engine, model: resolved.model.id, effort: resolved.effort, label: hooks.label, context: hooks.context, ...asked },
           { signal: options?.signal, onActivity: hooks.onActivity },

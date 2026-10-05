@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { dropNulls, strictSchema } from './llm'
+import { dropNulls, strictSchema } from './schema'
 
 describe('codex structured-output schema', () => {
   const schema = {
