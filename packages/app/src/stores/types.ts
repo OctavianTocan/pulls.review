@@ -1,5 +1,7 @@
 import type { AgentMessage } from '@earendil-works/pi-agent-core'
-import type { CommentThread, DiffsPayload, FileChange, GroupedResult, GroupSource, PendingReview, ReviewDraftTarget, ReviewSummary, ReviewVerdict } from '@pulls.review/core/types'
+import type { AskSelection } from '@pulls.review/core/llm'
+import type { AiUsage, ReviewLens } from '@pulls.review/core/local-rpc'
+import type { CommentThread, CritiqueFinding, CritiqueResult, CritiqueSeverity, DiffsPayload, FileChange, GroupedResult, GroupSource, PendingReview, ReviewDraftTarget, ReviewSummary, ReviewVerdict } from '@pulls.review/core/types'
 import type { ResolvedGroupWithChildren } from '../components/diff/group-utils'
 
 /** A step of the running analysis, already worded in the UI language. */
@@ -76,6 +78,103 @@ export interface DiffsStoreReviews {
   /** Posts one COMMENT review with inline comments; a pending review is submitted with them, drafts included. */
   postReview: (body: string, comments: { target: ReviewDraftTarget, body: string }[]) => Promise<void>
   discardPendingReview: () => Promise<void>
+}
+
+/** A request to scroll a finding into view; `nonce` changes on every request. */
+export interface CritiqueFocus {
+  id: string
+  path: string
+  nonce: number
+}
+
+/**
+ * An AI review of the diff for defects, run through Claude Code or Codex on the local
+ * server, behind `DiffsStore.critique` (local build only).
+ */
+export interface DiffsStoreCritique {
+  /** Whether the configured AI provider can review: Claude Code or Codex. */
+  readonly available: boolean
+  /** Whether skills can be picked as review lenses. */
+  readonly hasLenses: boolean
+  /** The critique of the current head, from this run or an earlier one. */
+  readonly result: CritiqueResult | undefined
+  readonly isRunning: boolean
+  readonly error: Error | undefined
+  /** What the running review is doing, e.g. `Read src/a.ts`. */
+  readonly activity: string | undefined
+  /** Whole seconds since the running review started. */
+  readonly elapsed: number
+  /** The lens of the running review, else of `result`; `undefined` is the general review. */
+  readonly lens: string | undefined
+  /** Severities the findings list shows. */
+  readonly severities: CritiqueSeverity[]
+  /** `result`'s findings of the shown severities. */
+  readonly visibleFindings: CritiqueFinding[]
+  /** Ids of the findings picked for posting. */
+  readonly selected: Set<string>
+  /** Ids of the findings already posted from `result`. */
+  readonly posted: Set<string>
+  /** The visible, picked findings not yet posted. */
+  readonly toPost: CritiqueFinding[]
+  /** Whether `toPost` can be posted as a review on this source. */
+  readonly canPost: boolean
+  readonly isPosting: boolean
+  readonly postError: Error | undefined
+  /** The review body `post` is prefilled with. */
+  readonly defaultBody: string
+  readonly focused: CritiqueFocus | undefined
+  /** The skills on offer as lenses; empty when none are. */
+  listLenses: () => Promise<ReviewLens[]>
+  /** Shows the saved critique for `lens` at this head, or runs one; `force` always runs. */
+  run: (options?: { lens?: string, force?: boolean }) => Promise<void>
+  /** Stops following the running review; leaves `error` unset. */
+  abort: () => void
+  setSeverities: (severities: CritiqueSeverity[]) => void
+  setSelected: (id: string, selected: boolean) => void
+  /** Picks or unpicks every visible finding. */
+  selectAll: (selected: boolean) => void
+  focus: (finding: CritiqueFinding) => void
+  /** Posts `toPost` as one COMMENT review with `body` above its inline comments. */
+  post: (body: string) => Promise<void>
+}
+
+/** One question of an ask thread and its answer. */
+export interface AskThreadTurn {
+  question: string
+  /** Markdown; unset while the question is being answered or when it failed. */
+  answer?: string
+  error?: string
+  usage?: AiUsage
+}
+
+/** Questions about one selection of lines, answered one after another. */
+export interface AskThread {
+  id: string
+  selection: AskSelection
+  /** The selection as `path:L10-L20`. */
+  label: string
+  turns: AskThreadTurn[]
+  isAsking: boolean
+  /** What the running answer is doing, e.g. `Read src/a.ts`. */
+  activity?: string
+}
+
+/**
+ * Questions about selected lines, answered through Claude Code or Codex on the local
+ * server, behind `DiffsStore.ask` (local build only). Threads last for the page session.
+ */
+export interface DiffsStoreAsk {
+  /** Whether the configured ask provider is Claude Code or Codex. */
+  readonly available: boolean
+  /** This diff's threads, oldest first. */
+  readonly threads: AskThread[]
+  /** Opens a thread on `selection`, or returns the open one on the same lines. */
+  open: (selection: AskSelection) => string
+  /** Asks `question` in thread `id`, after the turns already answered there. */
+  ask: (id: string, question: string) => Promise<void>
+  /** Stops the answer thread `id` is waiting for. */
+  stop: (id: string) => void
+  close: (id: string) => void
 }
 
 /** A shared analysis found in the PR's Conversation comments, offered for loading. */
@@ -176,6 +275,10 @@ export interface DiffsStore {
   readonly auth?: 'github-token'
   /** `undefined` = this source can't fetch a file's full content (a paste has no live origin). */
   readonly fileContent?: DiffsStoreFileContent
+  /** `undefined` = no AI review in this build (only the local build has one). */
+  readonly critique?: DiffsStoreCritique
+  /** `undefined` = no asking about selected lines in this build (only the local build has it). */
+  readonly ask?: DiffsStoreAsk
   load: () => Promise<void>
   refresh: () => Promise<void>
   /** Marks (or unmarks) files by `sha`; either way clears their `changedSinceReviewed` flag. */

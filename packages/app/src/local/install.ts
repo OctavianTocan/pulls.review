@@ -8,6 +8,7 @@ import { installAppContext, settingsCredentials } from '../app-context'
 import { i18n } from '../i18n'
 import { createJobRunner } from './ai-jobs'
 import { connectLocal } from './connection'
+import { createRpcLenses, setLensSource } from './lenses'
 import { localRpcKey } from './local-rpc-key'
 import LocalAuthGate from './LocalAuthGate.vue'
 import { localRoutes } from './pages'
@@ -43,6 +44,7 @@ export async function installLocal(app: App, router: Router): Promise<void> {
   })
   app.provide(localRpcKey, rpc)
   setCliRunner(createJobRunner(rpc))
+  setLensSource(createRpcLenses(rpc))
 
   for (const route of localRoutes(() => import('../pages-local/diff.vue')))
     router.addRoute(route)
