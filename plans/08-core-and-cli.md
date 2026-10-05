@@ -1,4 +1,4 @@
-# Plan 08: `@pulls.review/core` and the `pulls-review` CLI / GitHub Action
+# Plan 08: `@pulls.review/core` and the `pulls.review` CLI / GitHub Action
 
 Status: **built**.
 
@@ -21,7 +21,7 @@ The repo is a pnpm workspace:
 | --------------- | ----------------------------- | ------ | ------------------------------------------------------------------ |
 | `packages/app`  | `@pulls.review/app` (private) | Vite   | The SPA and the github.com embed.                                  |
 | `packages/core` | `@pulls.review/core`          | tsdown | Everything runtime-agnostic, as subpath entries (below).           |
-| `packages/cli`  | `pulls-review`                | tsdown | `pulls-review [owner/repo#n]`: fetch, analyze, upsert the comment. |
+| `packages/cli`  | `pulls.review`                | tsdown | `pulls.review [owner/repo#n]`: fetch, analyze, upsert the comment. |
 
 Core has no root barrel; each subpath is one `src/<entry>.ts` and one tsdown entry:
 
@@ -94,7 +94,7 @@ Behaviour (`packages/cli/src/run.ts`):
 ## GitHub Action
 
 `action.yml` at the repo root is a composite action running
-`npx -y pulls-review@<version>` with the inputs mapped onto `PULLS_REVIEW_*`.
+`npx -y pulls.review@<version>` with the inputs mapped onto `PULLS_REVIEW_*`.
 Blank inputs arrive as `''`, which the CLI treats as unset.
 
 The README recommends `pull_request_target`: the CLI never checks out PR code
@@ -103,7 +103,7 @@ fork PRs get a comment too. `permissions: pull-requests: write` is required.
 
 ## Publishing
 
-Both `@pulls.review/core` and `pulls-review` are publishable; the CLI depends on
+Both `@pulls.review/core` and `pulls.review` are publishable; the CLI depends on
 core as a normal dependency. The `@pulls.review` npm scope has to be claimed
 before the first release. Releases require explicit human approval.
 

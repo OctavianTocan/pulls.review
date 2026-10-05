@@ -31,7 +31,7 @@ management product.
    should stay fast via virtualization, not degrade the way GitHub's own UI
    does.
 4. **Zero backend** — everything (fetching, caching, analysis) runs in the
-   visitor's browser, or in the user's own CI through the `pulls-review`
+   visitor's browser, or in the user's own CI through the `pulls.review`
    CLI. Auth is a self-supplied GitHub token; LLM access is a self-supplied
    key or gateway token. Nothing is proxied through a server we run.
 
@@ -40,7 +40,7 @@ management product.
 - LLM-powered analysis (richer summaries) as an opt-in alongside the
   always-available rule-based fallback, plus a fully in-browser (`web-llm`)
   option requiring no API key at all.
-- Analyzing every PR once from a workflow (built): the `pulls-review` CLI and
+- Analyzing every PR once from a workflow (built): the `pulls.review` CLI and
   its GitHub Action post the same shared-analysis comment a reviewer can, so
   the site and the embed show the result without anyone spending a key.
 - Reviewing PRs interactively from within pulls.review (built): inline review

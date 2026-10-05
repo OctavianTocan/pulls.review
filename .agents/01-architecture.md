@@ -24,7 +24,7 @@ A pnpm workspace of three packages (`plans/08-core-and-cli.md`):
   Vite-only syntax (`import.meta.glob`, `import.meta.env`) inside it.
   Callers pass model settings and locale in, inject group text, word the
   structured progress events, and translate nostics diagnostics by code.
-- `packages/cli` (`pulls-review`) — fetch, analyze, upsert the shared-analysis
+- `packages/cli` (`pulls.review`) — fetch, analyze, upsert the shared-analysis
   comment; what the root `action.yml` composite action runs.
 
 ## Invariants
