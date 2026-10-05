@@ -4,7 +4,7 @@ import ActionButton from '@antfu/design/components/Action/ActionButton.vue'
 import ActionIconButton from '@antfu/design/components/Action/ActionIconButton.vue'
 import { computed, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { formatSeconds } from './format'
+import { formatClockDuration } from '../ai/ai-format'
 import LensPicker from './LensPicker.vue'
 
 const props = defineProps<{
@@ -17,7 +17,7 @@ const pickerOpen = ref(false)
 
 const label = computed(() => {
   if (props.critique.isRunning)
-    return t('critique.running', { time: formatSeconds(props.critique.elapsed) })
+    return t('critique.running', { time: formatClockDuration(props.critique.elapsed * 1000) })
   return props.critique.result ? t('critique.rerun') : t('critique.run')
 })
 const title = computed(() => props.critique.lens ? t('critique.withLens', { lens: props.critique.lens }) : t('critique.runTitle'))

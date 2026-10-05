@@ -6,9 +6,10 @@ import { resolveAskModel } from '@pulls.review/core/analyze'
 import { askAboutSelection, isCliEngine, selectionLabel } from '@pulls.review/core/llm'
 import { serializeRef } from '@pulls.review/core/types'
 import { computed, reactive } from 'vue'
+import { upsertActivities } from '../components/ai/ai-activity'
 import { t } from '../i18n'
 import { settings } from '../state/settings'
-import { createActivityLog, isAbortError, toError } from './ai-activity'
+import { isAbortError, toError } from './run-errors'
 
 export interface AskStoreOptions {
   /** The diff questions are about; threads are kept per diff. */
@@ -58,34 +59,36 @@ export function createAskStore(opts: AskStoreOptions): DiffsStoreAsk {
     if (!thread || !loaded || thread.isAsking || !text)
       return
     const history: AskTurn[] = thread.turns.flatMap(turn => turn.answer !== undefined ? [{ question: turn.question, answer: turn.answer }] : [])
-    thread.turns.push({ question: text })
+    thread.turns.push({ question: text, activities: [], startedAt: Date.now() })
     const turn = thread.turns.at(-1)!
     const resolved = resolveAskModel(settings.value.llm)
     if (!resolved || !isCliEngine(resolved.model.provider)) {
       turn.error = t('ask.unavailable')
+      turn.outcome = 'failed'
       return
     }
 
     const controller = new AbortController()
     controllers.set(id, controller)
-    const log = createActivityLog()
     thread.isAsking = true
     try {
       const answer = await askAboutSelection(loaded, resolved, { selection: thread.selection, question: text, history }, {
         signal: controller.signal,
-        onActivity: (activities) => {
-          thread.activity = log.merge(activities)
+        onActivity: (incoming) => {
+          turn.activities = upsertActivities(turn.activities ?? [], incoming)
         },
       })
       turn.answer = answer.text
       turn.usage = answer.usage
+      turn.outcome = 'done'
     }
     catch (err) {
-      turn.error = isAbortError(err) ? t('ask.stopped') : toError(err).message
+      const stopped = isAbortError(err)
+      turn.error = stopped ? t('ask.stopped') : toError(err).message
+      turn.outcome = stopped ? 'stopped' : 'failed'
     }
     finally {
       thread.isAsking = false
-      thread.activity = undefined
       controllers.delete(id)
     }
   }

@@ -8,8 +8,9 @@ import FormTextarea from '@antfu/design/components/Form/FormTextarea.vue'
 import { Markdown } from '@comark/vue'
 import { computed, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
+import AiActivityLog from '../ai/AiActivityLog.vue'
+import AiUsageLine from '../ai/AiUsageLine.vue'
 import FindingCard from './FindingCard.vue'
-import { formatSeconds, formatUsage } from './format'
 
 const props = defineProps<{
   store: DiffsStore
@@ -24,11 +25,11 @@ const result = computed(() => props.critique.result)
 const reviews = computed(() => props.store.reviews)
 
 const ENGINE_NAMES: Record<string, string> = { 'claude-code': 'Claude Code', 'codex': 'Codex' }
+// The usage line names the model the CLI reported, so it is only repeated here when the CLI named none.
 const engine = computed(() => {
   const r = result.value
-  return r ? [ENGINE_NAMES[r.engine] ?? r.engine, r.model, r.effort].filter(Boolean).join(' · ') : ''
+  return r ? [ENGINE_NAMES[r.engine] ?? r.engine, r.usage?.model ? undefined : r.model, r.effort].filter(Boolean).join(' · ') : ''
 })
-const usage = computed(() => formatUsage(result.value?.usage))
 const isOutdated = computed(() => !!result.value?.headSha && result.value.headSha !== props.store.diff?.head?.sha)
 
 const severityOptions = computed(() => (['bug', 'risk', 'nit'] as const).map((severity) => {
@@ -59,14 +60,18 @@ watch(() => props.critique.defaultBody, (value) => {
         {{ $t('critique.findingCount', { n: result.findings.length }, result.findings.length) }}
       </span>
       <span v-if="engine" class="text-xs op-mute">{{ engine }}</span>
-      <span v-if="usage" class="ml-auto text-xs tabular-nums op-mute" :title="$t('critique.usage')">{{ usage }}</span>
+      <AiUsageLine v-if="result && !critique.isRunning" class="ml-auto" :usage="result.usage" :title="$t('critique.usage')" />
     </header>
 
-    <div v-if="critique.isRunning" class="flex items-center gap-2 text-sm">
-      <span class="i-ph:spinner-duotone shrink-0 animate-spin op-fade" aria-hidden="true" />
-      <span class="min-w-0 flex-1 truncate op-fade">{{ critique.activity ?? $t('critique.starting') }}</span>
-      <span class="shrink-0 text-xs tabular-nums op-mute">{{ formatSeconds(critique.elapsed) }}</span>
-      <ActionButton size="sm" @click="critique.abort()">
+    <div v-if="critique.isRunning || critique.activities.length" class="flex items-start gap-3">
+      <AiActivityLog
+        class="flex-1"
+        :activities="critique.activities"
+        :running="critique.isRunning"
+        :started-at="critique.startedAt"
+        :outcome="critique.outcome"
+      />
+      <ActionButton v-if="critique.isRunning" size="sm" icon="i-ph:stop-duotone" @click="critique.abort()">
         {{ $t('common.stop') }}
       </ActionButton>
     </div>

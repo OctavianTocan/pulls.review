@@ -52,9 +52,9 @@ describe('createAskStore', () => {
       question: 'Is it safe?',
       history: [{ question: 'What does this do?', answer: 'It parses.' }],
     })
-    expect(store.threads[0]!.turns).toEqual([
-      { question: 'What does this do?', answer: 'It parses.', usage: { costUsd: 0.01 } },
-      { question: 'Is it safe?', answer: 'Yes.', usage: undefined },
+    expect(store.threads[0]!.turns).toMatchObject([
+      { question: 'What does this do?', answer: 'It parses.', usage: { costUsd: 0.01 }, outcome: 'done' },
+      { question: 'Is it safe?', answer: 'Yes.', usage: undefined, outcome: 'done' },
     ])
   })
 

@@ -101,6 +101,8 @@ export interface DiffsStoreReviews {
   discardPendingReview: () => Promise<void>
 }
 
+export type AiRunOutcome = 'done' | 'failed' | 'stopped'
+
 /** A request to scroll a finding into view; `nonce` changes on every request. */
 export interface CritiqueFocus {
   id: string
@@ -121,8 +123,12 @@ export interface DiffsStoreCritique {
   readonly result: CritiqueResult | undefined
   readonly isRunning: boolean
   readonly error: Error | undefined
-  /** What the running review is doing, e.g. `Read src/a.ts`. */
-  readonly activity: string | undefined
+  /** The work log of the review running now, or of the last one run on this page. */
+  readonly activities: readonly TrackedActivity[]
+  /** When that review started, ms since the epoch. */
+  readonly startedAt: number | undefined
+  /** How that review ended; `undefined` while it runs or before any has. */
+  readonly outcome: AiRunOutcome | undefined
   /** Whole seconds since the running review started. */
   readonly elapsed: number
   /** The lens of the running review, else of `result`; `undefined` is the general review. */
@@ -166,6 +172,12 @@ export interface AskThreadTurn {
   answer?: string
   error?: string
   usage?: AiUsage
+  /** What the engine did to answer, oldest first. */
+  activities?: TrackedActivity[]
+  /** When the question was sent, ms since the epoch. */
+  startedAt?: number
+  /** Unset while the answer is coming. */
+  outcome?: AiRunOutcome
 }
 
 /** Questions about one selection of lines, answered one after another. */
@@ -176,8 +188,6 @@ export interface AskThread {
   label: string
   turns: AskThreadTurn[]
   isAsking: boolean
-  /** What the running answer is doing, e.g. `Read src/a.ts`. */
-  activity?: string
 }
 
 /**

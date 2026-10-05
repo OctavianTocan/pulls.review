@@ -3,15 +3,17 @@ import type { CacheRepositories } from '@pulls.review/core/cache'
 import type { ReviewLens } from '@pulls.review/core/local-rpc'
 import type { CritiqueFinding, CritiqueResult, CritiqueSeverity, DiffsPayload, ReviewDraftTarget } from '@pulls.review/core/types'
 import type { Ref } from 'vue'
+import type { TrackedActivity } from '../components/ai/ai-activity'
 import type { LensSource } from '../local/lenses'
-import type { CritiqueFocus, DiffsStoreCritique, DiffsStoreReviews } from './types'
+import type { AiRunOutcome, CritiqueFocus, DiffsStoreCritique, DiffsStoreReviews } from './types'
 import { resolveModel } from '@pulls.review/core/analyze'
 import { critiqueReviewBody, findingCommentBody, isCliEngine, runCritique } from '@pulls.review/core/llm'
 import { serializeRef } from '@pulls.review/core/types'
 import { computed, reactive, ref, shallowRef, watch } from 'vue'
+import { upsertActivities } from '../components/ai/ai-activity'
 import { t } from '../i18n'
 import { settings } from '../state/settings'
-import { createActivityLog, isAbortError, toError } from './ai-activity'
+import { isAbortError, toError } from './run-errors'
 
 export interface CritiqueStoreOptions {
   cache: CacheRepositories
@@ -55,7 +57,8 @@ export function createCritiqueStore(opts: CritiqueStoreOptions): DiffsStoreCriti
   const result = shallowRef<CritiqueResult>()
   const isRunning = ref(false)
   const error = ref<Error>()
-  const activity = ref<string>()
+  const activities = shallowRef<TrackedActivity[]>([])
+  const outcome = ref<AiRunOutcome>()
   const lens = ref<string>()
   const severities = ref<CritiqueSeverity[]>([...SEVERITIES])
   const selected = ref(new Set<string>())
@@ -63,9 +66,8 @@ export function createCritiqueStore(opts: CritiqueStoreOptions): DiffsStoreCriti
   const isPosting = ref(false)
   const postError = ref<Error>()
   const focused = ref<CritiqueFocus>()
-  const startedAt = ref(0)
+  const startedAt = ref<number>()
   const now = ref(0)
-  const log = createActivityLog()
   let controller: AbortController | undefined
   let timer: ReturnType<typeof setInterval> | undefined
   let focusNonce = 0
@@ -77,7 +79,7 @@ export function createCritiqueStore(opts: CritiqueStoreOptions): DiffsStoreCriti
     const reviews = getReviews()
     return !!reviews?.canWrite && toPost.value.length > 0 && !isPosting.value && result.value?.headSha === diff.value?.head?.sha
   })
-  const elapsed = computed(() => isRunning.value ? Math.max(0, Math.floor((now.value - startedAt.value) / 1000)) : 0)
+  const elapsed = computed(() => isRunning.value && startedAt.value !== undefined ? Math.max(0, Math.floor((now.value - startedAt.value) / 1000)) : 0)
   const defaultBody = computed(() => result.value ? critiqueReviewBody(result.value) : '')
 
   function show(next: CritiqueResult | undefined) {
@@ -94,10 +96,11 @@ export function createCritiqueStore(opts: CritiqueStoreOptions): DiffsStoreCriti
   }
 
   function abort() {
+    if (controller)
+      outcome.value = 'stopped'
     controller?.abort()
     controller = undefined
     isRunning.value = false
-    activity.value = undefined
     stopTimer()
   }
 
@@ -105,6 +108,8 @@ export function createCritiqueStore(opts: CritiqueStoreOptions): DiffsStoreCriti
   watch(() => diff.value && `${serializeRef(diff.value.ref)}@${diff.value.head?.sha ?? ''}`, async (subject) => {
     abort()
     error.value = undefined
+    activities.value = []
+    startedAt.value = outcome.value = undefined
     show(undefined)
     const loaded = diff.value
     if (!subject || !loaded)
@@ -130,7 +135,8 @@ export function createCritiqueStore(opts: CritiqueStoreOptions): DiffsStoreCriti
     timer = setInterval(() => {
       now.value = Date.now()
     }, 1000)
-    log.clear()
+    activities.value = []
+    outcome.value = undefined
   }
 
   function stopRunning(current: AbortController) {
@@ -138,7 +144,7 @@ export function createCritiqueStore(opts: CritiqueStoreOptions): DiffsStoreCriti
       return
     controller = undefined
     isRunning.value = false
-    activity.value = undefined
+    outcome.value = error.value ? 'failed' : 'done'
     stopTimer()
   }
 
@@ -165,9 +171,9 @@ export function createCritiqueStore(opts: CritiqueStoreOptions): DiffsStoreCriti
       const next = await runCritique(loaded, resolved, {
         lens: await lensOf(options.lens),
         signal: current.signal,
-        onActivity: (activities) => {
+        onActivity: (incoming) => {
           if (controller === current)
-            activity.value = log.merge(activities)
+            activities.value = upsertActivities(activities.value, incoming)
         },
       })
       // Saved even when the view moved on, so the paid review is there on return.
@@ -228,7 +234,9 @@ export function createCritiqueStore(opts: CritiqueStoreOptions): DiffsStoreCriti
     result,
     isRunning,
     error,
-    activity,
+    activities,
+    startedAt,
+    outcome,
     elapsed,
     lens,
     severities,

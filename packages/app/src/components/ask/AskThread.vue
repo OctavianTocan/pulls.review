@@ -5,7 +5,8 @@ import ActionIconButton from '@antfu/design/components/Action/ActionIconButton.v
 import FormTextarea from '@antfu/design/components/Form/FormTextarea.vue'
 import { Markdown } from '@comark/vue'
 import { onMounted, ref, useTemplateRef } from 'vue'
-import { formatUsage } from '../critique/format'
+import AiActivityLog from '../ai/AiActivityLog.vue'
+import AiUsageLine from '../ai/AiUsageLine.vue'
 
 const props = defineProps<{
   thread: AskThread
@@ -48,24 +49,28 @@ onMounted(() => {
         <div class="max-w-[85%] self-end whitespace-pre-wrap break-words rounded-lg bg-active px-3 py-2 text-sm">
           {{ turn.question }}
         </div>
+        <div v-if="turn.startedAt !== undefined" class="flex items-start gap-2 px-1">
+          <AiActivityLog
+            compact
+            class="flex-1"
+            :activities="turn.activities ?? []"
+            :running="turn.outcome === undefined"
+            :started-at="turn.startedAt"
+            :outcome="turn.outcome"
+          />
+          <ActionButton v-if="turn.outcome === undefined" size="sm" variant="text" icon="i-ph:stop-duotone" @click="ask.stop(thread.id)">
+            {{ $t('common.stop') }}
+          </ActionButton>
+        </div>
         <Suspense v-if="turn.answer !== undefined">
           <Markdown :value="turn.answer" class="chat-markdown min-w-0 px-1 text-sm" />
         </Suspense>
         <p v-else-if="turn.error" class="px-1 text-xs text-red-600 dark:text-red-400">
           {{ turn.error }}
         </p>
-        <p v-if="formatUsage(turn.usage)" class="px-1 text-xs tabular-nums op-mute">
-          {{ formatUsage(turn.usage) }}
-        </p>
+        <AiUsageLine v-if="turn.usage" class="px-1" :usage="turn.usage" />
       </div>
-      <div v-if="thread.isAsking" class="flex items-center gap-2 px-1 text-xs">
-        <span class="i-ph:spinner-duotone shrink-0 animate-spin op-fade" aria-hidden="true" />
-        <span class="min-w-0 flex-1 truncate op-fade">{{ thread.activity ?? $t('ask.thinking') }}</span>
-        <ActionButton size="sm" variant="text" @click="ask.stop(thread.id)">
-          {{ $t('common.stop') }}
-        </ActionButton>
-      </div>
-      <div v-else class="flex flex-col gap-2">
+      <div v-if="!thread.isAsking" class="flex flex-col gap-2">
         <FormTextarea
           ref="input"
           v-model="question"
