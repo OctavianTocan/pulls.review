@@ -94,7 +94,7 @@ const to = computed(() => routeForRef({ kind: 'github-pr', owner: props.pull.own
       :title="pull.changedFiles !== undefined ? $t('triage.files', pull.changedFiles) : undefined"
     />
     <span class="hidden w-24 shrink-0 truncate text-xs op-fade sm:inline">{{ pull.author }}</span>
-    <time class="w-20 shrink-0 text-right text-xs op-fade" :datetime="pull.updatedAt" :title="new Date(pull.updatedAt).toLocaleString(locale)">
+    <time class="min-w-20 shrink-0 whitespace-nowrap text-right text-xs op-fade" :datetime="pull.updatedAt" :title="new Date(pull.updatedAt).toLocaleString(locale)">
       {{ formatTimeAgo(new Date(pull.updatedAt), locale) }}
     </time>
   </RouterLink>

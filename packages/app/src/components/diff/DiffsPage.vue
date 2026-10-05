@@ -6,7 +6,7 @@ import FeedbackLoading from '@antfu/design/components/Feedback/FeedbackLoading.v
 import FormCheckbox from '@antfu/design/components/Form/FormCheckbox.vue'
 import { Markdown } from '@comark/vue'
 import { Virtualizer } from '@pierre/diffs'
-import { useElementBounding, useEventListener } from '@vueuse/core'
+import { useElementBounding, useEventListener, useMediaQuery } from '@vueuse/core'
 import { computed, defineAsyncComponent, nextTick, onBeforeUnmount, onMounted, provide, ref, useTemplateRef, watch } from 'vue'
 import { usePrCommands } from '../../composables/usePrCommands'
 import { autoRefresh } from '../../state/auto-refresh'
@@ -83,8 +83,11 @@ useEventListener(() => props.document ?? document, 'scroll', (event) => {
 // measured height is published as the `--diffs-header-height` CSS variable on the root
 // (DiffGroup asides and section scroll-margins read it) and reused here so a group only
 // counts as "visible" once it's scrolled past the header, not merely past the viewport top.
+// On phones the header would eat half the screen, so it scrolls away and covers nothing.
 const headerRef = useTemplateRef<{ $el: HTMLElement }>('header')
-const { height: headerHeight } = useElementBounding(() => headerRef.value?.$el)
+const { height: measuredHeaderHeight } = useElementBounding(() => headerRef.value?.$el)
+const isHeaderSticky = useMediaQuery('(min-width: 768px)')
+const headerHeight = computed(() => isHeaderSticky.value ? measuredHeaderHeight.value : 0)
 usePrCommands({
   store: () => props.store,
   root: () => props.document ?? document,
@@ -152,7 +155,7 @@ function scrollToGroup(key: string) {
 
 const styles = computed(() => {
   return {
-    '--diffs-header-height': headerHeight.value ? `${headerHeight.value}px` : undefined,
+    '--diffs-header-height': measuredHeaderHeight.value ? `${headerHeight.value}px` : undefined,
   }
 })
 

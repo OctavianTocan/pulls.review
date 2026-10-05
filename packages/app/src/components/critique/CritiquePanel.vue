@@ -137,7 +137,8 @@ watch(() => props.critique.isRunning, (running) => {
           <p v-if="critique.postError" class="text-xs text-red-600 dark:text-red-400">
             {{ critique.postError.message }}
           </p>
-          <div class="flex flex-wrap items-center justify-end gap-2">
+          <!-- On phones the floating chat button sits over the right edge; keep the post button clear of it. -->
+          <div class="flex flex-wrap items-center justify-end gap-2 pr-16 md:pr-0">
             <span v-if="critique.posted.size" class="mr-auto flex items-center gap-1 text-xs op-fade">
               <span class="i-ph:check-circle-duotone text-green-600 dark:text-green-400" aria-hidden="true" />
               {{ $t('critique.postedCount', { n: critique.posted.size }, critique.posted.size) }}
