@@ -337,5 +337,28 @@
     "noViewer": "无法确定此 token 对应的 GitHub 用户。",
     "tokenRejected": "GitHub 拒绝了此 token（401）。请检查是否完整粘贴且未被撤销。",
     "tooLarge": "分析内容过大，无法作为评论分享（{n} 个字符）。"
+  },
+  "local": {
+    "loading": "正在加载本地更改…",
+    "loadFailed": "无法加载这些更改",
+    "auth": {
+      "title": "输入终端中显示的代码",
+      "hint": "pulls.review 已在其运行的终端中打印了一个 6 位代码。",
+      "invalid": "该代码无效。请检查终端后重试。",
+      "submit": "继续"
+    },
+    "picker": {
+      "tagline": "像审查 Pull Request 一样审查本地分支、范围和未提交的更改：分组、摘要、逐个范围查看。",
+      "title": "审查本地更改",
+      "base": "基准",
+      "head": "头部",
+      "compare": "比较",
+      "shortcuts": "快捷方式",
+      "worktree": "未提交的更改",
+      "recentCommits": "最近的提交",
+      "branches": "分支",
+      "against": "对比 {base}",
+      "current": "当前分支"
+    }
   }
 }

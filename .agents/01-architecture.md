@@ -27,10 +27,16 @@ A pnpm workspace of three packages (`plans/08-core-and-cli.md`):
 - `packages/actions` (`@pulls.review/actions`) — the GitHub Actions CLI: fetch,
   analyze, upsert the shared-analysis comment; what the root `action.yml`
   composite action runs.
-- `packages/cli` (`pulls.review`, the unscoped name) is reserved for the
-  standalone CLI: local git review served through devframe
-  (`plans/09-devframe-local-review.md`, on Plan 04's `local` source). It is not
-  built yet and MUST NOT take over the Actions entry point.
+- `packages/cli` (`pulls.review`, the unscoped name) — the standalone CLI:
+  `pulls.review [target]` serves local git reviews through devframe
+  (`plans/09-devframe-local-review.md`, on Plan 04's `local` source) at `/`
+  standalone and `/__pulls.review/` in a hub. The server holds no target: pages
+  (`/`, `/branch/<name>`, `/compare/<A...B>`, `/worktree`, `/commit/<sha>`)
+  name their own, and the argument only picks which one opens. Its SPA is the
+  app's `PR_LOCAL` build (`vite.config.local.ts`), which swaps only the app
+  context: the cache is an RPC driver over `<git-common-dir>/pulls-review` and
+  the GitHub token comes from the server. It MUST NOT take over the
+  Actions entry point, and the public site MUST NOT bundle the devframe client.
 
 ## Invariants
 
@@ -326,9 +332,13 @@ land later without a rewrite:
 - Settings (GitHub PAT, later model keys) and loading a pasted/uploaded diff
   are both modals/panels (`SettingsModal.vue`/`LoadDiffModal.vue` wrapping
   pure `*Panel.vue` content), triggered from `AppHeader.vue` — never routed
-  pages. `AppHeader` itself only renders on `pages/index.vue` (the `/gh/...`
-  and `/upload` reading views stay header-free; their own sticky
-  `DiffsHeader` is the only scroll nav there).
+  pages. `AppHeader` itself only renders on the landing pages
+  (`pages-web/index.vue`, and `pages-local/index.vue` in the `PR_LOCAL`
+  build). The reading views stay header-free: their own sticky `DiffsHeader`
+  is the only scroll nav there.
+- Routed pages live in `app/pages-web/` (the site: landing, `/upload`,
+  `/gh/...`) and `app/pages-local/` (only registered by the `PR_LOCAL` build:
+  the ref picker and the local review page).
 - A generated userscript (`scripts/build-userscript.ts`) mounts
   `<pulls-review-embed-panel>` (`app/embed/`, a Vue custom element built as
   one IIFE with `PR_EMBED` on and `PR_LLM` off) into `github.com` pull request

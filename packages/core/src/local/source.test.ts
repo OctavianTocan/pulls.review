@@ -56,6 +56,21 @@ describe('local source', () => {
     expect(await source.fingerprint!()).toBe(diff.head!.sha)
     expect(await source.loadFile!('a.ts', diff.head!.sha)).toBe('two\n')
     expect(await source.loadFile!('a.ts', diff.base!.sha)).toBe('one\n')
+    expect(await source.loadFile!('../outside.txt', diff.head!.sha)).toBeUndefined()
+  })
+
+  it('moves the working-tree fingerprint when HEAD moves under an unchanged diff', async () => {
+    write('a.ts', 'one\n')
+    commit('init')
+    write('b.ts', 'b\n')
+    commit('second')
+    write('a.ts', 'two\n')
+    const source = createLocalSource({ cwd: repo, target: '' })
+    const before = await source.fingerprint()
+    sh('stash', '-q')
+    sh('reset', '-q', '--hard', 'HEAD~1')
+    sh('stash', 'pop', '-q')
+    expect(await source.fingerprint()).not.toBe(before)
   })
 
   it('moves the working-tree fingerprint when a file changes again', async () => {

@@ -337,5 +337,28 @@
     "noViewer": "Der GitHub-Benutzer dieses Tokens konnte nicht ermittelt werden.",
     "tokenRejected": "GitHub hat dieses Token abgelehnt (401). Prüfe, ob es vollständig eingefügt wurde und nicht widerrufen ist.",
     "tooLarge": "Die Analyse ist zu groß, um als Kommentar geteilt zu werden ({n} Zeichen)."
+  },
+  "local": {
+    "loading": "Lokale Änderungen werden geladen…",
+    "loadFailed": "Diese Änderungen konnten nicht geladen werden",
+    "auth": {
+      "title": "Code aus dem Terminal eingeben",
+      "hint": "pulls.review hat im Terminal, in dem es läuft, einen 6-stelligen Code ausgegeben.",
+      "invalid": "Dieser Code hat nicht funktioniert. Prüfe das Terminal und versuche es erneut.",
+      "submit": "Weiter"
+    },
+    "picker": {
+      "tagline": "Reviewe lokale Branches, Bereiche und nicht committete Änderungen wie einen Pull Request: gruppiert, zusammengefasst, ein Bereich nach dem anderen.",
+      "title": "Lokale Änderungen reviewen",
+      "base": "Basis",
+      "head": "Head",
+      "compare": "Vergleichen",
+      "shortcuts": "Schnellzugriff",
+      "worktree": "Nicht committete Änderungen",
+      "recentCommits": "Letzte Commits",
+      "branches": "Branches",
+      "against": "gegen {base}",
+      "current": "Ausgecheckt"
+    }
   }
 }
