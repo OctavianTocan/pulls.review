@@ -11,6 +11,8 @@ import { parentForRef } from '../../source-routes'
 import { showGroupSidebar } from '../../state/group-nav'
 import GithubAvatar from '../GithubAvatar.vue'
 import NavControls from '../NavControls.vue'
+import { usePrOverview } from '../overview/context'
+import PrHeaderChips from '../overview/PrHeaderChips.vue'
 import DiffAnalyzeButton from './DiffAnalyzeButton.vue'
 import DiffGroupNav from './DiffGroupNav.vue'
 import DiffGroupNavToggle from './DiffGroupNavToggle.vue'
@@ -30,6 +32,17 @@ const { t } = useI18n()
 
 // `store.diff` is guaranteed set - `DiffsPage` only renders this component once it is.
 const meta = computed(() => props.store.diff!)
+const overviewCtx = usePrOverview()
+// While the diff is narrowed to some commits, `meta` describes those commits; the header still names the PR.
+const pr = computed(() => overviewCtx?.store.overview)
+const display = computed(() => {
+  const current = pr.value
+  if (!current) {
+    const { title, label, url, base, head, author } = meta.value
+    return { title, label, url, state: meta.value.pullRequest?.state, base: base?.ref, head: head?.ref, author: author && { login: author.name, avatarUrl: author.avatarUrl } }
+  }
+  return { title: current.title, label: `#${current.number}`, url: current.url, state: current.state, base: current.base.ref, head: current.head.ref, author: current.author }
+})
 const groups = computed(() => props.store.groups)
 // The embedded view keys off the compile-time `PR_EMBED` flag instead of a runtime flag
 // threaded down from the store.
@@ -47,6 +60,11 @@ const parent = computed(() => parentForRef(meta.value.ref))
 
 const reviews = computed(() => props.store.reviews)
 
+function refresh() {
+  void props.store.refresh()
+  void overviewCtx?.store.refresh()
+}
+
 function scrollToGroup(key: string) {
   (props.document ?? document).getElementById(`group-${key}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
 }
@@ -60,17 +78,17 @@ function scrollToGroup(key: string) {
     <div class="mxa max-w-500 w-full">
       <div class="flex flex-wrap items-center gap-2">
         <component :is="isEmbedded ? 'div' : RouterLink" to="/" class="flex">
-          <PrStatusIcon v-if="meta.pullRequest?.state" :state="meta.pullRequest.state" />
+          <PrStatusIcon v-if="display.state" :state="display.state" />
           <div v-else class="i-ph-house-line-duotone" />
         </component>
         <h1 class="flex flex-auto items-center gap-2 break-words text-lg font-semibold">
-          {{ meta.title }}
-          <a v-if="meta.label" :href="meta.url" target="_blank" rel="noopener" class="text-base font-normal op-fade hover:underline">{{ meta.label }}</a>
+          {{ display.title }}
+          <a v-if="display.label" :href="display.url" target="_blank" rel="noopener" class="text-base font-normal op-fade hover:underline">{{ display.label }}</a>
           <ActionIconButton
             v-if="store.canRefresh"
             icon="i-ph:arrows-clockwise-duotone"
             :label="$t('common.refresh')" :tooltip="$t('common.refresh')"
-            class="shrink-0 text-sm" @click="store.refresh()"
+            class="shrink-0 text-sm" @click="refresh"
           />
         </h1>
 
@@ -105,16 +123,17 @@ function scrollToGroup(key: string) {
         <RouterLink v-if="parent && !isEmbedded" :to="parent.route" class="flex items-center gap-1.5 op-fade hover:underline">
           <span>{{ parent.label }}</span>
         </RouterLink>
-        <span v-if="meta.author" class="flex items-center gap-1.5">
+        <span v-if="display.author" class="flex items-center gap-1.5">
           <span class="op-fade">{{ $t('pr.by') }}</span>
-          <GithubAvatar :login="meta.author.name" :avatar-url="meta.author.avatarUrl" :size="16" />
-          <span class="op-fade">{{ meta.author.name }}</span>
+          <GithubAvatar :login="display.author.login" :avatar-url="display.author.avatarUrl" :size="16" />
+          <span class="op-fade">{{ display.author.login }}</span>
         </span>
-        <span v-if="meta.base && meta.head && !isEmbedded" class="flex items-center gap-1 font-mono">
-          <span class="border border-base rounded bg-code px-2 py-0.5 text-xs font-mono">{{ meta.base.ref }}</span>
+        <span v-if="display.base && display.head && !isEmbedded" class="flex items-center gap-1 font-mono">
+          <span class="border border-base rounded bg-code px-2 py-0.5 text-xs font-mono">{{ display.base }}</span>
           ←
-          <span class="border border-base rounded bg-code px-2 py-0.5 text-xs font-mono">{{ meta.head.ref }}</span>
+          <span class="border border-base rounded bg-code px-2 py-0.5 text-xs font-mono">{{ display.head }}</span>
         </span>
+        <PrHeaderChips />
         <span v-if="aiResult?.sharedBy && store.analyzeMode !== 'rule-based'" class="flex items-center gap-1.5 border border-base rounded px2" :title="aiResult.model">
           <template v-if="aiResult.sharedBy === ACTIONS_BOT_LOGIN">
             {{ $t('pr.sharedAnalysis') }}
@@ -129,20 +148,6 @@ function scrollToGroup(key: string) {
         <DiffShareButton v-if="canShareResult" :store="store" :document="document" />
         <DiffPrMeta v-if="showGroupSidebar" class="ml-auto" :store="store" :document="document" />
       </div>
-      <!-- <template v-if="meta.description">
-      <button
-        type="button"
-        class="text-sm color-muted mt-1 flex gap-1 items-center hover:color-base"
-        :aria-expanded="descriptionOpen"
-        @click="descriptionOpen = !descriptionOpen"
-      >
-        <span :class="descriptionOpen ? 'i-ph:caret-down' : 'i-ph:caret-right'" aria-hidden="true" />
-        Description
-      </button>
-      <p v-if="descriptionOpen" class="text-sm whitespace-pre-wrap">
-        {{ meta.description }}
-      </p>
-    </template> -->
 
       <div v-if="!showGroupSidebar" class="flex items-center gap-2 pt-2 text-sm">
         <DiffGroupNav
