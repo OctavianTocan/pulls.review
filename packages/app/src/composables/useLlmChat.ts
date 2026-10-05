@@ -3,12 +3,15 @@ import type { AssistantMessage } from '@earendil-works/pi-ai'
 import type { LlmSession } from '@pulls.review/core/cache'
 import type { DiffsPayload, GroupedResult } from '@pulls.review/core/types'
 import type { Ref } from 'vue'
-import { resolveModel } from '@pulls.review/core/analyze'
+import type { TrackedActivity } from '../components/ai/ai-activity'
+import { resolveAskModel } from '@pulls.review/core/analyze'
 import { diagnostics } from '@pulls.review/core/diagnostics'
 import { computed, getCurrentScope, onScopeDispose, ref, shallowRef, toRaw } from 'vue'
+import { upsertActivities } from '../components/ai/ai-activity'
 import { t } from '../i18n'
 import { localizeError } from '../i18n/core-messages'
 import { settings } from '../state/settings'
+import { buildPrContext } from '../stores/ai-job'
 
 export interface LlmChatOptions {
   diff: Ref<DiffsPayload | undefined>
@@ -25,6 +28,9 @@ export function useLlmChat({ diff, session, onSessionChange, onGroupingUpdate }:
   const isStreaming = ref(false)
   const error = ref<Error>()
   const live = shallowRef<{ session: LlmSession, messages: AgentMessage[] }>()
+  const activities = shallowRef<TrackedActivity[]>([])
+  const startedAt = ref<number>()
+  const endedAt = ref<number>()
   let liveAgent: Agent | undefined
   let stopRequested = false
 
@@ -39,7 +45,7 @@ export function useLlmChat({ diff, session, onSessionChange, onGroupingUpdate }:
     const current = session.value
     if (!currentDiff || !current || isStreaming.value)
       return
-    const resolved = resolveModel(settings.value.llm)
+    const resolved = resolveAskModel(settings.value.llm)
     if (!resolved) {
       error.value = localizeError(diagnostics.llmNotConfigured())
       return
@@ -49,6 +55,9 @@ export function useLlmChat({ diff, session, onSessionChange, onGroupingUpdate }:
     const isStale = () => session.value !== current || toRaw(diff.value) !== currentDiff
 
     error.value = undefined
+    activities.value = []
+    startedAt.value = Date.now()
+    endedAt.value = undefined
     isStreaming.value = true
     stopRequested = false
     try {
@@ -61,6 +70,11 @@ export function useLlmChat({ diff, session, onSessionChange, onGroupingUpdate }:
         locale: settings.value.locale,
         messages: history,
         onGroupingUpdate: result => isStale() ? undefined : onGroupingUpdate(result),
+        onActivity: (next) => {
+          if (!isStale())
+            activities.value = upsertActivities(activities.value, next)
+        },
+        context: buildPrContext(currentDiff),
       })
       liveAgent = agent
       const sync = () => {
@@ -91,6 +105,7 @@ export function useLlmChat({ diff, session, onSessionChange, onGroupingUpdate }:
     finally {
       liveAgent = undefined
       live.value = undefined
+      endedAt.value = Date.now()
       isStreaming.value = false
     }
   }
@@ -122,8 +137,9 @@ export function useLlmChat({ diff, session, onSessionChange, onGroupingUpdate }:
       return
     stop()
     error.value = undefined
+    activities.value = []
     await onSessionChange({ messages: toRaw(current.messages).slice(0, current.chatStartIndex), chatStartIndex: current.chatStartIndex })
   }
 
-  return { available, messages, isStreaming, error, send, retry, stop, clear }
+  return { available, messages, isStreaming, error, activities, startedAt, endedAt, send, retry, stop, clear }
 }

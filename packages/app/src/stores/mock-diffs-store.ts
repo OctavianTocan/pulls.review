@@ -1,8 +1,12 @@
 import type { AgentMessage } from '@earendil-works/pi-agent-core'
+import type { AiUsage } from '@pulls.review/core/local-rpc'
 import type { CommentThread, DiffsPayload, GroupedResult, GroupSource, PendingReview, ReviewDraftTarget, ReviewSummary, ReviewVerdict } from '@pulls.review/core/types'
+import type { TrackedActivity } from '../components/ai/ai-activity'
 import type { DiffsStore, DiffsStoreReviews, DiffsStoreShared, LlmProgress, SharedAnalysisCandidate } from './types'
 import { computed, reactive, ref, shallowRef } from 'vue'
+import { activitiesFromTranscript } from '../components/ai/ai-activity'
 import { resolveGroups } from '../components/diff/group-utils'
+import { t } from '../i18n'
 
 export interface MockReviewsInput {
   threads?: CommentThread[]
@@ -163,10 +167,21 @@ export function createMockDiffsStore(input: {
   llmProgress?: LlmProgress
   llmTranscript?: AgentMessage[]
   llmError?: Error
+  /** The run's work log; defaults to the one read off `llmTranscript`, as for API providers. */
+  llmActivities?: TrackedActivity[]
+  llmEngine?: string
+  llmStartedAt?: number
+  llmEndedAt?: number
+  llmUsage?: AiUsage
+  llmCancelled?: boolean
+  llmResumed?: boolean
   chatMessages?: AgentMessage[]
   chatStreaming?: boolean
   chatError?: Error
   chatAvailable?: boolean
+  chatActivities?: TrackedActivity[]
+  chatStartedAt?: number
+  chatEndedAt?: number
   layout?: 'split' | 'unified'
   /** Enables the reviews sub-store (absent = a source with no review lifecycle). */
   reviews?: MockReviewsInput
@@ -193,6 +208,8 @@ export function createMockDiffsStore(input: {
   const llmProgress = ref(input.llmProgress)
   const llmTranscript = shallowRef(input.llmTranscript ?? [])
   const llmError = ref(input.llmError)
+  const llmActivities = computed(() => input.llmActivities ?? activitiesFromTranscript(llmTranscript.value, isAnalyzing.value, t))
+  const llmCancelled = ref(input.llmCancelled ?? false)
   const hasAiResult = ref(grouped.value?.source === 'llm')
   const isSetup = computed(() => input.isSetup ?? true)
   const aiResult = computed(() => hasAiResult.value ? grouped.value : undefined)
@@ -207,6 +224,9 @@ export function createMockDiffsStore(input: {
     messages: chatMessages,
     isStreaming: input.chatStreaming ?? false,
     error: input.chatError,
+    activities: input.chatActivities ?? [],
+    startedAt: input.chatStartedAt,
+    endedAt: input.chatEndedAt,
     async send(text: string) {
       chatMessages.value = [...chatMessages.value, { role: 'user', content: text, timestamp: Date.now() }]
     },
@@ -245,6 +265,7 @@ export function createMockDiffsStore(input: {
   function abort() {
     isAnalyzing.value = false
     llmProgress.value = undefined
+    llmCancelled.value = true
   }
 
   const ui = reactive({
@@ -272,6 +293,13 @@ export function createMockDiffsStore(input: {
           progress: llmProgress,
           transcript: llmTranscript,
           error: llmError,
+          activities: llmActivities,
+          engine: input.llmEngine,
+          startedAt: input.llmStartedAt,
+          endedAt: input.llmEndedAt,
+          usage: input.llmUsage,
+          cancelled: llmCancelled,
+          resumed: input.llmResumed ?? false,
           reanalyze,
           abort,
           chat,
