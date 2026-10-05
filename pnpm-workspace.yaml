@@ -59,6 +59,7 @@ catalogs:
     '@antfu/eslint-config': ^9.5.1
     '@types/node': ^26.6.4
     '@types/picomatch': ^4.0.3
+    bumpp: ^12.3.0
     eslint: ^10.12.0
     eslint-plugin-format: ^2.0.1
     eslint-plugin-slop: ^0.1.3

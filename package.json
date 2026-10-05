@@ -21,6 +21,7 @@
     "typecheck": "pnpm -r run typecheck",
     "test": "vitest run",
     "test:watch": "vitest",
+    "release": "bumpp -r",
     "prepare": "skills-npm",
     "storybook": "pnpm -F @pulls.review/app run storybook"
   },
@@ -29,6 +30,7 @@
     "@antfu/skills": "catalog:agentic",
     "@types/node": "catalog:dev",
     "@unocss/eslint-config": "catalog:build",
+    "bumpp": "catalog:dev",
     "eslint": "catalog:dev",
     "eslint-plugin-format": "catalog:dev",
     "eslint-plugin-slop": "catalog:dev",
