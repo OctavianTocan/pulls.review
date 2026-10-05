@@ -22,7 +22,7 @@ export const LOCAL_RPC = {
   storageRemoveItem: 'storage-remove-item',
   storageGetKeys: 'storage-get-keys',
   githubToken: 'github-token',
-  /** The signed-in user's open pull requests, found through the `gh` CLI. */
+  /** The signed-in user's pull requests, fetched fresh unless the server's copy is seconds old. */
   myPulls: 'my-pulls',
   /** One prompt through the server's Claude Code or Codex CLI. */
   llmRun: 'llm-run',
@@ -35,6 +35,11 @@ export const LOCAL_RPC = {
   aiJobCancel: 'ai-job-cancel',
   /** Jobs still running or recently finished, newest first. */
   aiJobList: 'ai-job-list',
+  /** The server's last `my-pulls` answer without waiting; starts a refresh when it has aged. */
+  myPullsCached: 'my-pulls-cached',
+  /** Batched `storage-get-item` / `storage-set-item`: one round trip for many keys. */
+  storageGetItems: 'storage-get-items',
+  storageSetItems: 'storage-set-items',
 } as const
 
 /** The CLIs the server can run a model prompt through. */
@@ -167,7 +172,38 @@ export interface MyPull {
   labels: string[]
   state: 'open' | 'closed'
   role: MyPullRole
+  url?: string
+  /** Closed by merging rather than abandoned. */
+  merged?: boolean
+  headSha?: string
+  /** The signed-in user is asked to review it, directly or through a team. */
+  requestedFromMe?: boolean
+  /** Absent when the repository requires no review. */
+  reviewDecision?: MyPullReviewDecision
+  /** The combined status of the head commit's checks. */
+  checks?: MyPullChecks
+  mergeable?: MyPullMergeable
+  additions?: number
+  deletions?: number
+  changedFiles?: number
+  /** Logins and `org/team` slugs with a pending review request. */
+  reviewRequests?: string[]
 }
+
+export type MyPullReviewDecision = 'approved' | 'changes-requested' | 'review-required'
+/** `none`: the head commit reports no checks at all. */
+export type MyPullChecks = 'success' | 'failure' | 'pending' | 'none'
+/** `unknown` while GitHub is still computing it. */
+export type MyPullMergeable = 'mergeable' | 'conflicting' | 'unknown'
 
 export const MY_PULL_STATES = ['open', 'closed'] as const
 export type MyPullState = typeof MY_PULL_STATES[number]
+
+/** What the server last fetched for a `my-pulls` state. */
+export interface MyPullsSnapshot {
+  pulls: MyPull[]
+  /** Epoch milliseconds the list was fetched at. */
+  fetchedAt: number
+  /** A newer list is being fetched right now. */
+  refreshing: boolean
+}

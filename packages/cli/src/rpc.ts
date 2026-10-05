@@ -7,7 +7,7 @@ import { defineRpcFunction } from 'devframe'
 import * as v from 'valibot'
 import { resolveGithubToken } from './credentials'
 import { runLlm } from './llm'
-import { listMyPulls } from './my-pulls'
+import { cachedMyPulls, listMyPulls } from './my-pulls'
 
 export interface LocalRpcOptions {
   /** Any directory inside the repository under review. */
@@ -87,6 +87,32 @@ export function localRpcFunctions({ cwd, driver, env }: LocalRpcOptions) {
       })],
       returns: v.string(),
       handler: request => runLlm(request),
+    }),
+    defineRpcFunction({
+      name: LOCAL_RPC.myPullsCached,
+      type: 'query',
+      args: [v.object({ state: v.picklist(MY_PULL_STATES) })],
+      returns: v.unknown(),
+      handler: async ({ state }) => cachedMyPulls(state),
+    }),
+    defineRpcFunction({
+      name: LOCAL_RPC.storageGetItems,
+      type: 'query',
+      args: [v.object({ keys: v.array(v.string()) })],
+      returns: v.array(v.nullable(v.string())),
+      handler: ({ keys }) => Promise.all(keys.map(async (key) => {
+        const value = await driver.getItem(key, {})
+        return typeof value === 'string' ? value : null
+      })),
+    }),
+    defineRpcFunction({
+      name: LOCAL_RPC.storageSetItems,
+      type: 'action',
+      args: [v.object({ items: v.array(v.object({ key: v.string(), value: v.string() })) })],
+      returns: v.void(),
+      handler: async ({ items }) => {
+        await Promise.all(items.map(({ key, value }) => driver.setItem?.(key, value, {})))
+      },
     }),
   ]
 }

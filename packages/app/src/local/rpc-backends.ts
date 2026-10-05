@@ -18,6 +18,13 @@ export function createRpcDriver(rpc: LocalRpc): Driver {
       await rpc.call(LOCAL_RPC.storageRemoveItem, { key })
     },
     getKeys: async base => v.parse(v.array(v.string()), await rpc.call(LOCAL_RPC.storageGetKeys, { base })),
+    getItems: async (items) => {
+      const values = v.parse(v.array(v.nullable(v.string())), await rpc.call(LOCAL_RPC.storageGetItems, { keys: items.map(item => item.key) }))
+      return items.map((item, index) => ({ key: item.key, value: values[index] ?? null }))
+    },
+    setItems: async (items) => {
+      await rpc.call(LOCAL_RPC.storageSetItems, { items: items.map(({ key, value }) => ({ key, value })) })
+    },
   }
 }
 
