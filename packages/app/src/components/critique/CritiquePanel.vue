@@ -6,7 +6,7 @@ import ActionToggleGroup from '@antfu/design/components/Action/ActionToggleGroup
 import FormCheckbox from '@antfu/design/components/Form/FormCheckbox.vue'
 import FormTextarea from '@antfu/design/components/Form/FormTextarea.vue'
 import { Markdown } from '@comark/vue'
-import { computed, ref, watch } from 'vue'
+import { computed, ref, useTemplateRef, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import AiActivityLog from '../ai/AiActivityLog.vue'
 import AiUsageLine from '../ai/AiUsageLine.vue'
@@ -43,10 +43,17 @@ const allSelected = computed(() => selectable.value.length > 0 && selectable.val
 watch(() => props.critique.defaultBody, (value) => {
   body.value = value
 }, { immediate: true })
+
+// The panel sits under the pull request's description, so a review started from the toolbar is otherwise off screen.
+const root = useTemplateRef<HTMLElement>('root')
+watch(() => props.critique.isRunning, (running) => {
+  if (running)
+    root.value?.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
+}, { immediate: true, flush: 'post' })
 </script>
 
 <template>
-  <section data-critique-panel class="flex flex-col gap-3 border border-base rounded-lg bg-raised px-3 py-2">
+  <section ref="root" data-critique-panel class="flex flex-col gap-3 border border-base rounded-lg bg-raised px-3 py-2">
     <header class="flex flex-wrap items-center gap-x-3 gap-y-1">
       <button type="button" class="flex items-center gap-1.5 text-sm font-medium" :aria-expanded="isOpen" @click="isOpen = !isOpen">
         <span :class="isOpen ? 'i-ph:caret-down' : 'i-ph:caret-right'" aria-hidden="true" />

@@ -235,7 +235,8 @@ interface RawFinding {
 }
 
 function stringOf(value: unknown): string {
-  return typeof value === 'string' ? value.trim() : ''
+  // Claude sometimes leaves the answer object's closing `"}` inside its last string.
+  return typeof value === 'string' ? value.trim().replace(/"\s*\}+$/, '').trimEnd() : ''
 }
 
 function lineOf(value: unknown): number | undefined {

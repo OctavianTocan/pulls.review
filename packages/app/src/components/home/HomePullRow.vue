@@ -81,7 +81,11 @@ const to = computed(() => routeForRef({ kind: 'github-pr', owner: props.pull.own
       class="shrink-0 rounded bg-hover px-1.5 py-0.5 text-xs text-red-600 dark:text-red-400"
       :title="$t('triage.conflictHint')"
     >{{ $t('triage.conflict') }}</span>
-    <span v-for="label in pull.labels.slice(0, 2)" :key="label" class="hidden max-w-32 shrink-0 truncate rounded bg-hover px-1.5 py-0.5 text-xs op-fade lg:inline">{{ label }}</span>
+    <span
+      v-if="pull.labels.length"
+      class="hidden max-w-24 shrink-0 truncate rounded bg-hover px-1.5 py-0.5 text-xs op-fade lg:inline"
+      :title="pull.labels.join(', ')"
+    >{{ pull.labels[0] }}<template v-if="pull.labels.length > 1"> +{{ pull.labels.length - 1 }}</template></span>
     <DiffStats
       v-if="pull.additions !== undefined"
       class="hidden w-24 shrink-0 text-right md:inline"

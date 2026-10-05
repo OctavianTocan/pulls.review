@@ -162,6 +162,11 @@ describe('runCritique', () => {
     await expect(runCritique(diffWith(file('a.ts')), resolved)).resolves.toMatchObject({ summary: 'Nothing to flag.', findings: [] })
   })
 
+  it('drops the object\'s closing quote and brace left inside the summary', async () => {
+    setCliRunner(async () => ({ text: JSON.stringify({ summary: 'Nothing to flag."}', findings: [] }) }))
+    await expect(runCritique(diffWith(file('a.ts')), resolved)).resolves.toMatchObject({ summary: 'Nothing to flag.' })
+  })
+
   it('refuses API providers', async () => {
     await expect(runCritique(diffWith(), resolveModel({ ...defaultLlmSettings, provider: 'anthropic', anthropicApiKey: 'k' })!)).rejects.toThrow('Claude Code or Codex')
   })
