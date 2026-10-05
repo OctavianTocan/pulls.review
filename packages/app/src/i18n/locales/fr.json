@@ -77,6 +77,10 @@
     "reviewedOf": "/ {total} relus",
     "openInSite": "Ouvrir dans pulls.review"
   },
+  "embed": {
+    "reviewChanges": "Relire les modifications",
+    "updateUserscript": "Mettre à jour le userscript"
+  },
   "pulls": {
     "loading": "Chargement des pull requests…",
     "loadFailed": "Impossible de charger les pull requests",
