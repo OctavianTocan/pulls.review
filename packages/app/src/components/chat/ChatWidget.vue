@@ -3,7 +3,10 @@ import type { DiffsStore } from '../../stores/types'
 import ActionButton from '@antfu/design/components/Action/ActionButton.vue'
 import ActionIconButton from '@antfu/design/components/Action/ActionIconButton.vue'
 import { useResizeObserver } from '@vueuse/core'
-import { computed, ref, useTemplateRef } from 'vue'
+import { computed, nextTick, ref, useTemplateRef } from 'vue'
+import { t } from '../../i18n'
+import { useCommand } from '../../state/commands'
+import { COMMAND } from '../../state/keymap'
 import ChatMessage from './ChatMessage.vue'
 
 const props = defineProps<{
@@ -52,6 +55,19 @@ async function submit() {
   stuckToBottom.value = true
   await chat.value.send(text)
 }
+
+const field = useTemplateRef<HTMLTextAreaElement>('field')
+useCommand(() => ({
+  id: COMMAND.ask,
+  title: t('keys.ask'),
+  group: t('palette.group.pr'),
+  icon: 'i-ph:chat-circle-dots-duotone',
+  run: async () => {
+    open.value = true
+    await nextTick()
+    field.value?.focus()
+  },
+}))
 
 function onKeydown(event: KeyboardEvent) {
   if (event.key !== 'Enter' || event.shiftKey || event.isComposing)
@@ -112,6 +128,7 @@ function onKeydown(event: KeyboardEvent) {
 
         <div class="flex items-end gap-2 border-t border-base p-2">
           <textarea
+            ref="field"
             v-model="input"
             rows="2"
             :placeholder="$t('chat.placeholder')"

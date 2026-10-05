@@ -8,6 +8,7 @@ import { Markdown } from '@comark/vue'
 import { Virtualizer } from '@pierre/diffs'
 import { useElementBounding, useEventListener } from '@vueuse/core'
 import { computed, defineAsyncComponent, nextTick, onBeforeUnmount, onMounted, provide, ref, useTemplateRef, watch } from 'vue'
+import { usePrCommands } from '../../composables/usePrCommands'
 import { autoRefresh } from '../../state/auto-refresh'
 import { showGroupSidebar } from '../../state/group-nav'
 import GithubTokenRecovery from '../settings/GithubTokenRecovery.vue'
@@ -76,6 +77,13 @@ useEventListener(() => props.document ?? document, 'scroll', (event) => {
 // counts as "visible" once it's scrolled past the header, not merely past the viewport top.
 const headerRef = useTemplateRef<{ $el: HTMLElement }>('header')
 const { height: headerHeight } = useElementBounding(() => headerRef.value?.$el)
+usePrCommands({
+  store: () => props.store,
+  root: () => props.document ?? document,
+  scroller: () => props.document && !(props.document instanceof Document) ? rootEl.value ?? undefined : undefined,
+  headerHeight,
+  collapsedGroups,
+})
 const groupsVisable = ref<string[]>([])
 function updateVisibleGroups() {
   const root = props.document ?? document
