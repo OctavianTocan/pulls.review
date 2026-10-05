@@ -27,6 +27,9 @@ const props = defineProps<{
 const ChatWidget = import.meta.env.PR_LLM
   ? defineAsyncComponent(() => import('../chat/ChatWidget.vue'))
   : undefined
+const CritiquePanel = import.meta.env.PR_LOCAL
+  ? defineAsyncComponent(() => import('../critique/CritiquePanel.vue'))
+  : undefined
 
 const diff = computed(() => props.store?.diff)
 const grouped = computed(() => props.store?.grouped)
@@ -114,6 +117,21 @@ watch([groups, headerHeight], () => nextTick(() => {
   updateVisibleGroups()
   updateVisibleFiles()
 }), { immediate: true })
+
+// A collapsed group has no diff mounted to scroll to, so it opens and the jump is replayed.
+watch(() => props.store?.critique?.focused, async (focus) => {
+  const critique = props.store?.critique
+  if (!focus || !critique)
+    return
+  const group = groups.value.find(top => [top, ...top.children].some(child => child.files.some(file => file.path === focus.path)))
+  if (!group || !collapsedGroups.value.has(group.key))
+    return
+  toggleGroup(group.key)
+  await nextTick()
+  const finding = critique.visibleFindings.find(item => item.id === focus.id)
+  if (finding)
+    critique.focus(finding)
+})
 
 function scrollToGroup(key: string) {
   (props.document ?? document).getElementById(`group-${key}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
@@ -208,6 +226,12 @@ function refreshFromBanner() {
             <SharedAnalysisBanner v-if="store?.shared" :store="store" />
 
             <ReviewSummaries v-if="store?.reviews" :summaries="store.reviews.summaries" />
+
+            <CritiquePanel
+              v-if="CritiquePanel && store?.critique && (store.critique.result || store.critique.isRunning || store.critique.error)"
+              :store="store"
+              :critique="store.critique"
+            />
 
             <Suspense v-if="grouped?.overallSummary">
               <Markdown :value="grouped?.overallSummary" class="border-b border-base px-4 pb-2 text-sm op-fade" />
