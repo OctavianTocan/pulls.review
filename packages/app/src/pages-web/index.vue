@@ -23,11 +23,12 @@ import { formatTimeAgo } from '../i18n/time-ago'
 import { routeForRef, routeFromGithubUrl } from '../source-routes'
 
 const DEMO_PRS = [
-  { owner: 'slidevjs', repo: 'slidev', number: 2746, state: 'open', title: 'feat: arrange slides on a grid' },
-  { owner: 'slidevjs', repo: 'slidev', number: 2722, state: 'merged', title: 'feat(export): editable PPTX export with native shapes and text' },
-  { owner: 'unocss', repo: 'unocss', number: 5296, state: 'merged', title: 'feat: add Rollup and Rolldown integration' },
-  { owner: 'antfu', repo: 'pulls.review', number: 9, state: 'merged', title: 'feat: share an AI analysis as a PR comment and load shared results' },
+  { owner: 'antfu', repo: 'pulls.review', number: 45, state: 'merged', title: 'feat: review any GitHub compare range or single commit' },
+  { owner: 'antfu', repo: 'pulls.review', number: 46, state: 'merged', title: 'feat(app): sidebar tree mode for the group list' },
 ] as const
+
+// Auto-load the AI analysis shared by the GitHub Actions bot.
+const DEMO_FROM = 'github-actions[bot]'
 
 const router = useRouter()
 const { locale, t } = useI18n()
@@ -176,7 +177,7 @@ useDocumentTitle(() => t('landing.documentTitle'), ' - ')
           <DiffPill
             v-for="pr in DEMO_PRS"
             :key="`${pr.owner}/${pr.repo}#${pr.number}`"
-            :to="routeForRef({ kind: 'github-pr', owner: pr.owner, repo: pr.repo, number: String(pr.number) })"
+            :to="`${routeForRef({ kind: 'github-pr', owner: pr.owner, repo: pr.repo, number: String(pr.number) })}?from=${encodeURIComponent(DEMO_FROM)}`"
             :parent="`${pr.owner}/${pr.repo}`"
             :label="`#${pr.number}`"
             :state="pr.state"
