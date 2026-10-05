@@ -81,6 +81,11 @@ export interface ReviewsApi {
   resolveThread: (threadId: string) => Promise<void>
   /** Submits `pendingReview` when given, else a review with no draft comments. */
   submitReview: (verdict: ReviewVerdict, body: string, pendingReview?: { id: number }) => Promise<void>
+  /**
+   * Posts one COMMENT review holding `comments`. With `pendingReview`, the comments join it and it is
+   * submitted, along with the drafts it already held.
+   */
+  postReview: (input: { headSha: string, body: string, comments: { target: ReviewDraftTarget, body: string }[], pendingReview?: { id: number, nodeId: string } }) => Promise<void>
   discardPendingReview: (pendingReview: { id: number }) => Promise<void>
 }
 

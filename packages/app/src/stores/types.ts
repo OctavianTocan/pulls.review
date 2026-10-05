@@ -73,6 +73,8 @@ export interface DiffsStoreReviews {
   deleteComment: (commentId: number) => Promise<void>
   resolveThread: (threadId: string) => Promise<void>
   submitReview: (verdict: ReviewVerdict, body: string) => Promise<void>
+  /** Posts one COMMENT review with inline comments; a pending review is submitted with them, drafts included. */
+  postReview: (body: string, comments: { target: ReviewDraftTarget, body: string }[]) => Promise<void>
   discardPendingReview: () => Promise<void>
 }
 

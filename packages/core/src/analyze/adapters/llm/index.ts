@@ -1,12 +1,15 @@
 import type { AgentMessage } from '@earendil-works/pi-agent-core'
 import type { Locale } from '../../../locales'
-import type { DiffGroup, GroupedResult, GroupedResultCore } from '../../../types/analyze'
+import type { DiffGroup, FileNote, GroupedResult, GroupedResultCore, HunkNote } from '../../../types/analyze'
 import type { DiffsPayload } from '../../../types/diff'
 import type { LlmAnalyzeOptions } from './agent'
 import type { ResolvedModel } from './model'
 import type { Analysis } from './schema'
 import { normalizeGroupedResult } from '../../../types/analyze'
 import { runAgent } from './agent'
+
+export * from './ask'
+export * from './critique'
 
 export const LLM_SCHEMA_VERSION = 1
 
@@ -45,10 +48,38 @@ function reconcile(diff: DiffsPayload, analysis: Analysis): DiffGroup[] {
   return groups
 }
 
+/** Keeps file notes for paths in the diff (first wins) with non-empty text, and hunk notes whose index names a hunk of that file. */
+function reconcileFiles(diff: DiffsPayload, notes: FileNote[] | undefined): FileNote[] {
+  const hunkCounts = new Map(diff.files.map(file => [file.path, file.hunks.length]))
+  const seen = new Set<string>()
+  const files: FileNote[] = []
+  for (const note of notes ?? []) {
+    const hunkCount = hunkCounts.get(note.path)
+    const summary = note.summary.trim()
+    if (hunkCount === undefined || seen.has(note.path) || !summary)
+      continue
+    seen.add(note.path)
+    const indices = new Set<number>()
+    const hunks: HunkNote[] = []
+    for (const hunk of note.hunks ?? []) {
+      const text = hunk.note.trim()
+      if (!Number.isInteger(hunk.index) || hunk.index < 0 || hunk.index >= hunkCount || indices.has(hunk.index) || !text)
+        continue
+      indices.add(hunk.index)
+      hunks.push({ index: hunk.index, note: text })
+    }
+    hunks.sort((a, b) => a.index - b.index)
+    files.push({ path: note.path, summary, hunks: hunks.length ? hunks : undefined })
+  }
+  return files
+}
+
 export function toGroupedResult(diff: DiffsPayload, analysis: Analysis, resolved: ResolvedModel, locale: Locale): GroupedResult {
+  const files = reconcileFiles(diff, analysis.files)
   const core: GroupedResultCore = {
     overallSummary: analysis.overallSummary,
     groups: reconcile(diff, analysis),
+    ...(files.length ? { files } : {}),
     schemaVersion: LLM_SCHEMA_VERSION,
   }
   return { ...normalizeGroupedResult('llm', core, `${resolved.model.provider}/${resolved.model.id}`), locale }
