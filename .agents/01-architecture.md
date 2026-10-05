@@ -324,6 +324,10 @@ land later without a rewrite:
   icon that still opens the site in a new tab.
 - Diff layout (split/unified) is user-toggleable; both are supported by
   `@pierre/diffs`.
+- The group list is user-toggleable between tabs in the sticky `DiffsHeader`
+  and a sticky left sidebar tree (`DiffGroupSidebar`, subgroups nested under
+  their parent). The sidebar only applies at `lg` and up; narrower viewports
+  always get the tabs. Persisted like the diff layout (`state/group-nav.ts`).
 - Large PRs are a first-class case, not an edge case: file lists and diff
   content MUST be virtualized (`@tanstack/vue-virtual`).
 - Every component in `app/components/` gets a Storybook story, backed by a

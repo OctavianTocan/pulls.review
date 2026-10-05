@@ -9,9 +9,11 @@ import { Virtualizer } from '@pierre/diffs'
 import { useElementBounding, useEventListener } from '@vueuse/core'
 import { computed, defineAsyncComponent, nextTick, onBeforeUnmount, onMounted, provide, ref, useTemplateRef, watch } from 'vue'
 import { autoRefresh } from '../../state/auto-refresh'
+import { showGroupSidebar } from '../../state/group-nav'
 import GithubTokenRecovery from '../settings/GithubTokenRecovery.vue'
 import { diffVirtualizerKey } from './diff-virtualizer'
 import DiffGroup from './DiffGroup.vue'
+import DiffGroupSidebar from './DiffGroupSidebar.vue'
 import DiffsHeader from './DiffsHeader.vue'
 import ReviewSummaries from './ReviewSummaries.vue'
 import SharedAnalysisBanner from './SharedAnalysisBanner.vue'
@@ -113,6 +115,10 @@ watch([groups, headerHeight], () => nextTick(() => {
   updateVisibleFiles()
 }), { immediate: true })
 
+function scrollToGroup(key: string) {
+  (props.document ?? document).getElementById(`group-${key}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+}
+
 const styles = computed(() => {
   return {
     '--diffs-header-height': headerHeight.value ? `${headerHeight.value}px` : undefined,
@@ -173,40 +179,54 @@ function refreshFromBanner() {
           :scroll-y="scrollY"
         />
 
-        <div class="mxa max-w-500 w-full flex flex-col gap-4">
-          <slot name="stale" :refresh="() => store?.refresh()">
-            <div v-if="isStale" class="mb-4 flex flex-wrap items-center justify-between gap-3 border border-amber:20 rounded-lg bg-amber:10 bg-raised px-3 py-2 text-sm text-amber-700 dark:text-amber-400">
-              <span>{{ $t('pr.newCommits') }}</span>
-              <div class="flex items-center gap-3">
-                <FormCheckbox v-model="autoRefreshNextTime" :label="$t('pr.autoRefreshNextTime')" />
-                <ActionButton size="sm" @click="refreshFromBanner">
-                  {{ $t('common.refresh') }}
-                </ActionButton>
-              </div>
+        <div class="mxa max-w-500 w-full flex">
+          <!-- The aside stretches to the full row height so its border does too; the content inside sticks. -->
+          <aside v-if="showGroupSidebar" class="w-64 shrink-0 border-r border-base">
+            <div class="sticky top-[calc(var(--diffs-header-height)+10px)] max-h-[calc(100vh-var(--diffs-header-height)-20px)] overflow-auto py-3 pl-3 pr-2">
+              <DiffGroupSidebar
+                :groups="groups"
+                :groups-visable="groupsVisable"
+                :reviewed="store!.reviewed"
+                @select="scrollToGroup"
+              />
             </div>
-          </slot>
+          </aside>
 
-          <SharedAnalysisBanner v-if="store?.shared" :store="store" />
+          <div class="min-w-0 flex flex-auto flex-col gap-4">
+            <slot name="stale" :refresh="() => store?.refresh()">
+              <div v-if="isStale" class="mb-4 flex flex-wrap items-center justify-between gap-3 border border-amber:20 rounded-lg bg-amber:10 bg-raised px-3 py-2 text-sm text-amber-700 dark:text-amber-400">
+                <span>{{ $t('pr.newCommits') }}</span>
+                <div class="flex items-center gap-3">
+                  <FormCheckbox v-model="autoRefreshNextTime" :label="$t('pr.autoRefreshNextTime')" />
+                  <ActionButton size="sm" @click="refreshFromBanner">
+                    {{ $t('common.refresh') }}
+                  </ActionButton>
+                </div>
+              </div>
+            </slot>
 
-          <ReviewSummaries v-if="store?.reviews" :summaries="store.reviews.summaries" />
+            <SharedAnalysisBanner v-if="store?.shared" :store="store" />
 
-          <Suspense v-if="grouped?.overallSummary">
-            <Markdown :value="grouped?.overallSummary" class="border-b border-base px-4 pb-2 text-sm op-fade" />
-          </Suspense>
+            <ReviewSummaries v-if="store?.reviews" :summaries="store.reviews.summaries" />
 
-          <DiffGroup
-            v-for="group in groups"
-            :key="group.key"
-            :store="store!"
-            :group="group"
-            :collapsed="collapsedGroups.has(group.key)"
-            :files-visible="filesVisible"
-            @toggle="toggleGroup(group.key)"
-          />
+            <Suspense v-if="grouped?.overallSummary">
+              <Markdown :value="grouped?.overallSummary" class="border-b border-base px-4 pb-2 text-sm op-fade" />
+            </Suspense>
 
-          <!-- To leave some space at the end of the diff -->
-          <div class="mt-200 p2 text-center text-xs italic op50">
-            {{ $t('pr.endOfDiff') }}
+            <DiffGroup
+              v-for="group in groups"
+              :key="group.key"
+              :store="store!"
+              :group="group"
+              :collapsed="collapsedGroups.has(group.key)"
+              :files-visible="filesVisible"
+              @toggle="toggleGroup(group.key)"
+            />
+
+            <!-- To leave some space at the end of the diff -->
+            <div class="mt-200 p2 text-center text-xs italic op50">
+              {{ $t('pr.endOfDiff') }}
+            </div>
           </div>
         </div>
 

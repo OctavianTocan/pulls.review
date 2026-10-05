@@ -3,22 +3,20 @@ import type { GroupSource } from '@pulls.review/core/types'
 import type { DiffsStore } from '../../stores/types'
 import ActionIconButton from '@antfu/design/components/Action/ActionIconButton.vue'
 import ActionToggleGroup from '@antfu/design/components/Action/ActionToggleGroup.vue'
-import DisplayDonut from '@antfu/design/components/Display/DisplayDonut.vue'
-import { computed, ref } from 'vue'
+import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { RouterLink } from 'vue-router'
 import { parentForRef } from '../../source-routes'
+import { showGroupSidebar } from '../../state/group-nav'
 import GithubAvatar from '../GithubAvatar.vue'
 import NavControls from '../NavControls.vue'
 import DiffAnalyzeButton from './DiffAnalyzeButton.vue'
 import DiffGroupNav from './DiffGroupNav.vue'
-import DiffReviewButton from './DiffReviewButton.vue'
+import DiffGroupNavToggle from './DiffGroupNavToggle.vue'
+import DiffPrMeta from './DiffPrMeta.vue'
 import DiffReviewThreadsToggle from './DiffReviewThreadsToggle.vue'
 import DiffShareButton from './DiffShareButton.vue'
-import DiffStats from './DiffStats.vue'
 import PrStatusIcon from './PrStatusIcon.vue'
-import ReviewProgressModal from './ReviewProgressModal.vue'
-import ReviewSubmitModal from './ReviewSubmitModal.vue'
 
 const props = defineProps<{
   document?: Document | ShadowRoot
@@ -35,11 +33,6 @@ const groups = computed(() => props.store.groups)
 // The embedded view keys off the compile-time `PR_EMBED` flag instead of a runtime flag
 // threaded down from the store.
 const isEmbedded = import.meta.env.PR_EMBED
-const totalFiles = computed(() => meta.value.files.length)
-const reviewedCount = computed(() => meta.value.files.filter(file => props.store.reviewed.has(file.sha)).length)
-const additions = computed(() => meta.value.files.reduce((sum, file) => sum + file.additions, 0))
-const deletions = computed(() => meta.value.files.reduce((sum, file) => sum + file.deletions, 0))
-const progress = computed(() => totalFiles.value === 0 ? 1 : reviewedCount.value / totalFiles.value)
 
 const aiResult = computed(() => props.store.aiResult)
 const analyzeOptions = computed(() => [
@@ -52,8 +45,6 @@ const canShareResult = computed(() => props.store.shared && props.store.llm && a
 const parent = computed(() => parentForRef(meta.value.ref))
 
 const reviews = computed(() => props.store.reviews)
-const reviewModalOpen = ref(false)
-const progressModalOpen = ref(false)
 
 function scrollToGroup(key: string) {
   (props.document ?? document).getElementById(`group-${key}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
@@ -100,7 +91,12 @@ function scrollToGroup(key: string) {
           @update:show-threads="reviews.setShowThreads($event)"
         />
         <div class="shrink-0">
-          <NavControls :document="document" />
+          <NavControls :document="document">
+            <!-- The sidebar only exists at `lg` and up, so the choice is only offered there. -->
+            <div class="hidden lg:block">
+              <DiffGroupNavToggle />
+            </div>
+          </NavControls>
         </div>
       </div>
 
@@ -125,6 +121,7 @@ function scrollToGroup(key: string) {
         </span>
         <DiffAnalyzeButton v-if="store.llm" :store="store" :document="document" />
         <DiffShareButton v-if="canShareResult" :store="store" :document="document" />
+        <DiffPrMeta v-if="showGroupSidebar" class="ml-auto" :store="store" :document="document" />
       </div>
       <!-- <template v-if="meta.description">
       <button
@@ -141,7 +138,7 @@ function scrollToGroup(key: string) {
       </p>
     </template> -->
 
-      <div class="flex items-center gap-2 pt-2 text-sm">
+      <div v-if="!showGroupSidebar" class="flex items-center gap-2 pt-2 text-sm">
         <DiffGroupNav
           class="flex-auto"
           :groups="groups"
@@ -150,37 +147,8 @@ function scrollToGroup(key: string) {
           @select="scrollToGroup"
         />
 
-        <div class="flex items-center self-end gap-2 pt-2 text-sm">
-          <DiffStats :additions="additions" :deletions="deletions" />
-          <button
-            type="button"
-            class="flex shrink-0 items-center gap-2 whitespace-nowrap rounded-md px-1.5 py-0.5 transition -mx-1.5 hover:bg-hover"
-            :title="$t('reviewProgress.title')"
-            :aria-expanded="progressModalOpen"
-            @click="progressModalOpen = true"
-          >
-            <DisplayDonut :value="progress" :size="18" :thickness="3" />
-            <span>{{ reviewedCount }} <span class="text-xs opacity-50">{{ $t('pr.reviewedOf', { total: totalFiles }) }}</span></span>
-          </button>
-          <DiffReviewButton
-            v-if="reviews?.canWrite"
-            :pending-comment-count="reviews.pendingCommentCount"
-            @review="reviewModalOpen = true"
-          />
-        </div>
+        <DiffPrMeta class="ml-auto self-end pt-2" :store="store" :document="document" />
       </div>
     </div>
-
-    <ReviewSubmitModal
-      v-if="reviews"
-      v-model:open="reviewModalOpen"
-      :reviews="reviews"
-      :document="document"
-    />
-    <ReviewProgressModal
-      v-model:open="progressModalOpen"
-      :store="store"
-      :document="document"
-    />
   </header>
 </template>
