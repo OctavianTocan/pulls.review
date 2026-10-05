@@ -35,7 +35,20 @@ export const LOCAL_RPC = {
   aiJobCancel: 'ai-job-cancel',
   /** Jobs still running or recently finished, newest first. */
   aiJobList: 'ai-job-list',
+  /** The skills a critique can be run through, as `ReviewLens`es. */
+  lensList: 'lens-list',
+  /** One skill's instructions by name, or `undefined` when there is none. */
+  lensGet: 'lens-get',
 } as const
+
+/** A skill offered as a point of view for an AI review. */
+export interface ReviewLens {
+  name: string
+  description?: string
+}
+
+/** What a lens name may look like; it also names a folder on the server. */
+export const REVIEW_LENS_NAME = /^[\w-][\w.-]*$/
 
 /** The CLIs the server can run a model prompt through. */
 export const LLM_ENGINES = ['claude-code', 'codex'] as const
