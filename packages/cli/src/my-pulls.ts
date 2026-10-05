@@ -250,7 +250,8 @@ export interface MyPullsServiceOptions {
  * @param options The GitHub client and clock to use.
  * @returns A `my-pulls` service with its own cache.
  */
-export function createMyPullsService({ graphql, now = Date.now }: MyPullsServiceOptions): MyPullsService {
+export function createMyPullsService(options: MyPullsServiceOptions): MyPullsService {
+  const { graphql, now = Date.now } = options
   const enrichments = new Map<string, EnrichmentEntry>()
   let owners: { logins: string[], fetchedAt: number } | undefined
 

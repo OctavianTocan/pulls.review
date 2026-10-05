@@ -32,8 +32,10 @@ export interface GithubClient {
 
 /** The `page` of the `rel="last"` link in a `Link` header. */
 function lastPage(link: string | null): number | undefined {
-  const match = link?.match(/<[^>]*[?&]page=(\d+)[^>]*>;\s*rel="last"/)
-  return match ? Number(match[1]) : undefined
+  const last = link?.split(',').find(part => part.includes('rel="last"'))
+  const target = last?.slice(last.indexOf('<') + 1, last.indexOf('>'))
+  const page = target ? new URL(target, 'https://api.github.com').searchParams.get('page') : null
+  return page ? Number(page) : undefined
 }
 
 /** `map` with at most `limit` calls in flight, results in input order. */
