@@ -3,8 +3,9 @@ import type { DiffsStore } from '../../stores/types'
 import ActionButton from '@antfu/design/components/Action/ActionButton.vue'
 import { useResizeObserver } from '@vueuse/core'
 import { computed, ref, useTemplateRef } from 'vue'
+import AiActivityLog from '../ai/AiActivityLog.vue'
+import AiUsageLine from '../ai/AiUsageLine.vue'
 import AppModal from '../AppModal.vue'
-import ChatMessage from '../chat/ChatMessage.vue'
 
 const props = defineProps<{
   open: boolean
@@ -19,8 +20,12 @@ const emit = defineEmits<{
 // Only opened when `store.llm` is set - `DiffAnalyzeButton` gates on it.
 const llm = computed(() => props.store.llm!)
 
-// The system prompt and the diff-carrying prompts are noise here; the agent's own turns are the story.
-const messages = computed(() => llm.value.transcript.filter(message => message.role === 'assistant' || message.role === 'toolResult'))
+const outcome = computed(() => llm.value.error ? 'failed' : llm.value.cancelled ? 'stopped' : 'done')
+const groupCount = computed(() => props.store.aiResult?.groups.length)
+const wallTime = computed(() => {
+  const { startedAt, endedAt } = llm.value
+  return startedAt !== undefined && endedAt !== undefined ? endedAt - startedAt : undefined
+})
 
 const listEl = useTemplateRef<HTMLDivElement>('listEl')
 const contentEl = useTemplateRef<HTMLDivElement>('contentEl')
@@ -32,7 +37,6 @@ function onScroll() {
     stuckToBottom.value = el.scrollHeight - el.scrollTop - el.clientHeight < 40
 }
 
-// Markdown renders async (Suspense), so follow the content's real size rather than message changes.
 useResizeObserver(contentEl, () => {
   if (stuckToBottom.value && listEl.value)
     listEl.value.scrollTop = listEl.value.scrollHeight
@@ -51,25 +55,54 @@ function rerun() {
     :document="document"
     @update:open="emit('update:open', $event)"
   >
-    <div class="max-h-[60vh] min-h-40 flex flex-col gap-3">
+    <div class="max-h-[60vh] min-h-40 flex flex-col">
       <div ref="listEl" class="min-w-0 flex-auto overflow-y-auto overscroll-contain" @scroll="onScroll">
-        <div ref="contentEl" class="flex flex-col gap-3">
-          <ChatMessage v-for="(message, index) in messages" :key="index" :message="message" />
-          <div v-if="llm.isAnalyzing" class="flex items-center gap-1.5 text-xs op-mute" role="status">
-            <span class="i-ph:spinner-duotone animate-spin" aria-hidden="true" />
-            {{ llm.progress?.message ?? $t('analyze.starting') }}
-          </div>
+        <div ref="contentEl" class="flex flex-col gap-3 text-sm">
+          <p v-if="llm.resumed" class="flex items-center gap-1.5 text-xs op-mute">
+            <span class="i-ph:plugs-connected shrink-0" aria-hidden="true" />
+            {{ $t('analyze.resumed') }}
+          </p>
+
+          <AiActivityLog
+            :activities="llm.activities"
+            :running="llm.isAnalyzing"
+            :started-at="llm.startedAt"
+            :ended-at="llm.endedAt"
+            :outcome="outcome"
+          />
+
+          <template v-if="!llm.isAnalyzing">
+            <div
+              v-if="llm.error"
+              role="alert"
+              class="flex flex-col gap-1 border border-red-500/30 rounded bg-red-500/5 p-3 text-red-600 dark:text-red-400"
+            >
+              <div class="flex items-center gap-1.5 font-medium">
+                <span class="i-ph:x-circle shrink-0" aria-hidden="true" />
+                {{ $t('analyze.failed') }}
+              </div>
+              <p class="whitespace-pre-wrap break-words">
+                {{ llm.error.message }}
+              </p>
+            </div>
+            <p v-else-if="llm.cancelled" class="flex items-center gap-1.5 op-fade">
+              <span class="i-ph:stop-circle shrink-0" aria-hidden="true" />
+              {{ $t('ai.stopped') }}
+            </p>
+            <p v-else-if="groupCount !== undefined" class="flex items-center gap-1.5 color-base">
+              <span class="i-ph:check-circle shrink-0 text-green-600 dark:text-green-400" aria-hidden="true" />
+              {{ $t('analyze.done', { n: groupCount }, groupCount) }}
+            </p>
+
+            <AiUsageLine :usage="llm.usage" :duration-ms="wallTime" />
+          </template>
         </div>
       </div>
-
-      <p v-if="llm.error" class="break-words text-sm text-red-600 dark:text-red-400">
-        {{ llm.error.message }}
-      </p>
     </div>
 
     <template #footer>
       <ActionButton v-if="llm.isAnalyzing" size="sm" icon="i-ph:stop-duotone" @click="llm.abort()">
-        {{ $t('common.abort') }}
+        {{ $t('common.stop') }}
       </ActionButton>
       <ActionButton v-else size="sm" variant="primary" icon="i-ph:arrow-clockwise-duotone" @click="rerun">
         {{ $t('common.rerun') }}

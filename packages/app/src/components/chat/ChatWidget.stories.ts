@@ -1,5 +1,6 @@
 import type { AgentMessage } from '@earendil-works/pi-agent-core'
 import type { Meta, StoryObj } from '@storybook/vue3-vite'
+import type { TrackedActivity } from '../ai/ai-activity'
 import { fauxAssistantMessage, fauxText, fauxToolCall } from '@earendil-works/pi-ai'
 import { createMockDiffsStore } from '../../stores/mock-diffs-store'
 import ChatWidget from './ChatWidget.vue'
@@ -44,6 +45,43 @@ export const Streaming: Story = {
     store: createMockDiffsStore({
       chatStreaming: true,
       chatMessages: [question, fauxAssistantMessage('The session store now persists tok', { stopReason: 'pending' })],
+    }),
+  },
+}
+
+const now = Date.now()
+
+/** A reply's work log as Claude Code reports it, `at` ms after the question. */
+function step(id: string, at: number, input: Pick<TrackedActivity, 'kind' | 'title'> & Partial<TrackedActivity>): TrackedActivity {
+  const status = input.status ?? 'done'
+  const endedAt = status === 'running' ? undefined : now - 20_000 + at + 1500
+  return { id, startedAt: now - 20_000 + at, endedAt, rev: 1, seenAt: endedAt ?? now - 2000, ...input, status }
+}
+
+const askWork: TrackedActivity[] = [
+  step('start', 0, { kind: 'status', title: 'Started Claude (claude-sonnet-5)' }),
+  step('read', 3000, { kind: 'tool', tool: 'read_file_diff', title: 'Read app/auth/store.ts (lines 1–120)' }),
+  step('search', 7000, { kind: 'tool', tool: 'search_diff', title: 'Searched the diff for `localStorage`' }),
+]
+
+export const StreamingFromCli: Story = {
+  args: {
+    store: createMockDiffsStore({
+      chatStreaming: true,
+      chatStartedAt: now - 20_000,
+      chatActivities: [...askWork, step('think', 11_000, { kind: 'thinking', title: 'Thinking', status: 'running', text: 'The store writes on every change.\nChecking whether the reads are guarded' })],
+      chatMessages: [question, fauxAssistantMessage([], { stopReason: 'pending' })],
+    }),
+  },
+}
+
+export const AnsweredFromCli: Story = {
+  args: {
+    store: createMockDiffsStore({
+      chatStartedAt: now - 20_000,
+      chatEndedAt: now - 4000,
+      chatActivities: [...askWork, step('answer', 12_000, { kind: 'text', title: 'Wrote', text: 'The session store now persists tokens across reloads.' })],
+      chatMessages: [question, fauxAssistantMessage('The session store now **persists tokens** across reloads: `store.ts` writes on every change.')],
     }),
   },
 }

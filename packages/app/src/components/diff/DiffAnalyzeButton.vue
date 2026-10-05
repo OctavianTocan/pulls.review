@@ -1,9 +1,11 @@
 <script setup lang="ts">
 import type { DiffsStore } from '../../stores/types'
 import ActionButton from '@antfu/design/components/Action/ActionButton.vue'
-import { computed, ref } from 'vue'
+import { useNow } from '@vueuse/core'
+import { computed, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { settingsModalOpen } from '../../state/settingsModal'
+import { formatClockDuration } from '../ai/ai-format'
 import AnalyzeStatusModal from './AnalyzeStatusModal.vue'
 
 const props = defineProps<{
@@ -20,6 +22,10 @@ const hasAiResult = computed(() => props.store.aiResult !== undefined)
 const hasStatus = computed(() => llm.value.isAnalyzing || llm.value.error !== undefined)
 const statusOpen = ref(false)
 
+const { now, pause, resume } = useNow({ interval: 1000, controls: true })
+watch(() => llm.value.isAnalyzing, analyzing => analyzing ? resume() : pause(), { immediate: true })
+const elapsed = computed(() => llm.value.startedAt === undefined ? undefined : formatClockDuration(now.value.getTime() - llm.value.startedAt))
+
 const icon = computed(() => {
   if (llm.value.isAnalyzing)
     return 'i-ph:spinner-duotone animate-spin'
@@ -30,7 +36,7 @@ const icon = computed(() => {
 
 const label = computed(() => {
   if (llm.value.isAnalyzing)
-    return t('analyze.analyzing')
+    return elapsed.value ? t('analyze.analyzingFor', { duration: elapsed.value }) : t('analyze.analyzing')
   if (llm.value.error)
     return t('analyze.failed')
   return hasAiResult.value ? t('analyze.reanalyze') : t('analyze.withAi')
@@ -38,7 +44,7 @@ const label = computed(() => {
 
 const title = computed(() => {
   if (llm.value.isAnalyzing)
-    return llm.value.progress?.message ?? t('analyze.analyzing')
+    return llm.value.activities.at(-1)?.title ?? llm.value.progress?.message ?? t('analyze.analyzing')
   if (llm.value.error)
     return t('analyze.failedTitle', { message: llm.value.error.message })
   return undefined
@@ -57,15 +63,16 @@ function onClick() {
     v-if="!llm.isSetup"
     class="shrink-0 text-xs shadow"
     size="sm"
-    icon="i-ph:key-duotone"
+    icon="i-ph:sparkle-duotone"
     variant="primary"
+    :title="$t('analyze.setupTitle')"
     @click="settingsModalOpen = true"
   >
-    {{ $t('analyze.setupKeys') }}
+    {{ $t('analyze.setup') }}
   </ActionButton>
   <ActionButton
     v-else-if="!hasAiResult || hasStatus || store.analyzeMode !== 'rule-based'"
-    class="shrink-0 text-xs"
+    class="shrink-0 text-xs tabular-nums"
     :variant="hasAiResult ? 'text' : 'primary'"
     :icon="icon"
     :title="title"
@@ -74,5 +81,5 @@ function onClick() {
     {{ label }}
   </ActionButton>
 
-  <AnalyzeStatusModal :open="statusOpen && hasStatus" :store="store" :document="document" @update:open="statusOpen = $event" />
+  <AnalyzeStatusModal :open="statusOpen" :store="store" :document="document" @update:open="statusOpen = $event" />
 </template>

@@ -4,6 +4,7 @@ import ActionButton from '@antfu/design/components/Action/ActionButton.vue'
 import ActionIconButton from '@antfu/design/components/Action/ActionIconButton.vue'
 import { useResizeObserver } from '@vueuse/core'
 import { computed, ref, useTemplateRef } from 'vue'
+import AiActivityLog from '../ai/AiActivityLog.vue'
 import ChatMessage from './ChatMessage.vue'
 
 const props = defineProps<{
@@ -21,11 +22,20 @@ const lastIsError = computed(() => {
 })
 
 const showThinking = computed(() => {
-  if (!chat.value.isStreaming)
+  if (!chat.value.isStreaming || chat.value.activities.length)
     return false
   const last = chat.value.messages.at(-1)
   const lastPart = last?.role === 'assistant' ? last.content.at(-1) : undefined
   return !(lastPart?.type === 'text' && lastPart.text.trim())
+})
+
+// The last reply's work log folds in under the question that asked for it.
+const lastQuestionIndex = computed(() => chat.value.messages.findLastIndex(message => message.role === 'user'))
+const replyOutcome = computed(() => {
+  const last = chat.value.messages.at(-1)
+  if (last?.role !== 'assistant')
+    return 'done'
+  return last.stopReason === 'error' ? 'failed' : last.stopReason === 'aborted' ? 'stopped' : 'done'
 })
 
 const listEl = useTemplateRef<HTMLDivElement>('listEl')
@@ -92,12 +102,28 @@ function onKeydown(event: KeyboardEvent) {
       <template v-else>
         <div ref="listEl" class="min-w-0 flex-auto overflow-y-auto overscroll-contain p-3" @scroll="onScroll">
           <div ref="contentEl" class="flex flex-col gap-3">
-            <ChatMessage
-              v-for="(message, index) in chat.messages"
-              :key="index"
-              :message="message"
-              :retryable="index === lastIndex && !chat.isStreaming"
-              @retry="chat.retry()"
+            <template v-for="(message, index) in chat.messages" :key="index">
+              <ChatMessage
+                :message="message"
+                :retryable="index === lastIndex && !chat.isStreaming"
+                @retry="chat.retry()"
+              />
+              <AiActivityLog
+                v-if="index === lastQuestionIndex && !chat.isStreaming && chat.activities.length"
+                :activities="chat.activities"
+                :running="false"
+                :started-at="chat.startedAt"
+                :ended-at="chat.endedAt"
+                :outcome="replyOutcome"
+                compact
+              />
+            </template>
+            <AiActivityLog
+              v-if="chat.isStreaming && chat.activities.length"
+              :activities="chat.activities"
+              running
+              :started-at="chat.startedAt"
+              compact
             />
             <div v-if="showThinking" class="flex items-center gap-1.5 text-xs op-mute" role="status">
               <span class="i-ph:spinner-duotone animate-spin" aria-hidden="true" />

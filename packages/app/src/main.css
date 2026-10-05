@@ -36,3 +36,40 @@ html.dark,
   display: inline-block;
   vertical-align: baseline;
 }
+
+/* A light sweeping across the text of an AI step that is still running. */
+@keyframes ai-shimmer {
+  from {
+    background-position: 100% 0;
+  }
+  to {
+    background-position: -100% 0;
+  }
+}
+
+.ai-shimmer {
+  --ai-shimmer-base: rgb(0 0 0 / 0.5);
+  --ai-shimmer-peak: rgb(0 0 0 / 0.95);
+  color: transparent;
+  background-image: linear-gradient(
+    90deg,
+    var(--ai-shimmer-base) 35%,
+    var(--ai-shimmer-peak) 50%,
+    var(--ai-shimmer-base) 65%
+  );
+  background-size: 200% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  animation: ai-shimmer 2s linear infinite;
+}
+
+.dark .ai-shimmer {
+  --ai-shimmer-base: rgb(255 255 255 / 0.5);
+  --ai-shimmer-peak: rgb(255 255 255 / 0.95);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ai-shimmer {
+    animation: none;
+  }
+}

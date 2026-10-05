@@ -35,6 +35,7 @@ export const Analyzing: Story = {
       isAnalyzing: true,
       llmProgress: { step: 3, message: 'Reading 4 files: app/auth/session.ts, …' },
       llmTranscript: analysisTranscript,
+      llmStartedAt: Date.now() - 72_000,
     }),
   },
 }

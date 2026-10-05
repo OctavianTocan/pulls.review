@@ -160,8 +160,10 @@
     }
   },
   "analyze": {
-    "setupKeys": "Setup API Keys",
+    "setup": "Set up AI",
+    "setupTitle": "Pick an AI provider in Settings",
     "analyzing": "Analyzing…",
+    "analyzingFor": "Analyzing… {duration}",
     "failed": "Analysis failed",
     "failedTitle": "AI analysis failed: {message}",
     "reanalyze": "Re-analyze",
@@ -172,7 +174,9 @@
     "reading": "Reading {n} file: {first} | Reading {n} files: {first}",
     "organizing": "Organizing groups…",
     "notConfigured": "AI analysis is not configured: pick Claude Code or Codex in Settings",
-    "chatFailed": "Chat request failed"
+    "chatFailed": "Chat request failed",
+    "done": "Sorted the changes into {n} group | Sorted the changes into {n} groups",
+    "resumed": "This analysis was already running on the server; following it from here."
   },
   "share": {
     "button": "Share result",
@@ -309,6 +313,49 @@
     "submittingGrouping": "Submitting grouping…",
     "requestFailed": "Request failed",
     "stopped": "stopped"
+  },
+  "ai": {
+    "loading": "Loading…",
+    "workingFor": "Working for {duration}",
+    "workedFor": "Worked for {duration}",
+    "stoppedAfter": "Stopped after {duration}",
+    "failedAfter": "Failed after {duration}",
+    "activeNow": "Active now",
+    "activeAgo": "Active {since} ago",
+    "idleFor": "No activity for {since}",
+    "elapsed": "{elapsed} elapsed",
+    "more": "+{n} more",
+    "showLess": "Show less",
+    "stopped": "Stopped",
+    "groups": {
+      "command": "Ran {n} command | Ran {n} commands",
+      "edit": "Edited {n} file | Edited {n} files",
+      "read": "Read {n} file | Read {n} files",
+      "search": "Ran {n} search | Ran {n} searches",
+      "other": "Used {n} tool | Used {n} tools"
+    },
+    "verb": {
+      "thinking": { "now": "Thinking", "past": "Thought" },
+      "writing": { "now": "Writing", "past": "Wrote" },
+      "readFiles": { "now": "Reading {n} file | Reading {n} files", "past": "Read {n} file | Read {n} files" },
+      "organizing": { "now": "Organizing the groups", "past": "Organized the groups" }
+    },
+    "usage": {
+      "input": "{n} in",
+      "output": "{n} out",
+      "cacheRead": "{n} cached",
+      "cacheWrite": "{n} cache write",
+      "reasoning": "{n} reasoning"
+    },
+    "effort": {
+      "minimal": "Minimal",
+      "low": "Low",
+      "medium": "Medium",
+      "high": "High",
+      "xhigh": "Extra High",
+      "max": "Max",
+      "ultra": "Ultra"
+    }
   },
   "settings": {
     "layout": "Diff layout",
