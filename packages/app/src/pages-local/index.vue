@@ -12,6 +12,7 @@ import { useRouter } from 'vue-router'
 import AppFooter from '../components/AppFooter.vue'
 import AppHeader from '../components/AppHeader.vue'
 import { useDocumentTitle } from '../composables/useDocumentTitle'
+import { useHomeNavigation } from '../composables/useHomeNavigation'
 import { formatTimeAgo } from '../i18n/time-ago'
 import { localRpcKey } from '../local/local-rpc-key'
 import { repoRoute, routeForRef, routeFromGithubUrl } from '../source-routes'
@@ -88,6 +89,7 @@ function pullRoute(pull: MyPull) {
 
 onMounted(load)
 useDocumentTitle(() => t('local.home.title'))
+const nav = useHomeNavigation({ rows: () => groups.value.flatMap(group => group.items), pulls: () => pulls.value, refresh: load })
 </script>
 
 <template>
@@ -126,7 +128,7 @@ useDocumentTitle(() => t('local.home.title'))
 
       <template v-else>
         <div class="flex items-center gap-2">
-          <FormTextInput v-model="query" :placeholder="$t('local.home.search')" icon="i-ph:magnifying-glass-duotone" class="flex-1" />
+          <FormTextInput v-model="query" :placeholder="$t('local.home.search')" icon="i-ph:magnifying-glass-duotone" class="flex-1" data-nav-search />
           <ActionToggleGroup :model-value="state" :options="stateOptions" @update:model-value="setState($event as MyPullState)" />
         </div>
 
@@ -160,7 +162,12 @@ useDocumentTitle(() => t('local.home.title'))
           </summary>
           <ul class="flex flex-col border border-base rounded-lg py-1">
             <li v-for="pull in group.items" :key="pull.number">
-              <RouterLink :to="pullRoute(pull)" class="flex items-center gap-3 px-3 py-2 text-sm transition hover:bg-hover">
+              <RouterLink
+                :to="pullRoute(pull)"
+                :data-nav-row="nav.rowKey(pull)"
+                class="flex items-center gap-3 px-3 py-2 text-sm transition hover:bg-hover"
+                :class="{ 'bg-hover ring-1 ring-inset ring-primary-500/50': nav.isActive(pull) }"
+              >
                 <span class="w-12 shrink-0 font-mono text-xs op-fade">#{{ pull.number }}</span>
                 <span class="min-w-0 flex-1 truncate">
                   <span v-if="pull.isDraft" class="mr-1 text-xs op-fade">[{{ $t('local.home.draft') }}]</span>{{ pull.title }}

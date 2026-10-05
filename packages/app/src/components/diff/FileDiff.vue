@@ -8,6 +8,7 @@ import DisplayFilePath from '@antfu/design/components/Display/DisplayFilePath.vu
 import { FileDiff as PierreFileDiff, processFile, VirtualizedFileDiff } from '@pierre/diffs'
 import { computed, inject, nextTick, onBeforeUnmount, onMounted, ref, useTemplateRef, watch } from 'vue'
 import { isDark as globalIsDark, isDarkKey } from '../../state/dark'
+import { useFileNavigation } from '../../state/navigation'
 import CommentComposer from './CommentComposer.vue'
 import { diffVirtualizerKey } from './diff-virtualizer'
 import DiffStats from './DiffStats.vue'
@@ -34,6 +35,11 @@ const virtualizer = inject(diffVirtualizerKey, undefined)
 const containerRef = useTemplateRef<HTMLDivElement>('container')
 const collapsed = ref(isReviewed.value || isNoisyFile(props.file.path))
 let instance: PierreFileDiff | undefined
+const isActive = useFileNavigation(() => props.file, {
+  collapsed,
+  container: () => containerRef.value,
+  lines: () => instance instanceof VirtualizedFileDiff ? instance : undefined,
+})
 
 function buildUnifiedDiffText(file: FileChange): string {
   const oldPath = file.previousPath ?? file.path
@@ -354,7 +360,7 @@ defineExpose({
     :id="`file-${file.sha}`"
     class="relative sticky top-[calc(var(--diffs-header-height)-1px)] z-file-diff-header mt-2 flex items-center justify-between gap-2 overflow-hidden border border-base bg-base px-2 py-1.5"
     role="button"
-    :class="collapsed ? 'rounded-lg' : 'rounded-t-lg'"
+    :class="[collapsed ? 'rounded-lg' : 'rounded-t-lg', isActive && 'ring-1 ring-primary-500/60']"
     @click.self="collapsed = !collapsed"
   >
     <div class="min-w-0 flex items-center gap-2 text-sm">
