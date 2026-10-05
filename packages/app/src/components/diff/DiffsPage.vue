@@ -10,6 +10,9 @@ import { useElementBounding, useEventListener } from '@vueuse/core'
 import { computed, defineAsyncComponent, nextTick, onBeforeUnmount, onMounted, provide, ref, useTemplateRef, watch } from 'vue'
 import { autoRefresh } from '../../state/auto-refresh'
 import { showGroupSidebar } from '../../state/group-nav'
+import CommitRangeBanner from '../overview/CommitRangeBanner.vue'
+import { usePrOverview } from '../overview/context'
+import PrOverviewPanel from '../overview/PrOverviewPanel.vue'
 import GithubTokenRecovery from '../settings/GithubTokenRecovery.vue'
 import { diffVirtualizerKey } from './diff-virtualizer'
 import DiffGroup from './DiffGroup.vue'
@@ -28,6 +31,7 @@ const ChatWidget = import.meta.env.PR_LLM
   ? defineAsyncComponent(() => import('../chat/ChatWidget.vue'))
   : undefined
 
+const overviewCtx = usePrOverview()
 const diff = computed(() => props.store?.diff)
 const grouped = computed(() => props.store?.grouped)
 const isLoading = computed(() => props.store?.isLoading ?? false)
@@ -143,7 +147,8 @@ function refreshFromBanner() {
   >
     <div>
       <template v-if="isLoading && !diff">
-        <div class="mxa max-w-500 w-full px-4 py-12">
+        <div class="mxa max-w-500 w-full flex flex-col gap-8 px-4 py-12">
+          <CommitRangeBanner />
           <slot name="loading">
             <FeedbackLoading :text="$t('common.loading')" />
           </slot>
@@ -151,6 +156,7 @@ function refreshFromBanner() {
       </template>
       <template v-else-if="error">
         <div class="mxa max-w-500 w-full flex flex-col gap-8 px-4 py-12">
+          <CommitRangeBanner />
           <slot name="error" :error="error" :retry="() => store?.load()">
             <FeedbackEmptyState icon="i-ph:warning-duotone" :title="$t('pr.somethingWrong')">
               <template #hint>
@@ -193,6 +199,11 @@ function refreshFromBanner() {
           </aside>
 
           <div class="min-w-0 flex flex-auto flex-col gap-4">
+            <div v-if="overviewCtx" class="flex flex-col gap-3 px-3 pt-3">
+              <CommitRangeBanner />
+              <PrOverviewPanel :document />
+            </div>
+
             <slot name="stale" :refresh="() => store?.refresh()">
               <div v-if="isStale" class="mb-4 flex flex-wrap items-center justify-between gap-3 border border-amber:20 rounded-lg bg-amber:10 bg-raised px-3 py-2 text-sm text-amber-700 dark:text-amber-400">
                 <span>{{ $t('pr.newCommits') }}</span>
@@ -207,7 +218,7 @@ function refreshFromBanner() {
 
             <SharedAnalysisBanner v-if="store?.shared" :store="store" />
 
-            <ReviewSummaries v-if="store?.reviews" :summaries="store.reviews.summaries" />
+            <ReviewSummaries v-if="store?.reviews && !overviewCtx?.store.overview" :summaries="store.reviews.summaries" />
 
             <Suspense v-if="grouped?.overallSummary">
               <Markdown :value="grouped?.overallSummary" class="border-b border-base px-4 pb-2 text-sm op-fade" />

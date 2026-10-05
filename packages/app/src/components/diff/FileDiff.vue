@@ -11,6 +11,7 @@ import { isDark as globalIsDark, isDarkKey } from '../../state/dark'
 import CommentComposer from './CommentComposer.vue'
 import { diffVirtualizerKey } from './diff-virtualizer'
 import DiffStats from './DiffStats.vue'
+import FileHeaderLinks from './FileHeaderLinks.vue'
 import FileStatus from './FileStatus.vue'
 import { isNoisyFile } from './noisy-files'
 import { ensurePierreDiffsShadowRoot } from './pierre-diffs-shadow'
@@ -370,6 +371,7 @@ defineExpose({
       <DiffStats v-if="!file.isBinary" :additions="file.additions" :deletions="file.deletions" />
       <span v-else class="text-xs op-fade">{{ $t('file.binary') }}</span>
       <FileStatus :status="file.status" />
+      <FileHeaderLinks :store="store" :file="file" />
       <span v-if="fullFileError" class="text-xs text-red-500" :title="fullFileError.message">{{ $t('file.loadFailed') }}</span>
       <ActionIconButton
         v-if="canLoadFullFile || isLoadingFullFile"
